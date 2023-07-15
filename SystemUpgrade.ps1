@@ -49,7 +49,6 @@ function NotAdminMessage {
     EmptyLine
     Write-Host "Please run this script as an admin access." -ForegroundColor DarkRed
     Write-Host "Because almost all commands require admin access." -ForegroundColor DarkRed
-    return
 }
 
 
@@ -82,7 +81,6 @@ function HelpMenu {
     Write-Host "-help [the option] :" -ForegroundColor DarkGreen
     Write-Host "- all"
     Write-Host "Example: .\SystemUpgrade.ps1 -help all" -ForegroundColor DarkRed
-    return
 }
 
 function Title() {
@@ -539,10 +537,12 @@ function ChocolateyInstall {
 function Main() {
     if (!$IsAdmin) {
         NotAdminMessage
+        return
     }
 
     if ($Help) {
         HelpMenu
+        return
     }
 
     Title

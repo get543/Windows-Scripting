@@ -20,3 +20,6 @@ Doing automation script on Windows using PowerShell.
 - Update most application installed on the system with the help of `winget` and `choco`.
 - Scan for any corruption system files and fix them if possible.
 - Clean unused files and folders in the system.
+
+# `Microsoft.PowerShell_profile.ps1`
+- PowerShell profile
