@@ -1,7 +1,10 @@
 <#
-TODO Create function: user add option to automatically answers yes
+TODO ValidateSet: Find a way to make it shorter
+- (https://adamtheautomator.com/powershell-validateset/) 
+- (https://java2blog.com/check-if-array-contains-element-powershell/)
+- (https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.3&viewFallbackFrom=powershell-7.1#dynamic-validateset-values)
+
 TODO Find a way to make prettier: Help Menu
-TODO Make shorter: Run System Cleanup (run disk cleanup, delete temporary files, and empty recycle bin)
 #>
 
 <#
@@ -12,7 +15,7 @@ This is a script that will update windows and applications on your system, if yo
 Display a help message which is basically the same thing as this one. Valid values : all
 
 .PARAMETER option
-Open up an option on how you want to run the script. Valid values : yes, assume-yes, assumeyes, answersyes, answers-yes
+Open up an option on how you want to run the script. Valid values : yes, assume-yes, assumeyes, answersyes, answers-yes, semi-auto, normal, regular
 
 .EXAMPLE
 .\SystemUpgrade.ps1 -help all
@@ -27,11 +30,20 @@ Open up an option on how you want to run the script. Valid values : yes, assume-
 Use to update windows and/or update your applications.
 #>
 
+# *Using class for ValidateSet
+# class AnswersYes : System.Management.Automation.IValidateSetValuesGenerator {
+#     [String[]] GetValidValues() {
+#         return
+#     }
+# }
+
 # Parameter help description
 param(
-    [parameter(ParameterSetName = 'Option')] [validateset("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "normal", "regular")] [string] $Option,
-    [parameter(ParameterSetName = 'GetHelp')] [validateset("all")] [string] $Help
+    [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "semi-auto","normal", "regular")] [String] $Option,
+    [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
 )
+
+$AnswersYesArray = @("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes")
 
 $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $Principal = New-Object Security.Principal.WindowsPrincipal $Identity
@@ -47,8 +59,8 @@ function EmptyLine() {
 <# -------------------------------------------------------- #>
 function NotAdminMessage {
     EmptyLine
-    Write-Host "Please run this script as an admin access." -ForegroundColor DarkRed
-    Write-Host "Because almost all commands require admin access." -ForegroundColor DarkRed
+    Write-Host "Please run this script as an admin access." -ForegroundColor Red
+    Write-Host "Because almost all commands require admin access." -ForegroundColor Red
 }
 
 
@@ -56,31 +68,33 @@ function NotAdminMessage {
 <#                      Menu or Title                       #>
 <# -------------------------------------------------------- #>
 function HelpMenu {
-    Write-Host "This is a Help Command for this script." -ForegroundColor DarkCyan
+    Write-Host "This is a Help Command for this script." -ForegroundColor Cyan
     Write-Host "Example: .\SystemUpgrade.ps1 [parameter] [the option]"
 
     EmptyLine
-    Write-Host "[parameter] :" -ForegroundColor DarkGreen
-    Write-Host "- -help -> Display this help message."
-    Write-Host "- -option -> An option on how you want to run the script."
-    Write-Host "Example: .\SystemUpgrade.ps1 -help" -ForegroundColor DarkRed
+    Write-Host "[parameter] :" -ForegroundColor Green
+    Write-Host "> -help -> Display this help message."
+    Write-Host "> -option -> An option on how you want to run the script."
+    Write-Host "Example: .\SystemUpgrade.ps1 -help" -ForegroundColor Red
 
     EmptyLine
-    Write-Host "-option [the option] :" -ForegroundColor DarkGreen
-    Write-Host "- yes -> Automatically answers yes to every questions."
-    Write-Host "- assume-yes -> Automatically answers yes to every questions."
-    Write-Host "- assumeyes -> Automatically answers yes to every questions."
-    Write-Host "- answersyes -> Automatically answers yes to every questions."
-    Write-Host "- answers-yes -> Automatically answers yes to every questions."
-    Write-Host "- normal -> Run the script normally."
-    Write-Host "- regular -> Run the script normally."
-    Write-Host "Example: .\SystemUpgrade.ps1 -option yes" -ForegroundColor DarkRed
-    Write-Host "Example: .\SystemUpgrade.ps1 -option normal" -ForegroundColor DarkRed
+    Write-Host "-option [the option] :" -ForegroundColor Green
+    Write-Host "> yes -> Automatically answers yes to every questions."
+    Write-Host "> assume-yes -> Automatically answers yes to every questions."
+    Write-Host "> assumeyes -> Automatically answers yes to every questions."
+    Write-Host "> answersyes -> Automatically answers yes to every questions."
+    Write-Host "> answers-yes -> Automatically answers yes to every questions."
+    Write-Host "> semi-auto -> Answers yes to all questions except for winget."
+    Write-Host "> normal -> Run the script normally."
+    Write-Host "> regular -> Run the script normally."
+    Write-Host "Example: .\SystemUpgrade.ps1 -option yes" -ForegroundColor Red
+    Write-Host "Example: .\SystemUpgrade.ps1 -option normal" -ForegroundColor Red
 
     EmptyLine
-    Write-Host "-help [the option] :" -ForegroundColor DarkGreen
-    Write-Host "- all"
-    Write-Host "Example: .\SystemUpgrade.ps1 -help all" -ForegroundColor DarkRed
+    Write-Host "-help [the option] :" -ForegroundColor Green
+    Write-Host "> all"
+    Write-Host "> full"
+    Write-Host "Example: .\SystemUpgrade.ps1 -help all" -ForegroundColor Red
 }
 
 function Title() {
@@ -101,6 +115,7 @@ function EndingScript() {
     __| |_________________________________| |__ 
    (__|_|_________________________________|_|__) " -ForegroundColor Magenta
 }
+
 
 <# -------------------------------------------------------- #>
 <#                     Script Function                      #>
@@ -124,8 +139,8 @@ function UpdatePowershellModule() {
         }
     }
 
-    # user add option to automatically answers yes
-    if (($Option -eq "yes") -or ($Option -eq "assume-yes") -or ($Option -eq "assumeyes") -or ($Option -eq "answersyes") -or ($Option -eq "answers-yes")) {
+    # user add option to automatically answers yes or semi yes
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "semi-auto")) {
         RunUpdateModule
         return
     }
@@ -188,8 +203,8 @@ function WindowsUpdateScript() {
         } while ($true)
     }
 
-    # user add option to automatically answers yes
-    if (($Option -eq "yes") -or ($Option -eq "assume-yes") -or ($Option -eq "assumeyes") -or ($Option -eq "answersyes") -or ($Option -eq "answers-yes")) {
+    # user add option to automatically answers yes or semi yes
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "semi-auto")) {
         EmptyLine
         Write-Host "Checking Windows Update..." -ForegroundColor Yellow
         Get-WindowsUpdate -Verbose
@@ -271,7 +286,7 @@ function WingetUpdateScript() {
                     }
                     else {
                         # start the process but still in admin mode (broken behaviour)
-                        Start-Process "$env:HOMEDRIVE\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -NoNewWindow -ArgumentList "winget upgrade --include-unknown $AppID"
+                        Start-Process "$env:windir\System32\WindowsPowerShell\v1.0\powershell.exe" -NoNewWindow -ArgumentList "winget upgrade --include-unknown $AppID"
                     }
                 }
             }
@@ -282,8 +297,9 @@ function WingetUpdateScript() {
     }
 
     # user add option automatically answers yes
-    if (($Option -eq "yes") -or ($Option -eq "assume-yes") -or ($Option -eq "assumeyes") -or ($Option -eq "answersyes") -or ($Option -eq "answers-yes")) {
-        RunWingetUpgrade
+    if ($AnswersYesArray -Contains $Option) {
+        Write-Host "Upgrading all installed applications if available..." -ForegroundColor Yellow
+        winget upgrade --include-unknown --all
         return
     }
 
@@ -339,11 +355,11 @@ function ChocolateyUpdateScript() {
         } while ($true)
     }
 
-    # user add option automatically answers yes
-    if (($Option -eq "yes") -or ($Option -eq "assume-yes") -or ($Option -eq "assumeyes") -or ($Option -eq "answersyes") -or ($Option -eq "answers-yes")) {
+    # user add option automatically answers yes or semi yes
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "semi-auto")) {
         choco outdated
 
-        Write-Host "Updating chocolatey application(s)..." -ForegroundColor Yellow
+        Write-Host "Updating all chocolatey application(s)..." -ForegroundColor Yellow
         choco upgrade --yes all
         return
     }
@@ -357,6 +373,41 @@ function ChocolateyUpdateScript() {
     else {
         EmptyLine
         Write-Host "Skipping application update using Chocolatey..." -ForegroundColor Yellow
+        return
+    }
+}
+
+function ScanSystemCorruptionFiles {
+    # main function code
+    function RunScan {
+        Write-Host "`n(1/4) Run 'chkdsk' (check disk)" -ForegroundColor Yellow
+        chkdsk
+
+        Write-Host "`n(2/4) Run 'sfc /SCANNOW' (System File Checker) - 1st scan" -ForegroundColor Yellow
+        sfc /SCANNOW
+
+        Write-Host "`n(3/4) Run DISM (Deployment Image Servicing and Management tool)" -ForegroundColor Yellow
+        DISM /Online /Cleanup-Image /Restorehealth
+
+        Write-Host "`n(4/4) Run 'sfc /SCANNOW' (System File Checker) - 2nd scan" -ForegroundColor Yellow
+        sfc /SCANNOW
+    }
+
+    # user add option automatically answers yes or semi yes
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "semi-auto")) {
+        RunScan
+        return
+    }
+
+    Write-Host "Check for system corruption files ? [Y/n] " -ForegroundColor Blue -NoNewline
+    $ScanCorruptionFilesOption = Read-Host
+
+    if (($ScanCorruptionFilesOption -eq 'Y'.ToLower()) -or ($ScanCorruptionFilesOption -eq '')) {
+        RunScan
+    }
+    else {
+        EmptyLine
+        Write-Host "Skipping scan for system corruption files..." -ForegroundColor Yellow
         return
     }
 }
@@ -380,7 +431,7 @@ function SystemCleanup {
     # remove tempfiles
     function DeleteTempFiles {
         if ((Test-Path "$env:HOMEDRIVE\Windows\Temp\") -and (Test-Path "$env:TEMP")) {
-            if (!(Get-ChildItem -Path "$env:HOMEDRIVE\Windows\Temp\" | Write-Output) -and (!(Get-ChildItem -Path "$env:TEMP" | Write-Output))) {
+            if (!(Get-ChildItem -Path "$env:HOMEDRIVE\Windows\Temp\" | Write-Output) -and !(Get-ChildItem -Path "$env:TEMP" | Write-Output)) {
                 EmptyLine
                 Write-Host "No need to, temporary folders are already empty. 😁👍" -ForegroundColor Yellow
                 return
@@ -418,15 +469,15 @@ function SystemCleanup {
         }
     }
 
-    # user add option automatically answers yes
-    if (($Option -eq "yes") -or ($Option -eq "assume-yes") -or ($Option -eq "assumeyes") -or ($Option -eq "answersyes") -or ($Option -eq "answers-yes")) {
+    # user add option automatically answers yes or semi yes
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "semi-auto")) {
         RunDiskCleanUp
         DeleteTempFiles
         EmptyRecycleBin
         return
     }
 
-    Write-Host "Run System Cleanup (run disk cleanup, delete temporary files, and empty recycle bin) ? [Y/n] " -ForegroundColor Blue -NoNewline
+    Write-Host "Delete unused files and folders ? [Y/n] " -ForegroundColor Blue -NoNewline
     $RunSystemCleanupOption = Read-Host
 
     if (($RunSystemCleanupOption -eq 'Y'.ToLower()) -or ($RunSystemCleanupOption -eq '')) {
@@ -437,41 +488,6 @@ function SystemCleanup {
     else {
         EmptyLine
         Write-Host "Skipping System Cleanup..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function ScanSystemCorruptionFiles {
-    # main function code
-    function RunScan {
-        Write-Host "`n(1/4) Run 'chkdsk' (check disk)" -ForegroundColor Yellow
-        chkdsk
-
-        Write-Host "`n(2/4) Run 'sfc /SCANNOW' (System File Checker) - 1st scan" -ForegroundColor Yellow
-        sfc /SCANNOW
-
-        Write-Host "`n(3/4) Run DISM (Deployment Image Servicing and Management tool)" -ForegroundColor Yellow
-        DISM /Online /Cleanup-Image /Restorehealth
-
-        Write-Host "`n(4/4) Run 'sfc /SCANNOW' (System File Checker) - 2nd scan" -ForegroundColor Yellow
-        sfc /SCANNOW
-    }
-
-    # user add option automatically answers yes
-    if (($Option -eq "yes") -or ($Option -eq "assume-yes") -or ($Option -eq "assumeyes") -or ($Option -eq "answersyes") -or ($Option -eq "answers-yes")) {
-        RunScan
-        return
-    }
-
-    Write-Host "Check for system corruption files ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $ScanCorruptionFilesOption = Read-Host
-
-    if (($ScanCorruptionFilesOption -eq 'Y'.ToLower()) -or ($ScanCorruptionFilesOption -eq '')) {
-        RunScan
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping scan for system corruption files..." -ForegroundColor Yellow
         return
     }
 }
@@ -497,8 +513,8 @@ function WindowsUpdateModuleInstall {
 }
 
 function WingetInstall {
-    Write-Host "winget is not installed in this system." -ForegroundColor DarkRed
-    Write-Host "winget is a Windows Package Manager that enables installing applications through terminal." -ForegroundColor DarkCyan
+    Write-Host "winget is not installed in this system." -ForegroundColor Red
+    Write-Host "winget is a Windows Package Manager that enables installing applications through terminal." -ForegroundColor Cyan
     Write-Host "Do you want to install 'winget' package manager ? [Y/n] " -ForegroundColor Cyan -NoNewline
     $WingetInstallOption = Read-Host
 
@@ -515,8 +531,8 @@ function WingetInstall {
 }
 
 function ChocolateyInstall {
-    Write-Host "Chocolatey is not installed in this system." -ForegroundColor DarkRed
-    Write-Host "Chocolatey is a universal package manager for windows that enables installing applications through terminal." -ForegroundColor DarkCyan
+    Write-Host "Chocolatey is not installed in this system." -ForegroundColor Red
+    Write-Host "Chocolatey is a universal package manager for windows that enables installing applications through terminal." -ForegroundColor Cyan
     Write-Host "Do you want to install 'Chocolatey' package manager ? [Y/n] " -ForegroundColor Cyan -NoNewline
     $ChocolateyInstallOption = Read-Host
 
@@ -533,7 +549,7 @@ function ChocolateyInstall {
 
 
 
-################################## Run Function ##################################
+################################## Main Function ##################################
 function Main() {
     if (!$IsAdmin) {
         NotAdminMessage
@@ -578,10 +594,10 @@ function Main() {
     }
 
     EmptyLine
-    SystemCleanup
+    ScanSystemCorruptionFiles
 
     EmptyLine
-    ScanSystemCorruptionFiles
+    SystemCleanup
 
     EmptyLine
     EndingScript
