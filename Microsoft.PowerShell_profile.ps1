@@ -38,20 +38,7 @@ function df {
 function export {
     $env:PATH -Replace ";", "`n"
 }
-function uptime { # does not work
-    # $bootUpTime = Get-WmiObject win32_operatingsystem | Select-Object lastbootuptime
-    # $plusMinus = $bootUpTime.lastbootuptime.SubString(21,1)
-    # $plusMinusMinutes = $bootUpTime.lastbootuptime.SubString(22, 3)
-    # $hourOffset = [int]$plusMinusMinutes/60
-    # $minuteOffset = 00
-
-    # if ($hourOffset -contains '.') { $minuteOffset = [int](60*[decimal]('.' + $hourOffset.ToString().Split('.')[1]))}       
-    # if ([int]$hourOffset -lt 10 ) { $hourOffset = "0" + $hourOffset + $minuteOffset.ToString().PadLeft(2,'0') } else { $hourOffset = $hourOffset + $minuteOffset.ToString().PadLeft(2,'0') }
-
-    # $leftSplit = $bootUpTime.lastbootuptime.Split($plusMinus)[0]
-    # $upSince = [datetime]::ParseExact(($leftSplit + $plusMinus + $hourOffset), 'yyyyMMddHHmmss.ffffffzzz', $null)
-    # Get-WmiObject win32_operatingsystem | Select-Object @{LABEL='Machine Name'; EXPRESSION={$_.csname}}, @{LABEL='Last Boot Up Time'; EXPRESSION={$upsince}}
-
+function uptime {
     Get-Uptime -Since
 }
 function sudo {
@@ -61,17 +48,24 @@ function sudo {
 
     if ($args.Count -gt 0) {
         $argList = "& '" + $args + "'"
-        Start-Process "$env:HOMEDRIVE\Program Files\PowerShell\7\pwsh.exe" -Verb runAs -ArgumentList $argList
+        Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb runAs -ArgumentList $argList
     }
     else {
-        Start-Process "$env:HOMEDRIVE\Program Files\PowerShell\7\pwsh.exe" -Verb runAs
+        Start-Process "${env:LOCALAPPDATA}\pwsh.exe" -Verb runAs
     }
 }
 Set-Alias -Name ll -Value Get-ChildItem
 Set-Alias -Name l -Value Get-ChildItem
 Set-Alias -Name read -Value Read-Host
-function file($path) {
-    explorer.exe "${path}"
+function file() {
+    if ($args.Count -gt 0) {
+        foreach ($path in $args) {
+            explorer.exe "${path}"
+        }
+    }
+    else {
+        explorer.exe $args
+    }
 }
 function open() {
     if ($args.Count -gt 0) {
@@ -93,16 +87,13 @@ function poweroff {
 
 ######################## From My Linux Machine
 function scrcpyupdate {
-    # Set-Location "$env:HOMEDRIVE$env:HOMEPATH\Documents\PowerShell\Scripts\Windows-Scripting"
-    USBScripts
-    .\UpdateScreenCopy.ps1
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
 }
 function matrix {
-    & "$env:HOMEDRIVE$env:HOMEPATH\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
 }
 function phone {
-    Set-Location $env:HOMEDRIVE\scrcpy
-    .\scrcpy.exe --shortcut-mod=lctrl,rctrl --video-bit-rate=20M --turn-screen-off
+    & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --shortcut-mod=lctrl,rctrl --video-bit-rate=20M --turn-screen-off
 }
 function sound {
     mmsys.cpl sounds,1
@@ -120,7 +111,6 @@ function reload {
 
 
 ######################## Windows Style Aliases
-# Compute file hashes - useful for checking successful downloads 
 function md5 { Get-FileHash -Algorithm MD5 $args }
 function sha1 { Get-FileHash -Algorithm SHA1 $args }
 function sha256 { Get-FileHash -Algorithm SHA256 $args }
@@ -153,19 +143,17 @@ function ChangeOutputDevice {
         Set-AudioDevice -ID "${SpeakerDeviceID}"
     }
 }
-function SystemUpgrade {
-    # Set-Location "$env:HOMEDRIVE$env:HOMEPATH\Documents\PowerShell\Scripts\Windows-Scripting"
-    USBScripts
-    .\SystemUpgrade.ps1 -Option yes
+function SystemUpgrade() { # does not work as intended
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1"
 }
 function Scripts {
-    Set-Location "$env:HOMEDRIVE$env:HOMEPATH\Documents\PowerShell\Scripts\Windows-Scripting"
+    Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
 }
 function USBScripts {
     Set-Location "F:\Code\WINDOWS\Scripts"
 }
 function ChocolateyApps {
-    Set-Location "$env:HOMEDRIVE\ProgramData\chocolatey\lib"
+    Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
 function WinUtil {
     Invoke-WebRequest -useb "https://christitus.com/win" | Invoke-Expression
@@ -186,10 +174,10 @@ function WindowsUpdateAll {
 
 ######################## Application Shortcut (admin)
 function firefox {
-    Start-Process -FilePath "$env:HOMEDRIVE\Program Files\Mozilla Firefox\firefox.exe" -Verb runAs
+    Start-Process -FilePath "${env:ProgramFiles}\Mozilla Firefox\firefox.exe" -Verb runAs
 }
 function discord {
-    Start-Process -FilePath "$env:HOMEDRIVE$env:HOMEPATH\AppData\Local\Discord\Update.exe" -Verb runAs
+    Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb runAs
 }
 
 
