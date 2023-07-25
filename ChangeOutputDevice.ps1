@@ -3,8 +3,6 @@
 https://www.powershellgallery.com/packages/AudioDeviceCmdlets/3.1.0.2
 https://github.com/frgnca/AudioDeviceCmdlets
 
-for shortcut : target : "C:\Program Files\PowerShell\7\pwsh.exe" -ExecutionPolicy Bypass -File "C:\Users\fghaz\Documents\Scripts\ChangeOutputDevice.ps1"
-
 .EXAMPLE
 Get-AudioDevice -List | Where-Object Type -like "Playback" | Where-Object name -like "*Realtek*"
 Set-AudioDevice -ID "{0.0.0.00000000}.{4229d439-1b7d-4deb-894e-544bb0fa40e1}" # speakers
