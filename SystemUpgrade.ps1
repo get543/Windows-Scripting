@@ -4,7 +4,7 @@ TODO ValidateSet: Find a way to make it shorter
 - (https://java2blog.com/check-if-array-contains-element-powershell/)
 - (https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.3&viewFallbackFrom=powershell-7.1#dynamic-validateset-values)
 
-TODO Find a way to make prettier: Help Menu
+TODO Help Menu: Find a way to make it prettier
 #>
 
 <#
@@ -229,7 +229,7 @@ function WindowsUpdateScript() {
 }
 
 function WingetUpdateScript() {
-    if (!(Get-Command -Name winget) -and !(Test-Path "$env:HOMEDRIVE$env:HOMEPATH\AppData\Local\Microsoft\WindowsApps\winget.exe")) { return }
+    if (!(Get-Command -Name winget) -and !(Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe")) { return }
 
     # main code function
     function RunWingetUpgrade() {
@@ -415,7 +415,7 @@ function ScanSystemCorruptionFiles {
 function SystemCleanup {
     # run diskcleanup
     function RunDiskCleanUp() {
-        if ((Get-Command -Name cleanmgr) -and (Test-Path "$env:HOMEDRIVE\Windows\system32\cleanmgr.exe")) {
+        if ((Get-Command -Name cleanmgr) -and (Test-Path "$env:windir\system32\cleanmgr.exe")) {
             EmptyLine
             Write-Host "Running Disk Cleanup..." -ForegroundColor Yellow
             cleanmgr.exe /d $env:HOMEDRIVE /VERYLOWDISK
@@ -430,8 +430,8 @@ function SystemCleanup {
 
     # remove tempfiles
     function DeleteTempFiles {
-        if ((Test-Path "$env:HOMEDRIVE\Windows\Temp\") -and (Test-Path "$env:TEMP")) {
-            if (!(Get-ChildItem -Path "$env:HOMEDRIVE\Windows\Temp\" | Write-Output) -and !(Get-ChildItem -Path "$env:TEMP" | Write-Output)) {
+        if ((Test-Path "$env:windir\Temp") -and (Test-Path "$env:TEMP")) {
+            if (!(Get-ChildItem -Path "$env:windir\Temp" | Write-Output) -and !(Get-ChildItem -Path "$env:TEMP" | Write-Output)) {
                 EmptyLine
                 Write-Host "No need to, temporary folders are already empty. 😁👍" -ForegroundColor Yellow
                 return
@@ -439,12 +439,12 @@ function SystemCleanup {
 
             EmptyLine
             Write-Host "Deleting Temporary Files..." -ForegroundColor Yellow
-            Get-ChildItem -Path "$env:HOMEDRIVE\Windows\Temp\" *.* -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+            Get-ChildItem -Path "$env:windir\Temp" *.* -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
             Get-ChildItem -Path $env:TEMP *.* -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
         }
         else {
             EmptyLine
-            Write-Host "$env:HOMEDRIVE\Windows\Temp and temporary folder in environment variable DOES NOT exist." -ForegroundColor Red
+            Write-Host "$env:windir\Temp and temporary folder in environment variable DOES NOT exist." -ForegroundColor Red
             Write-Host "Skipping this process..."
             return
         }
@@ -576,7 +576,7 @@ function Main() {
 
     EmptyLine
     # install winget if it isn't already
-    if (!(Get-Command -Name winget) -and !(Test-Path "$env:HOMEDRIVE$env:HOMEPATH\AppData\Local\Microsoft\WindowsApps\winget.exe")) {
+    if (!(Get-Command -Name winget) -and !(Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe")) {
         WingetInstall
     }
     else {
