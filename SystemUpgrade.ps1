@@ -250,6 +250,14 @@ function WingetUpdateScript() {
             else {
                 Write-Host "Winget upgrade will NOT run as an administrator." -ForegroundColor Yellow
             }
+
+            # if winget cannot find the update anymore return
+            if ((winget upgrade --include-unknown | Write-Output) -eq "No installed package found matching input criteria.") {
+                EmptyLine
+                Write-Host "Winget cannot find the update for the remaining package." -ForegroundColor Yellow
+                break
+            }
+
             Write-Host "Checking for upgradable winget applications..." -ForegroundColor Yellow
             winget upgrade --include-unknown
     
