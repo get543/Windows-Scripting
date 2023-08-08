@@ -48,26 +48,36 @@ function sudo {
 
     if ($args.Count -gt 0) {
         $argList = "& '" + $args + "'"
-        Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb runAs -ArgumentList $argList
+        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
+            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList $argList
+        }
+        else {
+            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList $argList
+        }
     }
     else {
-        Start-Process "${env:LOCALAPPDATA}\pwsh.exe" -Verb runAs
+        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
+            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs
+        }
+        else {
+            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs
+        }
     }
 }
 Set-Alias -Name ll -Value Get-ChildItem
 Set-Alias -Name l -Value Get-ChildItem
 Set-Alias -Name read -Value Read-Host
-function file() {
+function file {
     if ($args.Count -gt 0) {
         foreach ($path in $args) {
-            explorer.exe "${path}"
+            explorer "${path}"
         }
     }
     else {
-        explorer.exe $args
+        explorer $args
     }
 }
-function open() {
+function open {
     if ($args.Count -gt 0) {
         foreach ($app in $args) {
             & "${app}"
@@ -128,23 +138,10 @@ function ShowNotification($title, $text) {
     $BalloonNotification.ShowBalloonTip(5000)
 }
 function ChangeOutputDevice {
-    $SpeakerDeviceID = "{0.0.0.00000000}.{69274eea-2c89-451d-813a-c9407258be99}"
-    $HeadphoneDeviceID = "{0.0.0.00000000}.{4229d439-1b7d-4deb-894e-544bb0fa40e1}"
-
-    # if headphones is default audio then change it to speakers
-    if ((Get-AudioDevice -ID "${SpeakerDeviceID}" | Where-Object { ($_.Default -eq $true) -and ($_.Type -like "Playback") })) {
-        Write-Output "Change default audio device to Speakers."
-        Set-AudioDevice -ID "${HeadphoneDeviceID}"
-
-        # if speakers is default audio then change it headphones
-    }
-    elseif ((Get-AudioDevice -ID "${HeadphoneDeviceID}" | Where-Object { ($_.Default -eq $true) -and ($_.Type -like "Playback") })) {
-        Write-Output "Change default audio device to Headphones."
-        Set-AudioDevice -ID "${SpeakerDeviceID}"
-    }
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
 }
-function SystemUpgrade() { # does not work as intended
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1"
+function SystemUpgrade() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option yes
 }
 function Scripts {
     Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
@@ -164,6 +161,9 @@ function SignOut {
 function RestartToUEFI {
     shutdown /r /fw
 }
+function RestartToRecovery {
+    shutdown /r /o
+}
 function WindowsUpdateChoose($kbarticle) {
     Get-WindowsUpdate -Install -AcceptAll -KBArticleID "${kbarticle}"
 }
@@ -174,10 +174,10 @@ function WindowsUpdateAll {
 
 ######################## Application Shortcut (admin)
 function firefox {
-    Start-Process -FilePath "${env:ProgramFiles}\Mozilla Firefox\firefox.exe" -Verb runAs
+    Start-Process -FilePath "${env:ProgramFiles}\Mozilla Firefox\firefox.exe" -Verb RunAs
 }
 function discord {
-    Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb runAs
+    Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb RunAs
 }
 
 

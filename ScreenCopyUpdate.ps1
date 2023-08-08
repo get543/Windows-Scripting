@@ -21,7 +21,7 @@ if (Test-Path -Path "${env:HOMEDRIVE}\scrcpy" -ErrorAction Stop) {
     Remove-Item "${env:HOMEDRIVE}\scrcpy" -Force -Recurse -ErrorAction Stop # remove the old scrcpy folder
 }
 
-Invoke-WebRequest -Uri "$githubrepo" -OutFile "${env:HOMEDRIVE}\${filename}" # download
+Invoke-WebRequest -Uri "${githubrepo}" -OutFile "${env:HOMEDRIVE}\${filename}" # download
 Expand-Archive -Path "${env:HOMEDRIVE}\${filename}" -DestinationPath "${env:HOMEDRIVE}\" -Force # extract .zip
 Remove-Item "${env:HOMEDRIVE}\${filename}" -Force # remove .zip
 Rename-Item "${env:HOMEDRIVE}\scrcpy-win64-v${version}" -NewName "scrcpy" # rename extracted folder

@@ -9,7 +9,7 @@ TODO Help Menu: Find a way to make it prettier
 
 <#
 .DESCRIPTION
-This is a script that will update windows and applications on your system, if you install all the require powershell module. This will also update all the powershell module that is installed on your system.
+This is a script that will update windows and applications on your system, if you install all the required powershell module. This will also update all the powershell module that is installed on your system.
 
 .PARAMETER help
 Display a help message which is basically the same thing as this one. Valid values : all

@@ -1,6 +1,14 @@
 # Windows-Scripting
 Doing automation script on Windows using PowerShell.
 
+**Before executing the scripts you must change the execution policy on running scripts on windows.**
+
+> `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser` 
+> Allow it to run scripts only for current user.
+
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
+> Allow it to run scripts only for current session.
+
 # `ChangeOutputDevice.ps1`
 - Change output device from my speaker to headphones or vice versa.
 - Change the output device using the device ID.
@@ -23,3 +31,7 @@ Doing automation script on Windows using PowerShell.
 
 # `Microsoft.PowerShell_profile.ps1`
 - PowerShell profile
+
+# `Uninstaller.ps1`
+- Uninstall default windows applications.
+- Can be done with `winget` or with `Get-AppxPackage` command.
