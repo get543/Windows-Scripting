@@ -6,6 +6,8 @@ This is a script that can uninstall windows default applications on your system.
 Use to uninstall windows default applications.
 #>
 
+# Source: https://gist.github.com/ThioJoe/5cc29231c5cb1a8f051df28a69073f77
+
 Write-Host "                                    Uninstalling All System Application                                          " -ForegroundColor Blue
 Write-Host " --------------------------------------------------------------------------------------------------------------- "
 Write-Host "|   No  |           Option              |                                   Why ?                               |"

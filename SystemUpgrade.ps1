@@ -389,7 +389,7 @@ function ScanSystemCorruptionFiles {
     # main function code
     function RunScan {
         Write-Host "`n(1/4) Run 'chkdsk' (check disk)" -ForegroundColor Yellow
-        chkdsk
+        chkdsk /scan
 
         Write-Host "`n(2/4) Run 'sfc /SCANNOW' (System File Checker) - 1st scan" -ForegroundColor Yellow
         sfc /SCANNOW
