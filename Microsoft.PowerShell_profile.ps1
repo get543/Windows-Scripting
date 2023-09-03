@@ -32,16 +32,16 @@ function unzip($path, $destination) {
     }
     Expand-Archive -Path "${path}" -DestinationPath "${destination}"
 }
-function df {
+function df() {
     if ($args -eq "-H") { Get-Volume }
 }
-function export {
+function export() {
     $env:PATH -Replace ";", "`n"
 }
-function uptime {
+function uptime() {
     Get-Uptime -Since
 }
-function sudo {
+function sudo() {
     if ($isAdmin) {
         return Write-Host "This instance of PowerShell is already on admin access."
     }
@@ -67,7 +67,7 @@ function sudo {
 Set-Alias -Name ll -Value Get-ChildItem
 Set-Alias -Name l -Value Get-ChildItem
 Set-Alias -Name read -Value Read-Host
-function file {
+function file() {
     if ($args.Count -gt 0) {
         foreach ($path in $args) {
             explorer "${path}"
@@ -77,7 +77,7 @@ function file {
         explorer $args
     }
 }
-function open {
+function open() {
     if ($args.Count -gt 0) {
         foreach ($app in $args) {
             & "${app}"
@@ -87,43 +87,43 @@ function open {
         & $args
     }
 }
-function reboot {
+function reboot() {
     shutdown /r /t 0 /c "Restarting system"
 }
-function poweroff {
+function poweroff() {
     shutdown /s /t 0 /c "Shutdown system"
 }
 
 
 ######################## From My Linux Machine
-function scrcpyupdate {
+function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
 }
-function matrix {
+function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
 }
-function phone {
+function phone() {
     & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --shortcut-mod=lctrl,rctrl --video-bit-rate=20M --turn-screen-off
 }
-function sound {
+function sound() {
     mmsys.cpl sounds,1
 }
-function mirror {
+function mirror() {
     sound
     phone
 }
-function editrc {
+function editrc() {
     code $PROFILE
 }
-function reload {
+function reload() {
     & $PROFILE
 }
 
 
 ######################## Windows Style Aliases
-function md5 { Get-FileHash -Algorithm MD5 $args }
-function sha1 { Get-FileHash -Algorithm SHA1 $args }
-function sha256 { Get-FileHash -Algorithm SHA256 $args }
+function md5() { Get-FileHash -Algorithm MD5 $args }
+function sha1() { Get-FileHash -Algorithm SHA1 $args }
+function sha256() { Get-FileHash -Algorithm SHA256 $args }
 function ShowNotification($title, $text) {
     # windows 10 notification balloon
     Add-Type -AssemblyName System.Windows.Forms
@@ -137,46 +137,46 @@ function ShowNotification($title, $text) {
     $BalloonNotification.Visible = $true
     $BalloonNotification.ShowBalloonTip(5000)
 }
-function ChangeOutputDevice {
+function ChangeOutputDevice() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
 }
 function SystemUpgrade() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option yes
 }
-function Scripts {
+function Scripts() {
     Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
 }
-function USBScripts {
+function USBScripts() {
     Set-Location "F:\Code\WINDOWS\Scripts"
 }
-function ChocolateyApps {
+function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
-function WinUtil {
+function WinUtil() {
     Invoke-WebRequest -useb "https://christitus.com/win" | Invoke-Expression
 }
-function SignOut {
+function SignOut() {
     shutdown /L
 }
-function RestartToUEFI {
+function RestartToUEFI() {
     shutdown /r /fw
 }
-function RestartToRecovery {
+function RestartToRecovery() {
     shutdown /r /o
 }
-function WindowsUpdateChoose($kbarticle) {
-    Get-WindowsUpdate -Install -AcceptAll -KBArticleID "${kbarticle}"
+function WindowsUpdateChoose($kbarticleid) {
+    Get-WindowsUpdate -Install -AcceptAll -KBArticleID "${kbarticleid}"
 }
-function WindowsUpdateAll {
-    Install-WindowsUpdate
+function WindowsUpdateAll() {
+    Install-WindowsUpdate -Install -AcceptAll
 }
 
 
 ######################## Application Shortcut (admin)
-function firefox {
+function firefox() {
     Start-Process -FilePath "${env:ProgramFiles}\Mozilla Firefox\firefox.exe" -Verb RunAs
 }
-function discord {
+function discord() {
     Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb RunAs
 }
 
