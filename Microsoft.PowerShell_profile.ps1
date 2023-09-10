@@ -96,6 +96,9 @@ function poweroff() {
 
 
 ######################## From My Linux Machine
+function codefolder() {
+    Set-Location "F:\Code\code-desktop"
+}
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
 }
@@ -168,7 +171,7 @@ function WindowsUpdateChoose($kbarticleid) {
     Get-WindowsUpdate -Install -AcceptAll -KBArticleID "${kbarticleid}"
 }
 function WindowsUpdateAll() {
-    Install-WindowsUpdate -Install -AcceptAll
+    Get-WindowsUpdate -Install -AcceptAll
 }
 
 

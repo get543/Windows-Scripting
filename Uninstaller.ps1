@@ -8,7 +8,7 @@ Use to uninstall windows default applications.
 
 # Source: https://gist.github.com/ThioJoe/5cc29231c5cb1a8f051df28a69073f77
 
-Write-Host "                                    Uninstalling All System Application                                          " -ForegroundColor Blue
+Write-Host "                                       Uninstalling System Application                                          " -ForegroundColor Blue
 Write-Host " --------------------------------------------------------------------------------------------------------------- "
 Write-Host "|   No  |           Option              |                                   Why ?                               |"
 Write-Host " --------------------------------------------------------------------------------------------------------------- "
