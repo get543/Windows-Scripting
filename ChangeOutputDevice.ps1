@@ -24,8 +24,8 @@ function WindowsNotificationBalloon($text) {
     $BalloonNotification.ShowBalloonTip(5000)
 }
 
-$SpeakerDeviceID = "{0.0.0.00000000}.{7b927a05-c6d1-461c-a584-3112d71a7016}"
-$HeadphoneDeviceID = "{0.0.0.00000000}.{05005741-2e69-445a-9a89-5b8553662f96}"
+$SpeakerDeviceID = "{0.0.0.00000000}.{48d2a713-5544-4b20-b197-e6fa542a2974}"
+$HeadphoneDeviceID = "{0.0.0.00000000}.{4fe3e699-f8db-4d3f-bfe4-d8801939fb00}"
 
 # if headphones is the default output then change it to speakers
 if (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.ID -eq "${HeadphoneDeviceID}" }) {

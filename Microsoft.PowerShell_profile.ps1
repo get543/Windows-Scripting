@@ -47,12 +47,12 @@ function sudo() {
     }
 
     if ($args.Count -gt 0) {
-        $argList = "& '" + $args + "'"
+        $argList = "& '${args}'"
         if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
-            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList $argList
+            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList ${argList}
         }
         else {
-            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList $argList
+            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList ${argList}
         }
     }
     else {
@@ -98,6 +98,9 @@ function poweroff() {
 ######################## From My Linux Machine
 function codefolder() {
     Set-Location "F:\Code\code-desktop"
+}
+function kuliah() {
+    Set-Location "F:\Kuliah"
 }
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
