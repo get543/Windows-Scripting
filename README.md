@@ -35,3 +35,7 @@ Doing automation script on Windows using PowerShell.
 # `Uninstaller.ps1`
 - Uninstall default windows applications.
 - Can be done with `winget` or with `Get-AppxPackage` command.
+
+# `NetSpeedMonitor.ps1`
+- Monitor network speed realtime
+- Monitor continously 
