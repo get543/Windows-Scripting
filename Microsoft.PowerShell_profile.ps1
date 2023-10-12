@@ -47,19 +47,22 @@ function sudo() {
     }
 
     if ($args.Count -gt 0) {
-        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
-            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList "${args}"
+        if (Test-Path("${env:PROGRAMFILES}\PowerShell\7\pwsh.exe")) { # powershell 7
+            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs -ArgumentList "-NoExit", "-Command ${args}"
         }
-        else {
-            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList "${args}"
+        else { # powershell v1
+            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs -ArgumentList "-NoExit", "-Command ${args}"
         }
     }
     else {
-        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
+        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) { # windows terminal
             Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs
         }
-        else {
-            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs
+        elseif (Test-Path("${env:PROGRAMFILES}\PowerShell\7\pwsh.exe")) { # powershell 7
+            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs
+        }
+        else { # powershell v1
+            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs
         }
     }
 }
