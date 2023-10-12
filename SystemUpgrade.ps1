@@ -30,12 +30,6 @@ Open up an option on how you want to run the script. Valid values : yes, assume-
 Use to update windows and/or update your applications.
 #>
 
-# *Using class for ValidateSet
-# class AnswersYes : System.Management.Automation.IValidateSetValuesGenerator {
-#     [String[]] GetValidValues() {
-#         return
-#     }
-# }
 
 # Parameter help description
 param(
@@ -233,28 +227,11 @@ function WingetUpdateScript() {
 
     # main code function
     function RunWingetUpgrade() {
-        EmptyLine
-        Write-Host "This is a weird one, you don't need to have admin access to run winget." -ForegroundColor Green
-        Write-Host "Do you want to continue run winget as admin or start new powershell instance without admin access." -ForegroundColor Green
-        Write-Host "Note: Some applications CANNOT install or update if you run winget as admin. Example : Spotify" -ForegroundColor Red
-        EmptyLine
-
-        Write-Host "Continue run winget with admin ? [Y/n] " -NoNewline -ForegroundColor Red
-        $ContinueWingetWithAdmin = Read-Host
-
         do {
             EmptyLine
-            if (($ContinueWingetWithAdmin -eq 'Y'.ToLower()) -or ($ContinueWingetWithAdmin -eq '')) {
-                Write-Host "Winget upgrade will run WITH administrator privilage." -ForegroundColor Yellow
-            }
-            else {
-                Write-Host "Winget upgrade will NOT run as an administrator." -ForegroundColor Yellow
-            }
-
-            # if winget cannot find the update anymore return
+            # if winget cannot find the update anymore break loop
             if ((winget upgrade --include-unknown | Write-Output) -eq "No installed package found matching input criteria.") {
-                EmptyLine
-                Write-Host "Winget cannot find the update for the remaining package." -ForegroundColor Yellow
+                Write-Host "Winget cannot find the update for remaining packages." -ForegroundColor Yellow
                 break
             }
 
@@ -289,13 +266,7 @@ function WingetUpdateScript() {
 
                 EmptyLine
                 foreach ($AppID in $ArrayID) {
-                    if (($ContinueWingetWithAdmin -eq 'Y'.ToLower()) -or ($ContinueWingetWithAdmin -eq '')) {
-                        winget upgrade --include-unknown $AppID
-                    }
-                    else {
-                        # start the process but still in admin mode (broken behaviour)
-                        Start-Process "$env:windir\System32\WindowsPowerShell\v1.0\powershell.exe" -NoNewWindow -ArgumentList "winget upgrade --include-unknown $AppID"
-                    }
+                    winget upgrade --include-unknown $AppID
                 }
             }
     
