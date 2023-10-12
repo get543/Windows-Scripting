@@ -11,12 +11,6 @@ while ($true) {
             $result = [math]::Round($rawResult,2)
             $unit = "KB"
 
-            # if ($result -gt 1024) {
-            #     $rawResult = $interface.BytesTotalPersec * 0.000001
-            #     $result = [math]::Rount($rawResult, 2)
-            #     $unit = "MB"
-            # }
-
             Clear-Host
             Write-Host "Network Speed : $result $unit"
         }
