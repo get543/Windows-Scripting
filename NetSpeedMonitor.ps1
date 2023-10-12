@@ -8,7 +8,7 @@ while ($true) {
         # Exclude Nulls (any WMI failures)
         if ($totalBits -gt 0) {
             $rawResult = $interface.BytesTotalPersec * 0.001
-            $result = [math]::Round($rawResult,2)
+            $result = [math]::Round($rawResult, 2)
             $unit = "KB"
 
             Clear-Host
