@@ -47,12 +47,11 @@ function sudo() {
     }
 
     if ($args.Count -gt 0) {
-        $argList = "& '${args}'"
         if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
-            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList ${argList}
+            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList "${args}"
         }
         else {
-            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList ${argList}
+            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList "${args}"
         }
     }
     else {
@@ -148,6 +147,9 @@ function ChangeOutputDevice() {
 }
 function SystemUpgrade() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option yes
+}
+function NetSpeedMonitor() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\NetSpeedMonitor.ps1" -Option yes
 }
 function Scripts() {
     Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
