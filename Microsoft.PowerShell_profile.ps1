@@ -47,22 +47,20 @@ function sudo() {
     }
 
     if ($args.Count -gt 0) {
-        if (Test-Path("${env:PROGRAMFILES}\PowerShell\7\pwsh.exe")) { # powershell 7
-            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs -ArgumentList "-NoExit", "-Command ${args}"
+        $argList = "& '" + $args + "'"
+        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
+            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList $argList
         }
-        else { # powershell v1
-            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs -ArgumentList "-NoExit", "-Command ${args}"
+        else {
+            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs -ArgumentList $argList
         }
     }
     else {
-        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) { # windows terminal
+        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) {
             Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs
         }
-        elseif (Test-Path("${env:PROGRAMFILES}\PowerShell\7\pwsh.exe")) { # powershell 7
-            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs
-        }
-        else { # powershell v1
-            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs
+        else {
+            Start-Process "${env:ProgramFiles}\PowerShell\7\pwsh.exe" -Verb RunAs
         }
     }
 }
@@ -100,9 +98,6 @@ function poweroff() {
 ######################## From My Linux Machine
 function codefolder() {
     Set-Location "F:\Code\code-desktop"
-}
-function kuliah() {
-    Set-Location "F:\Kuliah"
 }
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
@@ -152,13 +147,16 @@ function SystemUpgrade() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option yes
 }
 function NetSpeedMonitor() {
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\NetSpeedMonitor.ps1" -Option yes
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\NetSpeedMonitor.ps1"
 }
 function Scripts() {
     Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
 }
 function USBScripts() {
     Set-Location "F:\Code\WINDOWS\Scripts"
+}
+function Kuliah {
+    Set-Location "F:\Kuliah"
 }
 function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
