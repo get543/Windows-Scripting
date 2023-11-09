@@ -160,6 +160,9 @@ function Scripts() {
 function USBScripts() {
     Set-Location "F:\Code\WINDOWS\Scripts"
 }
+function WindowsUpdateFolder {
+    Set-Location "${env:windir}\SoftwareDistribution\Download"
+}
 function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
