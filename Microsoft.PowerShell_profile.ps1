@@ -149,7 +149,16 @@ function ChangeOutputDevice() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
 }
 function SystemUpgrade() {
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option yes
+    param(
+        [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "semi-auto","normal", "regular")] [String] $Option,
+        [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
+    )
+
+    if ($Help) {
+        & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Help $Help
+    } else {
+        & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option $Option
+    }
 }
 function NetSpeedMonitor() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\NetSpeedMonitor.ps1"

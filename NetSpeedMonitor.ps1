@@ -1,6 +1,6 @@
 while ($true) {
     # Get an object for the network interfaces, excluding any that are currently disabled.
-    $colInterfaces = Get-CimInstance -class Win32_PerfFormattedData_Tcpip_NetworkInterface | Select-Object BytesTotalPersec, CurrentBandwidth, PacketsPersec | Where-Object { $_.PacketsPersec -gt 0 }
+    $colInterfaces = Get-CimInstance -ClassName Win32_PerfFormattedData_Tcpip_NetworkInterface | Select-Object BytesTotalPersec, CurrentBandwidth, PacketsPersec | Where-Object { $_.PacketsPersec -gt 0 }
 
     foreach ($interface in $colInterfaces) {
         $totalBits = $interface.CurrentBandwidth
