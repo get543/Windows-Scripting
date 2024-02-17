@@ -39,3 +39,12 @@ Doing automation script on Windows using PowerShell.
 # `NetSpeedMonitor.ps1`
 - Monitor network speed realtime
 - Monitor continously 
+
+# `AutoHotKey/`
+- Contains AutoHotkey scripts for automation
+- Scripts cannot function without `DesktopShortcut/`
+
+# `DesktopShortcut/`
+- Contains desktop shortcuts.
+- For opening programs with keyboard shortcuts.
+- For better experience use `AutoHotkey`.
