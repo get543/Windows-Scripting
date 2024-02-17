@@ -7,7 +7,8 @@ https://github.com/frgnca/AudioDeviceCmdlets
 Get-AudioDevice -List | Where-Object Type -like "Playback" | Where-Object name -like "*Realtek*"
 Set-AudioDevice -ID "{0.0.0.00000000}.{4229d439-1b7d-4deb-894e-544bb0fa40e1}" # speakers
 Set-AudioDevice -ID "{0.0.0.00000000}.{69274eea-2c89-451d-813a-c9407258be99}" # headphones
-Get-AudioDevice -List | Where-Object Type -like "Recording" | Where-Object name -like "*V8*" | Set-AudioDevice # set v8 mixer default recording device
+Get-AudioDevice -List | Where-Object Type -like "Recording" | Where-Object Name -Like "*V8*" | Set-AudioDevice # set v8 mixer as default recording device
+Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -Like "*speakers*" | Set-AudioDevice # set speakers as default playback device
 #>
 
 function WindowsNotificationBalloon($text) {
@@ -24,19 +25,35 @@ function WindowsNotificationBalloon($text) {
     $BalloonNotification.ShowBalloonTip(5000)
 }
 
-$SpeakerDeviceID = "{0.0.0.00000000}.{48d2a713-5544-4b20-b197-e6fa542a2974}"
-$HeadphoneDeviceID = "{0.0.0.00000000}.{4fe3e699-f8db-4d3f-bfe4-d8801939fb00}"
+$HeadphonesDeviceName = "Headphones (Realtek(R) Audio)"
+$SpeakersDeviceName = "Speakers (Realtek(R) Audio)"
+$SoundcardDeviceName = "Output Mixer (V8)"
 
 # if headphones is the default output then change it to speakers
-if (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.ID -eq "${HeadphoneDeviceID}" }) {
+if (Get-AudioDevice -PlaybackCommunication | Where-Object Type -Like "Playback" | Where-Object Name -Like "$HeadphonesDeviceName") {
     Write-Host "Change default audio device to Speakers."
-    Set-AudioDevice -ID "${SpeakerDeviceID}"
+    Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -Like "$SpeakersDeviceName" | Set-AudioDevice
     WindowsNotificationBalloon "Change default audio device to Speakers."
 
-} # if speakers is default audio then change it headphones
-elseif (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.ID -eq "${SpeakerDeviceID}" }) {
-    Write-Host "Change default audio device to Headphones."
-    Set-AudioDevice -ID "${HeadphoneDeviceID}"
-    WindowsNotificationBalloon "Change default audio device to Headphones."
-}
+} # if speakers is default audio then change it to headphones
+elseif (Get-AudioDevice -PlaybackCommunication | Where-Object Type -Like "Playback" | Where-Object Name -Like "$SpeakersDeviceName") {
 
+    # if there's no headphone device output then change it to soundcard output
+    if (!(Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -Like "$HeadphonesDeviceName")) {
+        Write-Host "Change default audio device to Output Mixer."
+        Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -Like "$SoundcardDeviceName" | Set-AudioDevice
+        WindowsNotificationBalloon "Change default audio device to Output Mixer."
+        return
+    }
+
+    Write-Host "Change default audio device to Headphones."
+    Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -Like "$HeadphonesDeviceName" | Set-AudioDevice
+    WindowsNotificationBalloon "Change default audio device to Headphones."
+
+
+} # if soundcard is default audio then change it to speakers
+elseif (Get-AudioDevice -PlaybackCommunication | Where-Object Type -Like "Playback" | Where-Object Name -Like "$SoundcardDeviceName") {
+    Write-Host "Change default audio device to Speakers."
+    Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -Like "$SpeakersDeviceName" | Set-AudioDevice
+    WindowsNotificationBalloon "Change default audio device to Speakers."
+}
