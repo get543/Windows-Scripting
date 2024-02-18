@@ -126,6 +126,9 @@ function editrc() {
 function reload() {
     & $PROFILE
 }
+function sync() {
+    syncthing --no-browser
+}
 
 
 ######################## Windows Style Aliases
@@ -145,24 +148,38 @@ function ShowNotification($title, $text) {
     $BalloonNotification.Visible = $true
     $BalloonNotification.ShowBalloonTip(5000)
 }
-function ChangeOutputDevice() {
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
-}
+
+######### Run Scripts #########
 function SystemUpgrade() {
     param(
-        [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "semi-auto","normal", "regular")] [String] $Option,
+        [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "semi-auto","normal", "regular", "GUI")] [String] $Option,
         [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
     )
 
+    if ($Option -eq "GUI") {
+        return & "F:\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
+    }
+    
     if ($Help) {
         & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Help $Help
     } else {
         & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option $Option
     }
 }
+function ChangeOutputDevice() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
+}
 function NetSpeedMonitor() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\NetSpeedMonitor.ps1"
 }
+function WinUtil() {
+    Invoke-WebRequest -useb "https://christitus.com/win" | Invoke-Expression
+}
+function XAMPP() {
+    & "${env:HOMEDRIVE}\xampp\xampp_shell.bat"
+}
+
+######### Change Folder #########
 function Scripts() {
     Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
 }
@@ -175,9 +192,8 @@ function WindowsUpdateFolder {
 function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
-function WinUtil() {
-    Invoke-WebRequest -useb "https://christitus.com/win" | Invoke-Expression
-}
+
+
 function SignOut() {
     shutdown /L
 }
@@ -193,7 +209,6 @@ function WindowsUpdateChoose($kbarticleid) {
 function WindowsUpdateAll() {
     Get-WindowsUpdate -Install -AcceptAll
 }
-
 
 ######################## Application Shortcut (admin)
 function firefox() {
@@ -237,3 +252,7 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 
 Remove-Variable identity
 Remove-Variable principal
+#34de4b3d-13a8-4540-b76d-b9e8d3851756 PowerToys CommandNotFound module
+
+Import-Module "C:\Users\udin\AppData\Local\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
+#34de4b3d-13a8-4540-b76d-b9e8d3851756
