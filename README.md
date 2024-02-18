@@ -48,3 +48,7 @@ Doing automation script on Windows using PowerShell.
 - Contains desktop shortcuts.
 - For opening programs with keyboard shortcuts.
 - For better experience use `AutoHotkey`.
+
+# `WUReset.bat`
+- Reset windows update
+- Reset windows network
