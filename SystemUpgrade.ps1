@@ -51,7 +51,7 @@ function EmptyLine() {
 <# -------------------------------------------------------- #>
 <#                         Checking                         #>
 <# -------------------------------------------------------- #>
-function NotAdminMessage {
+function NotAdminMessage() {
     EmptyLine
     Write-Host "Please run this script as an admin access." -ForegroundColor Red
     Write-Host "Because almost all commands require admin access." -ForegroundColor Red
@@ -61,7 +61,7 @@ function NotAdminMessage {
 <# -------------------------------------------------------- #>
 <#                      Menu or Title                       #>
 <# -------------------------------------------------------- #>
-function HelpMenu {
+function HelpMenu() {
     Write-Host "This is a Help Command for this script." -ForegroundColor Cyan
     Write-Host "Example: .\SystemUpgrade.ps1 [parameter] [the option]"
 
@@ -122,15 +122,8 @@ function UpdatePowershellModule() {
 
     # main code function
     function RunUpdateModule() {
-        # check if there is no output to Update-Module, then show message
-        if (!(Update-Module | Write-Output)) {
-            EmptyLine
-            Write-Host "No need to, there's no module that needs to be updated. 😁👍" -ForegroundColor Yellow
-        }
-        else {
-            Write-Host "Checking update for all PowerShell modules..." -ForegroundColor Yellow
-            Update-Module
-        }
+        Write-Host "Checking update for all PowerShell modules..." -ForegroundColor Yellow
+        Update-Module
     }
 
     # user add option to automatically answers yes or semi yes
@@ -158,13 +151,6 @@ function WindowsUpdateScript() {
     # main code function
     function RunWindowsUpdate() {
         do {
-            # check if there is no windows update, then break the loop
-            if (!(Get-WindowsUpdate | Write-Output)) { 
-                EmptyLine
-                Write-Host "No Windows Update detected. 😁👍" -ForegroundColor Yellow
-                break   
-            }
-
             Clear-Host
             Write-Host "Checking Windows Update..." -ForegroundColor Yellow
             Get-WindowsUpdate -Verbose
@@ -229,12 +215,6 @@ function WingetUpdateScript() {
     function RunWingetUpgrade() {
         do {
             EmptyLine
-            # if winget cannot find the update anymore break loop
-            if ((winget upgrade --include-unknown | Write-Output) -eq "No installed package found matching input criteria.") {
-                Write-Host "Winget cannot find the update for remaining packages." -ForegroundColor Yellow
-                break
-            }
-
             Write-Host "Checking for upgradable winget applications..." -ForegroundColor Yellow
             winget upgrade --include-unknown
     
