@@ -95,7 +95,14 @@ function reboot() {
 function poweroff() {
     shutdown /s /t 0 /c "Shutdown system"
 }
-
+function ipaddr() {
+    (ipconfig | Select-String -Pattern "IPv4 Address. . . . . . . . . . . : (.{1,50}\d)").Matches.Groups[1].Value
+}
+function pythonpipupgrade() {
+    pip list --format freeze | ForEach-Object {
+        pip install --upgrade $_.split('==')[0]
+    }
+}
 
 ######################## From My Linux Machine
 function codefolder() {
@@ -186,13 +193,15 @@ function Scripts() {
 function USBScripts() {
     Set-Location "F:\Code\WINDOWS\Scripts"
 }
-function WindowsUpdateFolder {
+function WindowsUpdateFolder() {
     Set-Location "${env:windir}\SoftwareDistribution\Download"
 }
 function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
-
+function AutoHotKeyFolder() {
+    Set-Location "${env:USERPROFILE}\Documents\AutoHotkey"
+}
 
 function SignOut() {
     shutdown /L

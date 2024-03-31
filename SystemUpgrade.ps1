@@ -534,6 +534,9 @@ function ScanSystemCorruptionFiles() {
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes")) {
         RunScan
         return
+    } # user add option upgrade skip this function
+    elseif ($AnswersUpgradeArray -Contains $Option) {
+        return
     }
 
     Write-Host "Check for system corruption files ? [Y/n] " -ForegroundColor Blue -NoNewline
@@ -660,6 +663,9 @@ function SystemCleanup {
         DeleteTempFiles
         EmptyRecycleBin
         return
+    } # user add option upgrade skip this function
+    elseif ($AnswersUpgradeArray -Contains $Option) {
+        return
     }
 
     Write-Host "Delete unused files and folders ? [Y/n] " -ForegroundColor Blue -NoNewline
@@ -775,9 +781,9 @@ function ChocolateyInstall() {
 
 
 
-<######################################################################################################>
-<#                                       Main Function                                                #>
-<######################################################################################################>
+<####################################################################>
+<#                       Main Function                              #>
+<####################################################################>
 function Main() {
     <#
     .SYNOPSIS
@@ -842,5 +848,5 @@ function Main() {
     EndingScript
 }
 
-################################## Run Function ##################################
+############################### Run Function ###############################
 Main
