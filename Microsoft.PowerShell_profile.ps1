@@ -159,8 +159,8 @@ function ShowNotification($title, $text) {
 ######### Run Scripts #########
 function SystemUpgrade() {
     param(
-        [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "semi-auto","normal", "regular", "GUI")] [String] $Option,
-        [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
+        [Parameter(ParameterSetName = "Option")] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade", "GUI")] [String] $Option,
+        [Parameter(ParameterSetName = "GetHelp")] [ValidateSet("all", "full")] [String] $Help
     )
 
     if ($Option -eq "GUI") {
@@ -265,3 +265,5 @@ Remove-Variable principal
 
 Import-Module "${env:LOCALAPPDATA}\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
 #34de4b3d-13a8-4540-b76d-b9e8d3851756
+
+$env:VIRTUAL_ENV_DISABLE_PROMPT = 1 # Disable python venv
