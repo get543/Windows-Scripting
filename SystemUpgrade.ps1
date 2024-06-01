@@ -33,12 +33,13 @@ And another extra tools is check for system corruption files.
 #>
 
 param(
-    [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade")] [String] $Option,
+    [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade", "cleanup", "deletetempfiles", "deletetemp")] [String] $Option,
     [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
 )
 
 $AnswersYesArray = @("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes")
 $AnswersUpgradeArray = @("update", "upgrade")
+$AnswersCleanupArray = @("cleanup", "deletetempfiles", "deletetemp")
 
 $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $Principal = New-Object Security.Principal.WindowsPrincipal $Identity
@@ -109,6 +110,10 @@ function HelpMenu() {
     Write-Host "> half-yes -> Answers yes to all questions except for winget."
     Write-Host "> upgrade -> Answers yes to all questions for upgrades only."
     Write-Host "> update -> Answers yes to all questions for upgrades only."
+    Write-Host "> cleanup -> Answers yes to delete temporary files script."
+    Write-Host "> deletetempfiles -> Answers yes to delete temporary files script."
+    Write-Host "> deletetemp -> Answers yes to delete temporary files script."
+
     Write-Host "> normal -> Run the script normally."
     Write-Host "> regular -> Run the script normally."
     Write-Host "Example: .\SystemUpgrade.ps1 -option yes" -ForegroundColor Red
@@ -197,6 +202,9 @@ function UpdatePowershellModule() {
     # user add option to automatically answers yes or half yes or upgrade only
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
         RunUpdateModule
+        return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
         return
     }
 
@@ -290,6 +298,9 @@ function WindowsUpdateScript() {
         Write-Host "Installing Windows Update..." -ForegroundColor Yellow
         Install-WindowsUpdate -Verbose -AcceptAll -IgnoreReboot
         return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
+        return
     }
 
     Write-Host "Check for Windows Update ? [Y/n] " -ForegroundColor Blue -NoNewline
@@ -362,7 +373,7 @@ function WingetUpdateScript() {
                 # turn id into array
                 $ArrayID = $WingetUpgradeChoose.Split(" ")
     
-                EmptyLine
+                Clear-Host
                 Write-Host "Application(s) that will be upgraded :"
                 # each of app name in array of id
                 foreach ($AppName in $ArrayID) {
@@ -386,6 +397,9 @@ function WingetUpdateScript() {
     if (($AnswersYesArray -Contains $Option) -or ($AnswersUpgradeArray -Contains $Option)) {
         Write-Host "Upgrading all installed applications if available..." -ForegroundColor Yellow
         winget upgrade --include-unknown --all
+        return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
         return
     }
 
@@ -448,7 +462,7 @@ function ChocolateyUpdateScript() {
                 break
             }
             else {
-                EmptyLine
+                Clear-Host
                 Write-Host "Your Choice : " -NoNewline
                 Write-Host "$ChocoUpgradeChoose" -ForegroundColor Magenta
                 EmptyLine
@@ -476,6 +490,9 @@ function ChocolateyUpdateScript() {
 
         Write-Host "Updating all chocolatey application(s)..." -ForegroundColor Yellow
         choco upgrade --yes all
+        return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
         return
     }
 
@@ -534,8 +551,8 @@ function ScanSystemCorruptionFiles() {
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes")) {
         RunScan
         return
-    } # user add option upgrade skip this function
-    elseif ($AnswersUpgradeArray -Contains $Option) {
+    } # user use -Option upgrade or -Option cleanup
+    elseif ($AnswersUpgradeArray -Contains $Option -or ($AnswersCleanupArray -Contains $Option)) {
         return
     }
 
@@ -658,7 +675,7 @@ function SystemCleanup {
     }
 
     # user add option automatically answers yes or half yes
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes")) {
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersCleanupArray -Contains $Option)) {
         RunDiskCleanUp
         DeleteTempFiles
         EmptyRecycleBin
@@ -796,12 +813,12 @@ function Main() {
     This function is not meant to run indepently.
     #>
 
-    if (!$IsAdmin) {
+    if (!$IsAdmin) { # if run script not as admin
         NotAdminMessage
         return
     }
 
-    if ($Help) {
+    if ($Help) { # if user use -Help
         HelpMenu
         return
     }
@@ -810,6 +827,9 @@ function Main() {
     EmptyLine
     UpdatePowershellModule
 
+    <# -------------------------------------------------------- #>
+    <#                  Checking Prerequisite                   #>
+    <# -------------------------------------------------------- #>
     EmptyLine
     # install PSWindowsUpdate module if isn't already
     if (! (Get-Module -Name "PSWindowsUpdate" -ListAvailable)) {
@@ -827,7 +847,6 @@ function Main() {
     else {
         WingetUpdateScript
     }
-
 
     EmptyLine
     # install chocolatey if isn't already

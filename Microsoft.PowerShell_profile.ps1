@@ -159,9 +159,9 @@ function ShowNotification($title, $text) {
 ######### Run Scripts #########
 function SystemUpgrade() {
     param(
-        [Parameter(ParameterSetName = "Option")] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade", "GUI")] [String] $Option,
-        [Parameter(ParameterSetName = "GetHelp")] [ValidateSet("all", "full")] [String] $Help
-    )
+        [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade", "cleanup", "deletetempfiles", "deletetemp")] [String] $Option,
+        [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
+    )    
 
     if ($Option -eq "GUI") {
         return & "F:\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
@@ -261,9 +261,9 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 
 Remove-Variable identity
 Remove-Variable principal
-#34de4b3d-13a8-4540-b76d-b9e8d3851756 PowerToys CommandNotFound module
+#f45873b3-b655-43a6-b217-97c00aa0db58 PowerToys CommandNotFound module
 
-Import-Module "${env:LOCALAPPDATA}\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
-#34de4b3d-13a8-4540-b76d-b9e8d3851756
+Import-Module -Name Microsoft.WinGet.CommandNotFound
+#f45873b3-b655-43a6-b217-97c00aa0db58
 
-$env:VIRTUAL_ENV_DISABLE_PROMPT = 1 # Disable python venv
+$env:VIRTUAL_ENV_DISABLE_PROMPT = 1 # Disable python venv prompt
