@@ -118,7 +118,7 @@ function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
 }
 function phone() {
-    & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --shortcut-mod=lctrl,rctrl --video-bit-rate=20M --turn-screen-off
+    & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off
 }
 function sound() {
     mmsys.cpl sounds,1
