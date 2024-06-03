@@ -52,3 +52,7 @@ Doing automation script on Windows using PowerShell.
 # `WUReset.bat`
 - Reset windows update
 - Reset windows network
+
+
+# `scrcpy-noconsole.vbs`
+- A script to launch scrcpy no console with specific options
