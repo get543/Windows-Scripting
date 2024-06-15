@@ -53,6 +53,8 @@ Doing automation script on Windows using PowerShell.
 - Reset windows update
 - Reset windows network
 
-
 # `scrcpy-noconsole.vbs`
 - A script to launch scrcpy no console with specific options
+
+# `ytdlpscript.ps1`
+- A script to use yt-dlp with easy to use presets.
