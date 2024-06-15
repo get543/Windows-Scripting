@@ -196,7 +196,12 @@ function UpdatePowershellModule() {
         #>
 
         Write-Host "Checking update for all PowerShell modules..." -ForegroundColor Yellow
-        Update-Module -AcceptLicense
+
+        if (Get-Command -Name pwsh) { # automatically answers yes to all prompt, powershell V7 is installed
+            Write-Output A | pwsh -c Update-Module
+        } else {
+            Update-Module -AcceptLicense
+        }
     }
 
     # user add option to automatically answers yes or half yes or upgrade only
