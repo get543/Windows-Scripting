@@ -1,6 +1,6 @@
 $Path = "~/Downloads"
 
-if (Get-Command -Name yt-dlp) {
+if (!(Get-Command -Name yt-dlp)) {
 	return "yt-dlp is not installed on your system or yt-dlp is not recognise as a command."
 }
 
