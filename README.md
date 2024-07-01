@@ -58,3 +58,8 @@ Doing automation script on Windows using PowerShell.
 
 # `ytdlpscript.ps1`
 - A script to use yt-dlp with easy to use presets.
+
+# `VMwareService.ps1`
+- A script to start or stop vmware services.
+- Start VMware services if it's stopped.
+- Stop VMware services if it's running.
