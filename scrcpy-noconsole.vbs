@@ -1,4 +1,4 @@
-strCommand = "cmd /c %SystemDrive%\scrcpy\scrcpy.exe --video-bit-rate=20M --turn-screen-off"
+strCommand = "cmd /c %SystemDrive%\scrcpy\scrcpy.exe --video-bit-rate=20M --turn-screen-off --stay-awake"
 
 For Each Arg In WScript.Arguments
     strCommand = strCommand & " """ & replace(Arg, """", """""""""") & """"
