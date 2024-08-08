@@ -106,10 +106,18 @@ function pythonpipupgrade() {
 
 ######################## From My Linux Machine
 function codefolder() {
-    Set-Location "F:\Code\code-desktop"
+    if (Test-Path -Path "F:\Code\code-desktop") {
+        Set-Location "F:\Code\code-desktop"
+    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop") {
+        Set-Location "${env:USERPROFILE}\Documents\Code Folder\code-desktop"
+    }
 }
 function kuliah() {
-    Set-Location "F:\Kuliah\Mata Kuliah"
+    if (Test-Path -Path "F:\Kuliah\Mata Kuliah") {
+        Set-Location "F:\Kuliah\Mata Kuliah"
+    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Kuliah\Mata Kuliah") {
+        Set-Location "${env:USERPROFILE}\Documents\Kuliah\Mata Kuliah"
+    }
 }
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
@@ -118,7 +126,7 @@ function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
 }
 function phone() {
-    & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off
+    & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off --stay-awake
 }
 function sound() {
     mmsys.cpl sounds,1
@@ -164,7 +172,11 @@ function SystemUpgrade() {
     )    
 
     if ($Option -eq "GUI") {
-        return & "F:\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
+        if (Test-Path -Path "F:\Code\WINDOWS\GUI") {
+            return & "F:\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
+        } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI") {
+            return & "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI\SystemUpgrade-GUI.ps1"
+        }
     }
     
     if ($Help) {
