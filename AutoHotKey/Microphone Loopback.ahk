@@ -1,6 +1,6 @@
-﻿/* To click on the specific mouse position
+﻿/* To click on the specific mouse position :
 - Activate the window
-- From Window Spy look at the Client (default) value
+- From Window Spy look at the 'Client: 123123, 123123 (default)'
 */
 
 ; This program turns on "Listen to this device" checkbox by clicking on the specific part of the screen
