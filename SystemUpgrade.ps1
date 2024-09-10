@@ -33,7 +33,7 @@ And another extra tools is check for system corruption files.
 #>
 
 param(
-    [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade", "cleanup", "deletetempfiles", "deletetemp")] [String] $Option,
+    [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes", "normal", "regular", "update", "upgrade", "cleanup", "deletetempfiles", "deletetemp")] [String] $Option,
     [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
 )
 
@@ -197,9 +197,11 @@ function UpdatePowershellModule() {
 
         Write-Host "Checking update for all PowerShell modules..." -ForegroundColor Yellow
 
-        if (Get-Command -Name pwsh) { # automatically answers yes to all prompt, powershell V7 is installed
+        if (Get-Command -Name pwsh) {
+            # automatically answers yes to all prompt, powershell V7 is installed
             Write-Output A | pwsh -c Update-Module
-        } else {
+        }
+        else {
             Update-Module -AcceptLicense
         }
     }
@@ -818,12 +820,14 @@ function Main() {
     This function is not meant to run indepently.
     #>
 
-    if (!$IsAdmin) { # if run script not as admin
+    if (!$IsAdmin) {
+        # if run script not as admin
         NotAdminMessage
         return
     }
 
-    if ($Help) { # if user use -Help
+    if ($Help) {
+        # if user use -Help
         HelpMenu
         return
     }
