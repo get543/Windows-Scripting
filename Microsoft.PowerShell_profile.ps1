@@ -230,6 +230,10 @@ function WindowsUpdateChoose($kbarticleid) {
 function WindowsUpdateAll() {
     Get-WindowsUpdate -Install -AcceptAll
 }
+function FirefoxProfile() {
+    Set-Location "${env:APPDATA}\Mozilla\Firefox\Profiles\jrecet5l.default-release"
+    
+}
 
 ######################## Application Shortcut (admin)
 function firefox() {
