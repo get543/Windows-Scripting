@@ -4,11 +4,11 @@
 Run "C:\Program Files\AMD\CNext\CNext\RadeonSoftware.exe"
 
 ; Activate 'AMD Software: Adrenalin Edition' window
-Sleep 3000
+Sleep 4000
 WinActivate "AMD Software: Adrenalin Edition"
 
 ; Click 'Record & Stream'
-Sleep 1000
+Sleep 2000
 Click 445, 50
 
 ; Click 'Settings'
@@ -24,11 +24,11 @@ Sleep 1000
 Send "Instant Replay"
 
 ; Click 'Instant Replay' Toggle
-Sleep 4000
+Sleep 3000
 Click 1124, 556
 
 ; Close 'AMD Software: Adrenalin Edition' software
-Sleep 3000
+Sleep 2000
 WinClose "AMD Software: Adrenalin Edition"
 
 ExitApp
