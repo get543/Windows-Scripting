@@ -63,3 +63,6 @@ Doing automation script on Windows using PowerShell.
 - A script to start or stop vmware services.
 - Start VMware services if it's stopped.
 - Stop VMware services if it's running.
+
+# `AutoLaunchApp.ps1`
+- A PowerShell script I use to launch app.
