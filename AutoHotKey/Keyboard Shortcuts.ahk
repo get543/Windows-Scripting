@@ -4,10 +4,12 @@
 ; - print screen : a toggle to Hold down the up arrow key
 ; - ctrl alt x   : always on top for currently active window
 ; - ctrl alt .   : spam text for 100x 
+; - page down    : auto click script for banana
+; - page up      : reload script (turn off auto-clicker)
 
 PrintScreen:: ; press print screen
 {   
-    static Toggle := 0
+    Static Toggle := 0
     Toggle := !Toggle
 
     if (Toggle) {
@@ -33,3 +35,21 @@ PrintScreen:: ; press print screen
     }
 }
 
+PgDn:: ; press page down
+{
+    if WinExist("Banana")
+        WinActivate ; Use the window found by WinExist.
+    else
+        return
+
+    Loop
+    {
+        Click 325, 273
+        Sleep 300
+    }
+}
+
+PgUp:: ; press page up
+{
+    Reload
+}
