@@ -249,7 +249,7 @@ function discord() {
 #                                  Requirement for Oh-My-Posh, Chocolatey, Winget                                     #
 #######################################################################################################################
 # Import PowerShell Theme from oh-my-posh
-oh-my-posh --init --shell pwsh --config $env:POSH_THEMES_PATH/takuya.omp.json | Invoke-Expression
+oh-my-posh init pwsh --config $env:POSH_THEMES_PATH/takuya.omp.json | Invoke-Expression
 
 Import-Module -Name Terminal-Icons
 Import-Module posh-git
