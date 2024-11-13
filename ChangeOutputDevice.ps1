@@ -25,8 +25,8 @@ function WindowsNotificationBalloon($text) {
     $BalloonNotification.ShowBalloonTip(5000)
 }
 
-$HeadphonesDeviceName = "Headphones (Realtek(R) Audio)"
-$SpeakersDeviceName = "Speakers (Realtek(R) Audio)"
+$HeadphonesDeviceName = "Headset (4- CX31993 384Khz HIFI AUDIO)"
+$SpeakersDeviceName = "Output Monitor (2- AMD High Definition Audio Device)"
 $SoundcardDeviceName = "Output Mixer (V8)"
 
 # if headphones is the default output then change it to speakers
