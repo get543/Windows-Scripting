@@ -803,7 +803,107 @@ function ChocolateyInstall() {
     }
 }
 
+<# -------------------------------------------------------- #>
+<#                      DevTools                            #>
+<# -------------------------------------------------------- #>
+function PipPackageUpgrade() {
+    <#
+    .SYNOPSIS
+    Upgrade Pip Packages
+    
+    .DESCRIPTION
+    List outdated pip packages and user can choose which package to upgrade or
+    to upgrade all outdated pip packages
 
+    .NOTES
+    This function is not meant to run independently
+    This function only going to run if python is installed.
+    #>
+
+    function RunPipUpgrade() {
+        <#
+        .SYNOPSIS
+        Main code function
+
+        .DESCRIPTION
+        This function consist of what actual commands that get run.
+
+        .NOTES
+        This function is not meant to run independently.
+        This function is always run if the user chose to run outer function.
+        #>
+
+        do {       
+            EmptyLine
+            Write-Host "List outdated pip packages..." -ForegroundColor Yellow
+    
+            pip list --outdated
+    
+            EmptyLine
+            Write-Host "Type the package name! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
+            Write-Host "Type 'all' if you want to upgrade all packages!" -ForegroundColor Green
+            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
+            Write-Host "Example : python hwinfo chocolatey" -ForegroundColor Red
+            EmptyLine
+
+            $pipUpgradeChoose = Read-Host -Prompt "Package name "
+    
+            if ($pipUpgradeChoose.ToLower() -eq "all") {
+                Clear-Host
+
+                $packages = pip list --outdated | Select-Object -Skip 2 | ForEach-Object {
+                    ($_ -split "\s+")[0].Trim()
+                }
+    
+                $Array = $packages -Split " "
+    
+                foreach ($package in $Array) {
+                    pip install --upgrade $package
+                }
+            }
+            elseif (!$pipUpgradeChoose -or $pipUpgradeChoose.ToLower() -eq "exit") {
+                EmptyLine
+                Write-Host "Exiting pip upgrade..." -ForegroundColor Yellow
+                break
+            }
+            else {
+                $Array = $pipUpgradeChoose.Split(" ")
+    
+                foreach ($package in $Array) {
+                    pip install --upgrade $package
+                }
+            }
+
+            Start-Sleep 8
+            Clear-Host
+        } while ($true)
+    }
+
+    # user add option automatically answers yes or half yes or upgrade only
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
+        choco outdated
+
+        Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
+        pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
+        return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
+        return
+    }
+
+    EmptyLine
+    Write-Host "Run pip upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline    
+    $PipUpgradeOption = Read-Host
+
+    if (($PipUpgradeOption.ToLower() -eq "y") -or ($PipUpgradeOption -eq "")) {
+        RunPipUpgrade
+    }
+    else {
+        EmptyLine
+        Write-Host "Skipping pip upgrade..." -ForegroundColor Yellow
+        return
+    }
+}
 
 <####################################################################>
 <#                       Main Function                              #>
@@ -841,7 +941,7 @@ function Main() {
     <# -------------------------------------------------------- #>
     EmptyLine
     # install PSWindowsUpdate module if isn't already
-    if (! (Get-Module -Name "PSWindowsUpdate" -ListAvailable)) {
+    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable)) {
         WindowsUpdateModuleInstall
     }
     else {
@@ -864,6 +964,11 @@ function Main() {
     }
     else {
         ChocolateyUpdateScript
+    }
+
+    # if python is installed, run update pip
+    if ((Get-Command -Name python) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
+        PipPackageUpgrade
     }
 
     EmptyLine
