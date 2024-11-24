@@ -72,11 +72,11 @@ Set-Alias -Name read -Value Read-Host
 function file() {
     if ($args.Count -gt 0) {
         foreach ($path in $args) {
-            explorer "${path}"
+            Start-Process "${path}"
         }
     }
     else {
-        explorer $args
+        Start-Process $args
     }
 }
 function open() {
