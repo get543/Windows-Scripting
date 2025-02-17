@@ -33,8 +33,27 @@ And another extra tools is check for system corruption files.
 #>
 
 param(
-    [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes", "normal", "regular", "update", "upgrade", "cleanup", "deletetempfiles", "deletetemp")] [String] $Option,
-    [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
+    [Parameter(ParameterSetName = 'Option')]
+    [ValidateSet(
+        "yes",
+        "assume-yes",
+        "assumeyes",
+        "answersyes",
+        "answers-yes",
+        "half-yes",
+        "normal",
+        "regular",
+        "update",
+        "upgrade",
+        "cleanup",
+        "deletetempfiles",
+        "deletetemp"
+    )]
+    [String] $Option,
+
+    [Parameter(ParameterSetName = 'GetHelp')]
+    [ValidateSet("all", "full")]
+    [String] $Help
 )
 
 $AnswersYesArray = @("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes")

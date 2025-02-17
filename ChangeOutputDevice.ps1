@@ -25,7 +25,7 @@ function WindowsNotificationBalloon($text) {
     $BalloonNotification.ShowBalloonTip(5000)
 }
 
-$HeadphonesDeviceName = "Headset (4- CX31993 384Khz HIFI AUDIO)"
+$HeadphonesDeviceName = "Headphones (CDS.KT USB Audio)"
 $SpeakersDeviceName = "Output Monitor (2- AMD High Definition Audio Device)"
 $SoundcardDeviceName = "Output Mixer (V8)"
 
