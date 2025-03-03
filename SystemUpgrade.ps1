@@ -870,6 +870,8 @@ function PipPackageUpgrade() {
             if ($pipUpgradeChoose.ToLower() -eq "all") {
                 Clear-Host
 
+                python.exe -m pip install --upgrade pip
+
                 $packages = pip list --outdated | Select-Object -Skip 2 | ForEach-Object {
                     ($_ -split "\s+")[0].Trim()
                 }
