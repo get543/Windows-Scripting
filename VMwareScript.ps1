@@ -28,21 +28,19 @@ param(
         "kali"
     )]
     [String] $AutoLaunch
-
-
 )
 
 #! Autolaunch VMs
 if ($AutoLaunch -eq "fedora") {
     & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\FedoraLinux\Fedora Linux.vmx"
 } elseif ($AutoLaunch -eq "arch") {
-    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\ArchLinux\Arch Linux.vmx"
+    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\ArchLinux\Arch Linux.vmx"
 } elseif ($AutoLaunch -eq "kali") {
-    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\KaliLinux\Kali Linux.vmx"
+    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\KaliLinux\Kali Linux.vmx"
 }
 
 
-#! Start or Stop VMware process
+#! Start or Stop VMware Workstation program
 # $VMWareProcess = Get-Process vmplayer -ErrorAction SilentlyContinue
 
 # if (!$VMWareProcess) {
