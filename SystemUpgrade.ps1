@@ -688,7 +688,7 @@ function SystemCleanup {
             Write-Host "Deleting contents inside recycle bin..." -ForegroundColor Yellow
             Clear-RecycleBin -Force
         }
-        elseif (Test-Path $env:RecycleBin -ErrorAction SilentlyContinue) {
+        elseif (Test-Path $env:RecycleBin -ErrorAction Stop) {
             EmptyLine
             Write-Host "Path found for recycle bin. Deleting contents inside..." -ForegroundColor Yellow
             Remove-Item -Path $env:RecycleBin -Recurse -Force
