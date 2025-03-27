@@ -1,21 +1,27 @@
 ﻿#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; SendMode Input
+; SetWorkingDir %A_ScriptDir%
 
 ;! A bunch of keyboard shortcuts here
-; - print screen : a toggle to Hold down the up arrow key
+; - ctrl alt z   : a toggle to Hold down the up arrow key
 ; - ctrl alt x   : always on top for currently active window
 ; - ctrl alt .   : spam text for 100x 
 ; - page down    : auto click script for banana
 ; - page up      : reload script (turn off auto-clicker)
 
-PrintScreen:: ; press print screen
+^!z:: ; press ctrl + alt + z
 {   
     Static Toggle := 0
     Toggle := !Toggle
 
     if (Toggle) {
-        Send "{Up down}"  ; Presses down the up-arrow key.
+        ; Send "{Up down}"  ; Presses down the up-arrow key.
+        Send "{W down}"  ; Presses down the W key.
     } else {
-        Send "{Up up}"  ; Releases the up-arrow key.
+        ; Send "{Up up}"  ; Releases the up-arrow key.
+        Send "{W up}"  ; Releases the W key.
     }
 }
 
