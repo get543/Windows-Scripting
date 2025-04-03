@@ -5,15 +5,16 @@
 ; SetWorkingDir %A_ScriptDir%
 
 ;! A bunch of keyboard shortcuts here
-; - ctrl alt z   : a toggle to Hold down the up arrow key
+; - ctrl alt z   : a toggle to Hold down any key defined in Send
 ; - ctrl alt x   : always on top for currently active window
-; - ctrl alt .   : spam text for 100x 
+; - ctrl alt .   : spam text for 100x
 ; - page down    : auto click script for banana
 ; - page up      : reload script (turn off auto-clicker)
+; - insert       : run ChangeOutputDevice.ps1 script
 
 ^!z:: ; press ctrl + alt + z
-{   
-    Static Toggle := 0
+{
+    static Toggle := 0
     Toggle := !Toggle
 
     if (Toggle) {
@@ -25,17 +26,14 @@
     }
 }
 
-
 ^!x:: ; press ctrl + alt + x
 {
     WinSetAlwaysOnTop -1, "A"
 }
 
-
 ^!.:: ; press ctrl + alt + .
 {
-    Loop 100
-    {
+    loop 100 {
         Send "Gw juga bisa spam {Enter}"
         Sleep 100
     }
@@ -48,8 +46,7 @@ PgDn:: ; press page down
     else
         return
 
-    Loop
-    {
+    loop {
         Click 325, 273
         Sleep 300
     }
@@ -58,4 +55,19 @@ PgDn:: ; press page down
 PgUp:: ; press page up
 {
     Reload
+}
+
+!F1:: ; press alt + f1
+{
+    Send "!t"
+    Send "{F1}"
+}
+
+Insert:: ; press insert
+{
+    RunWait(
+        'powershell.exe -ExecutionPolicy Bypass -File "'
+        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"',
+        , 'Hide'  ; Hides the PowerShell window
+    )
 }
