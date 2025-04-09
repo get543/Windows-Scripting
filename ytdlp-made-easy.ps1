@@ -242,6 +242,6 @@ while ($confirm -ne "y") {
 
 # Final Run
 Write-Output ""
-Write-Output "Running Command:   .\$downloader_exe $format $URL '--%' $options"
+Write-Output "Running Command:   .\$($downloader_exe) $format $URL '--%' $options"
 & $downloader_exe $format $URL '--%' $options #Final full command used on youtube-dl. The '--%' basically tells powershell not to interpret the rest of the line as powershell commands, so it can be passed to youtube-dl as is.
 Read-Host "Enter to Continue..."
