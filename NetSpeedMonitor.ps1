@@ -1,19 +1,35 @@
 while ($true) {
-    # Get an object for the network interfaces, excluding any that are currently disabled.
     $colInterfaces = Get-CimInstance -ClassName Win32_PerfFormattedData_Tcpip_NetworkInterface | Select-Object BytesTotalPersec, CurrentBandwidth, PacketsPersec | Where-Object { $_.PacketsPersec -gt 0 }
 
     foreach ($interface in $colInterfaces) {
         $totalBits = $interface.CurrentBandwidth
 
-        # Exclude Nulls (any WMI failures)
         if ($totalBits -gt 0) {
-            $rawResult = $interface.BytesTotalPersec * 0.001
-            $result = [math]::Round($rawResult, 2)
-            $unit = "KB"
+            $bytesPerSec = $interface.BytesTotalPersec
+            $units = @('B', 'KB', 'MB', 'GB', 'TB')
+            $unitIndex = 0
+            $value = $bytesPerSec
+
+            # Determine the appropriate unit
+            while ($value -ge 1024 -and $unitIndex -lt $units.Length - 1) {
+                $value /= 1024
+                $unitIndex++
+            }
+
+            # Round and check if it needs to go to the next unit
+            $valueRounded = [math]::Round($value, 2)
+            if ($valueRounded -ge 1024 -and $unitIndex -lt ($units.Length - 1)) {
+                $valueRounded /= 1024
+                $unitIndex++
+                $valueRounded = [math]::Round($valueRounded, 2)
+            }
+
+            $result = $valueRounded
+            $unit = $units[$unitIndex]
 
             Clear-Host
-            Write-Host "Network Speed : $result $unit"
+            Write-Host "Network Speed : $result $unit/s"
         }
     }
-    Start-Sleep -milliseconds 100
+    Start-Sleep -Milliseconds 1000
 }
