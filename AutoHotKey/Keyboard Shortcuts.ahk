@@ -47,7 +47,7 @@ PgDn:: ; press page down
         return
 
     loop {
-        Click 325, 273
+        Click 443, 296
         Sleep 300
     }
 }
