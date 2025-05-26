@@ -14,6 +14,9 @@
 # YouTube-dl documentation: https://github.com/ytdl-org/youtube-dl/blob/master/README.md#readme
 # Supported sites for Downloading: https://ytdl-org.github.io/youtube-dl/supportedsites.html
 # See this script's Readme for more details
+#
+# THIS SCRIPT HAS BEEN MODIFIED BY https://github.com/get543
+# SOURCE SCRIPT: https://raw.githubusercontent.com/ThioJoe/youtube-dl-easy/refs/heads/master/youtube-dl%20Easy%20Script.ps1
 # ---------------------------------------------------------------------------------------------
 
 
@@ -35,21 +38,33 @@ Command Line Arguments:
 	
 -debug
 	Display potentially helpful info for debugging, including resulting variable values
-	
+
+-output <string>
+    Manually set the output folder location of downloaded file.
+    Example Current Directory: -output "$(pwd)"
+    Default: "$HOME\Downloads"
+
+-ffmpeg <string>
+    Manually set ffmpeg location.
+    If ffmpeg is installed using winget or chocolatey, the default should work just fine.
+    Example: -ffmpeg "C:\ffmpeg.exe"
+    Default: ffmpeg.exe
 #>
 
 param (
     [string]$exe,
     [switch]$desktop,
     [string]$options,
-    [switch]$debug
+    [switch]$debug,
+    [string]$output,
+    [string]$ffmpeg
 )
 
 # PARAMETERS YOU MAY NEED/WISH TO CHANGE BELOW:
-# Set ffmpeg location here. Make sure it is up to date (if using chocolatey:  chocolatey upgrade ffmpeg )
+# Set ffmpeg location here. Make sure it is up to date (if using chocolatey:  chocolatey upgrade ffmpeg)
 # Set output location and filename of downloaded files. Defaults to Desktop, with video title and video extension. See documentation on specifics.
 # Set default options / parameters to apply to all downloads. See youtube-dl documentation for details. Includes ffmpeg location and output location using the other variables.
-$ffmpeg_location = "`"ffmpeg.exe`"" # Just put it in the same directory as the script
+#! $ffmpeg_location = "`"ffmpeg.exe`"" # If ffmpeg is installed, it should work as is WTF DO I NEED THIS ?
 $output_location = "`"$HOME\Downloads\%(title)s.%(ext)s`"" # Outputs to a folder called "Outputs" in the same directory as the script, with filename as video title
 $downloader_exe = "yt-dlp.exe" # "yt-dlp.exe"  or  "youtube-dl.exe"
 $other_options = "--no-mtime --add-metadata"  # The variables for ffmpeg location and output location are added automatically later
@@ -59,14 +74,22 @@ if ($exe) {
 }
 
 if ($desktop) {
-    $output_location = "`"$HOME\Desktop\Outputs\%(title)s.%(ext)s`""
+    $output_location = "`"$HOME\Desktop\%(title)s.%(ext)s`""
 }
 
 if ($options) {
     $other_options = $options
 }
 
-$options = "$other_options --ffmpeg-location $ffmpeg_location --output $output_location"
+if ($output) {
+    $output_location = "`"$output\%(title)s.%(ext)s`""
+}
+
+if ($ffmpeg) {
+    $ffmpeg_location = "--ffmpeg-location $ffmpeg"
+}
+
+$options = "$other_options $ffmpeg_location --output $output_location"
 
 if ($debug) {
     Write-Host "`nDebug Information:"
@@ -108,8 +131,7 @@ function Set-Format {
 
 # Outputs preview of format for user approval
 function Check-Format {
-    Write-Host "Output will be: " 
-    Write-Host (& $downloader_exe $format $URL --get-format)
+    Write-Host "Output will be: $(& $downloader_exe $format $URL --get-format)"
     Read-Host "Ok? (Enter Y/N)"
 }
 
@@ -140,7 +162,6 @@ function Custom-Formats {
 # Updates youtube-dl (must be in same directory as script)
 function Update-Program {
     & $downloader_exe --update
-    exit
 }
 
 # Function to check if the URL is a YouTube playlist
@@ -178,10 +199,10 @@ function Get-PlaylistId {
 
 # =================================== Start Main Program ===================================
 Write-Output ""
-Write-Output '--------------------------------- Video Downloader Script ---------------------------------'
+Write-Output "--------------------------------- Video Downloader Script ---------------------------------"
 Write-Output ""
-Write-Output 'REQUIRES the youtube-dl program from: https://youtube-dl.org/'
-Write-Output 'Supported Video Sites: https://ytdl-org.github.io/youtube-dl/supportedsites.html'
+Write-Output "REQUIRES the youtube-dl program from: https://github.com/yt-dlp/yt-dlp"
+Write-Output "Supported Video Sites: https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md"
 Write-Output ""
 $URL = Read-Host "Enter video URL here"
 
@@ -242,6 +263,6 @@ while ($confirm -ne "y") {
 
 # Final Run
 Write-Output ""
-Write-Output "Running Command:   .\$($downloader_exe) $format $URL '--%' $options"
-& $downloader_exe $format $URL '--%' $options #Final full command used on youtube-dl. The '--%' basically tells powershell not to interpret the rest of the line as powershell commands, so it can be passed to youtube-dl as is.
-Read-Host "Enter to Continue..."
+Write-Output "Running Command: $downloader_exe $format $URL '--%' $options"
+& $downloader_exe $format $URL '--%' $options #Final full command used on yt-dlp. The '--%' basically tells powershell not to interpret the rest of the line as powershell commands, so it can be passed to yt-dlp as is.
+cmd /c pause
