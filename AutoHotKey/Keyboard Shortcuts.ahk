@@ -11,6 +11,7 @@
 ; - page down    : auto click script for banana
 ; - page up      : reload script (turn off auto-clicker)
 ; - insert       : run ChangeOutputDevice.ps1 script
+; - alt f1       : toggle twitch theatre mode & toggle vertical tabs
 
 ^!z:: ; press ctrl + alt + z
 {
@@ -18,11 +19,13 @@
     Toggle := !Toggle
 
     if (Toggle) {
-        ; Send "{Up down}"  ; Presses down the up-arrow key.
-        Send "{W down}"  ; Presses down the W key.
+        ; Send "{Up down}"      ; Presses down up-arrow key.
+        Send "{W down}"         ; Presses down W key.
+        Send "{LShift down}"    ; Presses down Left Shift key.
     } else {
-        ; Send "{Up up}"  ; Releases the up-arrow key.
-        Send "{W up}"  ; Releases the W key.
+        ; Send "{Up up}"        ; Releases up-arrow key.
+        Send "{W up}"           ; Releases W key.
+        Send "{LShift up}"      ; Releases Left Shift key.
     }
 }
 
@@ -41,13 +44,14 @@
 
 PgDn:: ; press page down
 {
-    if WinExist("Banana")
+    if WinExist("Roblox")
         WinActivate ; Use the window found by WinExist.
     else
         return
 
     loop {
-        Click 443, 296
+        ; Click 443, 296
+        Click
         Sleep 300
     }
 }
@@ -59,8 +63,8 @@ PgUp:: ; press page up
 
 !F1:: ; press alt + f1
 {
-    Send "!t"
-    Send "{F1}"
+    Send "!t" ; toggle twitch theatre mode
+    Send "{F1}" ; toggle vertical tabs
 }
 
 Insert:: ; press insert
