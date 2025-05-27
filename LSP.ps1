@@ -13,7 +13,7 @@ Install LSP Software, if WinRar is installed, it will autmatically extract .rar 
 #>
 
 
-if ((Get-Command gdown)) {
+if (!(Get-Command gdown)) {
     Write-Host "gdown is not installed!" -ForegroundColor Red
     Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
     $installGdown = Read-Host
