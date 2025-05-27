@@ -1,10 +1,10 @@
 <#
 .COMPONENT
 gdown
-winrar/7zip
+winrar or 7zip
 
 .DESCRIPTION
-Install LSP Software
+Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
 
 .NOTES
 0. Open PowerShell as Admin
@@ -13,16 +13,28 @@ Install LSP Software
 #>
 
 
-if (!(Get-Command gdown)) {
-    return Write-Host "gdown is not installed, run pip install gdown" -ForegroundColor Red
+if ((Get-Command gdown)) {
+    Write-Host "gdown is not installed!" -ForegroundColor Red
+    Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
+    $installGdown = Read-Host
+    if (($installGdown.Tolower() -eq "y") -or ($installGdown -eq "")) {
+        try {
+            pip install gdown
+        }
+        catch {
+            return Write-Host "`nOops, something's wrong. Maybe python or pip is not properly configured." -ForegroundColor Red
+        }
+    }
 }
 
 if (Get-Command winget) {
-    Write-Host "Updating winget source..." -ForegroundColor Yellow; winget upgrade
+    Write-Host "Updating winget source..." -ForegroundColor Yellow
+    winget upgrade
 }
 
-if (Test-Path "${env:ProgramFiles}\WinRAR") { # if winrar is installed
-    Write-Host "WinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow; $winrarInstalled = $true
+if (Test-Path "${env:ProgramFiles}\WinRAR") {
+    Write-Host "WinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    $winrarInstalled = $true
 }
 
 
@@ -63,7 +75,7 @@ Write-Host "
 +----+------------------------------+-----------------+---------+--------+
 "
 
-Write-Host "Choose: " -NoNewline -ForegroundColor Yellow
+Write-Host "Choose number based on the table: " -NoNewline -ForegroundColor Yellow
 $choose = Read-Host
 
 switch ($choose) {
@@ -93,7 +105,7 @@ switch ($choose) {
     17 {  }
     18 { 
         gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # f4-minitab17-setup.exe | minitab+
-        Write-Host "masukkan serial key dibawah ini, ketika diminta saat proses install `nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
+        Write-Host "masukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         .\f4-minitab17-setup.exe
     }
     19 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
@@ -114,7 +126,7 @@ switch ($choose) {
         }
         Write-Host "`nYou need to extract DATA-SIMULASI 2012.rar" -ForegroundColor Red
     }
-    Default { Write-Host "`nWrong option try again." }
+    Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
 
 
