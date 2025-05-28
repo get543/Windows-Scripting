@@ -6,13 +6,71 @@ winrar or 7zip
 .DESCRIPTION
 Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
 
+.PARAMETER autoinstall
+It will autoinstall or upgrade all apps that can be downloaded using winget
+
 .NOTES
 0. Open PowerShell as Admin
 1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 2. Run this: Invoke-RestMethod https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | Invoke-Expression
 #>
 
+#TODO FOLDER DOWNLOAD ? (LIMIT 50 FOLDERS)
+#TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❎ NORMAL SCRIPT
+#TODO AUTOINSTALL FROM GDRIVE
 
+param (
+    [switch]$autoinstall
+)
+
+if (Test-Path "${env:ProgramFiles}\WinRAR") {
+    Write-Host "WinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    $winrarInstalled = $true
+}
+
+#! ===================================================================
+#!                          -autoinstall
+#! ===================================================================
+if ($autoinstall) {
+    if (!$winrarInstalled) {
+        Write-Host "`nWinRAR is not installed but still continue with the installation." -ForegroundColor Yellow 
+    }
+    
+    #################### USING WINGET ####################
+    $appArray = @("android-studio", "balsamiq", "capcut", "figma", "fluid ui", "jre", "vscode", "staruml", "php")
+    
+    foreach ($app in $appArray) {
+        if (winget list $app -eq "No installed package found matching input criteria.") {
+            if ($app -eq "jre") {
+                winget install Oracle.JavaRuntimeEnvironment --accept-package-agreements --accept-source-agreements
+                winget install Oracle.JDK.20 --accept-package-agreements --accept-source-agreements
+
+            } elseif ($app -eq "php") {
+                winget install PHP.PHP.8.4 --accept-package-agreements --accept-source-agreements
+                winget install ApacheFriends.Xampp.8.2 --accept-package-agreements --accept-source-agreements
+                
+            } elseif ($app -eq "capcut") {
+                winget install XP9KN75RRB9NHS --accept-package-agreements --accept-source-agreements
+                
+            } else {
+                winget install $app --accept-package-agreements --accept-source-agreements
+
+            }
+        }
+    }
+    
+    if (!(Get-Command gdown) -and (Get-Command pip)) {
+        pip install gdown
+    }
+    
+    Write-Host "`nOk so you've reached the end of the script" -ForegroundColor Red
+    return
+}
+
+
+#! ===================================================================
+#!                          NORMAL EXECUTION
+#! ===================================================================
 if (!(Get-Command gdown)) {
     Write-Host "gdown is not installed!" -ForegroundColor Red
     Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
@@ -31,12 +89,6 @@ if (Get-Command winget) {
     Write-Host "Updating winget source..." -ForegroundColor Yellow
     winget upgrade
 }
-
-if (Test-Path "${env:ProgramFiles}\WinRAR") {
-    Write-Host "WinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
-    $winrarInstalled = $true
-}
-
 
 # https://ozh.github.io/ascii-tables/
 Write-Host "
