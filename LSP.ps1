@@ -24,16 +24,19 @@ param (
 )
 
 if (Test-Path "${env:ProgramFiles}\WinRAR") {
-    Write-Host "WinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    Write-Host "`nWinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
     $winrarInstalled = $true
+} elseif (Test-Path "${env:ProgramFiles}\7-Zip") {
+    Write-Host "`n7-Zip is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    $7zipInstalled = $true
 }
 
 #! ===================================================================
 #!                          -autoinstall
 #! ===================================================================
 if ($autoinstall) {
-    if (!$winrarInstalled) {
-        Write-Host "`nWinRAR is not installed but still continue with the installation." -ForegroundColor Yellow 
+    if (!$winrarInstalled -or !$7zipInstalled) {
+        Write-Host "`nWinRAR or 7-Zip is not installed but still continue with the installation." -ForegroundColor Yellow 
     }
     
     #################### USING WINGET ####################
@@ -72,7 +75,7 @@ if ($autoinstall) {
 #!                          NORMAL EXECUTION
 #! ===================================================================
 if (!(Get-Command gdown)) {
-    Write-Host "gdown is not installed!" -ForegroundColor Red
+    Write-Host "`ngdown is not installed!" -ForegroundColor Red
     Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
     $installGdown = Read-Host
     if (($installGdown.Tolower() -eq "y") -or ($installGdown -eq "")) {
@@ -86,7 +89,7 @@ if (!(Get-Command gdown)) {
 }
 
 if (Get-Command winget) {
-    Write-Host "Updating winget source..." -ForegroundColor Yellow
+    Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
     winget upgrade
 }
 
@@ -133,13 +136,41 @@ $choose = Read-Host
 switch ($choose) {
     1 { 
         gdown --fuzzy "https://drive.google.com/file/d/13NuhwjDLhPBAQeGZDC90PA3HT2_wdXk8/view?usp=sharing" # ACL 9.rar
-        if ($winrarInstalled) { # if winrar is installed
+        if ($winrarInstalled) {
             mkdir "ACL 9"
             & "${env:ProgramFiles}\WinRAR\UnRAR.exe" x "ACL 9.rar" ".\ACL 9\"
+        } elseif ($7zipInstalled) {
+            mkdir "ACL 9"
+            & "${env:ProgramFiles}\7-Zip\7z.exe" x "ACL 9.rar" -o".\ACL 9\"
+        } else {
+            Write-Host "`nYou need to extract ACL 9.rar" -ForegroundColor Red
         }
-        Write-Host "`nYou need to extract ACL 9.rar" -ForegroundColor Red
     }
-    2 { gdown --fuzzy "" } # adobe illustrator
+    2 { #!NOT TESTED
+        Write-Host "
+        pw : www.yasir252.com
+        Download Adobe Illustrator 2022 Full Version
+        Extract the file with Winrar 6.1
+        When finished, run the setup.exe file
+        Press the install button and wait for it to finish
+        Next, open the Crack Adobe Illustrator . folder
+        Copy the .exe file
+        Paste and replace at
+        C:\Program Files\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows
+        Enjoy brother!
+        " -ForegroundColor Red
+        
+        gdown --fuzzy "https://drive.google.com/file/d/1iHbLr-PkXe2BfbnyQlzki7WJiEV7wsEm/view?usp=sharing" # AILS2265.rar
+        if ($winrarInstalled) {
+            mkdir "AILS2265"
+            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x -p"www.yasir252.com" "AILS2265.rar" ".\AILS2265\"
+        } elseif ($7zipInstalled) {
+            mkdir "AILS2265"
+            & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"www.yasir252.com" "AILS2265.rar" -o".\AILS2265\"
+        } else {
+            Write-Host "`nYou need to extract AILS2265.rar" -ForegroundColor Red
+        }
+    } # adobe illustrator
     3 { gdown --fuzzy "" } # adobe photoshop
     4 { gdown --fuzzy "" } # adobe premier
     5 { winget install Google.AndroidStudio } # android studio
@@ -157,7 +188,7 @@ switch ($choose) {
     17 {  }
     18 { 
         gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # f4-minitab17-setup.exe | minitab+
-        Write-Host "masukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
+        Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         .\f4-minitab17-setup.exe
     }
     19 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
@@ -175,8 +206,12 @@ switch ($choose) {
         if ($winrarInstalled) { # if winrar is installed
             mkdir "DATA-SIMULASI 2012"
             & "${env:ProgramFiles}\WinRAR\UnRAR.exe" x "DATA-SIMULASI 2012.rar" ".\DATA-SIMULASI 2012\"
+        } elseif ($7zipInstalled) {
+            mkdir "DATA-SIMULASI 2012"
+            & "${env:ProgramFiles}\7-Zip\7z.exe" x "DATA-SIMULASI 2012.rar" -o".\DATA-SIMULASI 2012\"
+        } else {
+            Write-Host "`nYou need to extract DATA-SIMULASI 2012.rar" -ForegroundColor Red
         }
-        Write-Host "`nYou need to extract DATA-SIMULASI 2012.rar" -ForegroundColor Red
     }
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
