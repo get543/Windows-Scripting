@@ -146,7 +146,7 @@ switch ($choose) {
             Write-Host "`nYou need to extract ACL 9.rar" -ForegroundColor Red
         }
     }
-    2 { #!NOT TESTED
+    2 {
         Write-Host "
         pw : www.yasir252.com
         Download Adobe Illustrator 2022 Full Version
