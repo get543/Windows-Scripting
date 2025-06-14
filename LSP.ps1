@@ -171,7 +171,31 @@ switch ($choose) {
             Write-Host "`nYou need to extract AILS2265.rar" -ForegroundColor Red
         }
     } # adobe illustrator
-    3 { gdown --fuzzy "" } # adobe photoshop
+    3 {
+        Write-Host "
+        1.) Install the Adobe Photoshop 2023 (use autoplay.exe).
+
+        2.) Enjoy!
+
+        Note: If you encounter any issues with a previous installation / crack,
+        please uninstall Adobe Photoshop 2023 and delete those folders:
+
+        C:\Program Files (x86)\Common Files\Adobe\SLCache
+        C:\ProgramData\Adobe\SLStore" -ForegroundColor Red
+
+        try {
+            gdown --folder https://drive.google.com/drive/folders/1XV9ezecsbVu5FkpgW6NdxvkPzaThwDmU?usp=drive_link # probably doesn't work because of folders
+        }
+        catch {
+            return
+        }
+
+        Write-Host "`nRemoving folder C:\Program Files (x86)\Common Files\Adobe\SLCache" -ForegroundColor Red
+        Remove-Item -Recurse -Verbose -Force "C:\Program Files (x86)\Common Files\Adobe\SLCache"
+        Write-Host "`nRemoving folder C:\Program Files (x86)\Common Files\Adobe\SLStore" -ForegroundColor Red
+        Remove-Item -Recurse -Verbose -Force "C:\ProgramData\Adobe\SLStore" -ForegroundColor Red
+
+    } # adobe photoshop
     4 { gdown --fuzzy "" } # adobe premier
     5 { winget install Google.AndroidStudio } # android studio
     6 {  }
