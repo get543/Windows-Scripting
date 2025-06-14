@@ -59,6 +59,8 @@ if ($autoinstall) {
                 winget install $app --accept-package-agreements --accept-source-agreements
 
             }
+        } else {
+            Write-Host "`nIt seems like a version of $app is already installed, skiping this step..." -ForegroundColor Red
         }
     }
     
