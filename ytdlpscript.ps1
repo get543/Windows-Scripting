@@ -35,7 +35,7 @@ if ($Option -eq 1) {
 	Write-Host  " 	1.	| 	720p or HD (24/30/60 fps)"
 	Write-Host  " 	2.	| 	1080p or FHD (24/30/60 fps)"
 	Write-Host  " 	3. 	|	1440p or QHD or 2K (24/30/60 fps)"
-	Write-Host  " 	4. 	|	2160p or UDH or 4K (24/30/60 fps)"
+	Write-Host  " 	4. 	|	2160p or UHD or 4K (24/30/60 fps)"
 	Write-Host  "---------------------------------------------------------"
 	Write-Host "Choose your prefered resolution ? " -ForegroundColor Red -NoNewline
 	$ResolutionOption = Read-Host
