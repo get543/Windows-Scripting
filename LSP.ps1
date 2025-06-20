@@ -161,12 +161,10 @@ if ($autoinstall) {
                 WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget"
                 
             } elseif ($app -eq "capcut") {
-                winget install XP9KN75RRB9NHS --accept-package-agreements --accept-source-agreements
                 WingetInstallCommand "XP9KN75RRB9NHS" "msstore"
                 
             } else {
-                winget install $app --accept-package-agreements --accept-source-agreements
-
+                WingetInstallCommand $app ""
             }
         } else {
             Write-Host "`nIt seems like a version of $app is already installed, skiping this step..." -ForegroundColor Red
