@@ -13,17 +13,32 @@ It will autoinstall or upgrade all apps that can be downloaded using winget
 0. Open PowerShell as Admin
 1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 2. Run this: Invoke-RestMethod https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | Invoke-Expression
+
+.NOTES
+PowerShell One-Liner
+
+& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
+& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation
 #>
 
 #TODO FOLDER DOWNLOAD ? (LIMIT 50 FOLDERS)
-#TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❎ NORMAL SCRIPT
-#TODO AUTOINSTALL FROM GDRIVE
+#TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
+#TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
 
 param (
-    [switch]$autoinstall
+    [switch]$autoinstall,
+    [string]$activation
 )
 
+Set-Location "$env:USERPROFILE\Downloads"
+
 function WingetInstall {
+    <#
+    .SYNOPSIS
+    Installs winget using powershell module.
+    This block of code is official from microsoft's website.
+    #>
+
     $progressPreference = 'silentlyContinue'
     Write-Host "Installing WinGet PowerShell module from PSGallery..." -ForegroundColor Yellow
     Install-PackageProvider -Name NuGet -Force | Out-Null
@@ -40,6 +55,36 @@ if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContin
     Write-Host "`n7-Zip is installed, will be using it to extract .rar files" -ForegroundColor Yellow
     $7zipInstalled = $true
 }
+
+function WingetInstallCommand($name, $source) {
+    winget install $name --accept-package-agreements --accept-source-agreements --source $source
+}
+
+#! ===================================================================
+#!                          -activation 
+#! ===================================================================
+if ($activation) {
+    Write-Host "Activating Microsoft Office products permanently (hopefully)..." -ForegroundColor Yellow
+    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /Ohook
+    
+    Write-Host "Activating Windows permanently (hopefully)..." -ForegroundColor Yellow
+    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /KMS38
+    return
+}
+
+#####################! windows #####################
+if ($activation -eq "windows") {
+    Write-Host "Activating Windows permanently (hopefully)..." -ForegroundColor Yellow
+    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /KMS38
+    return
+}
+#####################! office #####################
+if ($activation -eq "office") {
+    Write-Host "Activating Microsoft Office products permanently (hopefully)..." -ForegroundColor Yellow
+    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /Ohook
+    return
+}
+
 
 #! ===================================================================
 #!                          -autoinstall
@@ -60,15 +105,16 @@ if ($autoinstall) {
     foreach ($app in $appArray) {
         if (winget list $app -eq "No installed package found matching input criteria.") {
             if ($app -eq "jre") {
-                winget install Oracle.JavaRuntimeEnvironment --accept-package-agreements --accept-source-agreements
-                winget install Oracle.JDK.20 --accept-package-agreements --accept-source-agreements
+                WingetInstallCommand "Oracle.JavaRuntimeEnvironment" "winget"
+                WingetInstallCommand "Oracle.JDK.20" "winget"
 
             } elseif ($app -eq "php") {
-                winget install PHP.PHP.8.4 --accept-package-agreements --accept-source-agreements
-                winget install ApacheFriends.Xampp.8.2 --accept-package-agreements --accept-source-agreements
+                WingetInstallCommand "PHP.PHP.8.4" "winget"
+                WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget"
                 
             } elseif ($app -eq "capcut") {
                 winget install XP9KN75RRB9NHS --accept-package-agreements --accept-source-agreements
+                WingetInstallCommand "XP9KN75RRB9NHS" "msstore"
                 
             } else {
                 winget install $app --accept-package-agreements --accept-source-agreements
@@ -79,7 +125,11 @@ if ($autoinstall) {
         }
     }
     
-    if (!(Get-Command gdown -ErrorAction SilentlyContinue) -and  (Get-Command pip -ErrorAction SilentlyContinue)) {
+    if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
+        if (!(Get-Command pip -ErrorAction SilentlyContinue)) {
+            Write-Host "`nInstalling Python 3.13" -ForegroundColor Yellow
+            WingetInstallCommand "Python.Python.3.13" "winget"
+        }
         pip install gdown
     }
     
@@ -160,7 +210,7 @@ $table = @(
     [PSCustomObject]@{No=6;  Software='AutoCad';                   Source='';                Version='';    Status=''}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                  Source='winget';          Version='';    Status='OK'}
     [PSCustomObject]@{No=8;  Software='CapCut';                    Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=9;  Software='Circuit Wizard';            Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=9;  Software='Circuit Wizard';            Source='';                Version='';    Status='OK'}
     [PSCustomObject]@{No=10; Software='CorelDraw';                 Source='GDrive';          Version='';    Status='SOON'}
     [PSCustomObject]@{No=11; Software='CX Programming';            Source='';                Version='';    Status='SOON'}
     [PSCustomObject]@{No=12; Software='Draw.io';                   Source='https://draw.io'; Version='';    Status='OK'}
@@ -169,15 +219,15 @@ $table = @(
     [PSCustomObject]@{No=14; Software='FluidSIM';                  Source='';                Version='';    Status='SOON'}
     [PSCustomObject]@{No=15; Software='Java';                      Source='winget';          Version='8';   Status='OK'}
     [PSCustomObject]@{No=16; Software='JDK';                       Source='winget';          Version='20';  Status='OK'}
-    [PSCustomObject]@{No=17; Software='Krishand Inventory 3.0';    Source='';                Version='3.0';    Status='SOON'}
+    [PSCustomObject]@{No=17; Software='Krishand Inventory 3.0';    Source='';                Version='3.0'; Status='OK'}
     [PSCustomObject]@{No=18; Software='Minitab';                   Source='GDrive';          Version='';    Status='OK'}
     [PSCustomObject]@{No=19; Software='Microsot Excel';            Source='MAS (github)';    Version='';    Status='OK'}
     [PSCustomObject]@{No=20; Software='Microsoft Word';            Source='MAS (github)';    Version='';    Status='OK'}
     [PSCustomObject]@{No=21; Software='Microsoft Visio';           Source='';                Version='';    Status='SOON'}
     [PSCustomObject]@{No=22; Software='Microsoft Visual Studio Code'; Source='winget';       Version='';    Status='OK'}
     [PSCustomObject]@{No=23; Software='PHP';                       Source='winget';          Version='8.4'; Status='OK'}
-    [PSCustomObject]@{No=24; Software='POM QM';                    Source='';                Version='';    Status='SOON'}
-    [PSCustomObject]@{No=25; Software='SPSS';                      Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=24; Software='POM QM';                    Source='';                Version='';    Status='OK'}
+    [PSCustomObject]@{No=25; Software='SPSS';                      Source='';                Version='';    Status='OK'}
     [PSCustomObject]@{No=26; Software='Star UML';                  Source='winget';          Version='';    Status='OK'}
     [PSCustomObject]@{No=27; Software='XAMPP';                     Source='winget';          Version='8.2'; Status='OK'}
     [PSCustomObject]@{No=28; Software='Zahir';                     Source='GDrive';          Version='';    Status='?'}
@@ -255,19 +305,54 @@ switch ($choose) {
 
     } # adobe photoshop
     4 { gdown --fuzzy "" } # adobe premier
-    5 { winget install Google.AndroidStudio --accept-package-agreements --accept-source-agreements --source winget } # android studio
-    6 {  } # autocad
-    7 { winget install Balsamiq.Wireframes --accept-package-agreements --accept-source-agreements --source winget } # balsamiq
-    8 { winget install XP9KN75RRB9NHS --accept-package-agreements --accept-source-agreements --source msstore } # capcut
-    9 {  } # circuit wizard
+    5 { WingetInstallCommand "Google.AndroidStudio" "winget" } # android studio
+    6 { Write-Host "I don't know how to do this one." } # autocad
+    7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } # balsamiq
+    8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } # capcut
+    9 { 
+        gdown --fuzzy "https://drive.google.com/file/d/1I6iz-uzUFr4FrwAOfx1sYqj6U_GUwqI0/view?usp=sharing"
+
+        if ($winrarInstalled) {
+            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x "Circuit Wizard Student Version.zip" ".\"
+        } elseif ($7zipInstalled) {
+            & "${env:ProgramFiles}\7-Zip\7z.exe" x "Circuit Wizard Student Version.zip" -o".\"
+        } else {
+            Write-Host "`nYou need to extract Circuit Wizard Student Version.zip" -ForegroundColor Red
+            return
+        }
+
+        Set-Location "Circuit Wizard Student Version"
+
+        # Get Start Menu directory (current user)
+        $startMenuPath = [Environment]::GetFolderPath("Programs")
+
+        # Create shortcut
+        $shell = New-Object -ComObject WScript.Shell
+        $shortcut = $shell.CreateShortcut("$startMenuPath\Circuit Wizard.lnk")
+        $shortcut.TargetPath = "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
+        $shortcut.WorkingDirectory = Split-Path "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
+        $shortcut.Save()
+
+        Write-Host "`nStart Menu shortcut created: $startMenuPath\Circuit Wizard.lnk" -ForegroundColor Yellow
+
+        .\CktWiz.exe
+    } # circuit wizard
     10 { gdown --fuzzy "" } # coreldraw
     11 {  } # cx programming
-    12 { Write-Host "https://draw.io atau winget install  JGraph.Draw" }
-    13 { winget install Figma.Figma --accept-package-agreements --accept-source-agreements --source winget } # figma
-    14 { winget install 9NBLGGH4LVX9 --accept-package-agreements --accept-source-agreements --source msstore } # fluid ui
-    15 { winget install Oracle.JavaRuntimeEnvironment --accept-package-agreements --accept-source-agreements --source winget } # java
-    16 { winget install Oracle.JDK.20 --accept-package-agreements --accept-source-agreements --source winget } # jdk
-    17 {  } # krishand inventory 3.0
+    12 { Write-Host "https://draw.io atau winget install JGraph.Draw" }
+    13 { WingetInstallCommand "Figma.Figma" "winget" } # figma
+    14 { WingetInstallCommand "9NBLGGH4LVX9" "msstore" } # fluid ui
+    15 { WingetInstallCommand "Oracle".JavaRuntimeEnvironment "winget" } # java
+    16 { WingetInstallCommand "Oracle".JDK.20 "winget" } # jdk
+    17 { 
+        Invoke-WebRequest -Uri "https://www.pajak.net/download/inv03_300.exe" -OutFile "krishand-inventory-3.0.exe"
+        
+        Write-Host "Username: Admin" -ForegroundColor Red
+        Write-host "Password: krishand" -ForegroundColor Red
+        Write-Host "`nNanti biasanya minta username & password saat login."
+
+        .\krishand-inventory-3.0.exe
+     } # krishand inventory 3.0
     18 { 
         gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # f4-minitab17-setup.exe | minitab+
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
@@ -275,13 +360,28 @@ switch ($choose) {
     }
     19 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
     20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
-    21 {  } # visio
-    22 { winget install Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements --source winget } # vscode
-    23 { winget install PHP.PHP.8.4 --accept-package-agreements --accept-source-agreements --source winget } # php
-    24 {  } # POM QM
-    25 {  } # SPSS
-    26 { winget install MKLabs.StarUML --accept-package-agreements --accept-source-agreements --source winget } # star uml
-    27 { winget install ApacheFriends.Xampp.8.2 --accept-package-agreements --accept-source-agreements --source winget } # xampp
+    21 {
+        gdown --fuzzy ""
+
+    } # visio
+    22 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
+    23 { WingetInstallCommand "PHP.PHP.8.4" "winget" } # php
+    24 { 
+        Invoke-WebRequest -Uri "https://qm-for-windows.software.informer.com/download/?ca1e2f92" -OutFile POM-QM.exe
+
+        .\POM-QM.exe
+    } # POM QM
+    25 { 
+        gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link
+
+        gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link
+
+        Move-Item .\lservrc -Destination "C:\Program Files\IBM\SPSS\Statistics\25\" -Force 
+
+        .\SPSS_Statistics_25.exe
+    } # SPSS
+    26 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
+    27 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" } # xampp
     28 { gdown --fuzzy "" } # zahir
     29 {
         gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
