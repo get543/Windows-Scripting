@@ -273,7 +273,7 @@ $table = @(
     [PSCustomObject]@{No=19; Software='Minitab';                      Source='GDrive';          Version='17';        Status='OK'}
     [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='';          Status='OK'}
     [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='';          Status='OK'}
-    [PSCustomObject]@{No=22; Software='Microsoft Visio';              Source='GDrive';          Version='2024';      Status='VERYSOON'}
+    [PSCustomObject]@{No=22; Software='Microsoft Visio';              Source='GDrive';          Version='2024';      Status='OK'}
     [PSCustomObject]@{No=23; Software='Microsoft Visual Studio Code'; Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=24; Software='PHP';                          Source='winget';          Version='8.4';       Status='OK'}
     [PSCustomObject]@{No=25; Software='POM QM';                       Source='Web';             Version='Windows 5'; Status='OK'}
@@ -446,9 +446,9 @@ switch ($choose) {
     20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
     21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
     22 {
-        gdown --fuzzy ""
-        # cmd /c setup /configure Configuration.xml
-
+        gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
+        Set-Location "VISIO2024"
+        .\setup.exe /configure Configuration.xml
     } # visio
     23 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
     24 { WingetInstallCommand "PHP.PHP.8.4" "winget" } # php
