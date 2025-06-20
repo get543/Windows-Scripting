@@ -3,3 +3,5 @@ Everything about REGEX.ps1
 testing.ps1
 UpdateInstallAll.vbs
 UpdateInstallSpecific.vbs
+NonElevated.ps1
+EnableASR.ps1
