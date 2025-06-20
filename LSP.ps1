@@ -5,9 +5,21 @@ winrar or 7zip
 
 .DESCRIPTION
 Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
+GDown is needed to download files from GDrive and can be installed with pip install gdown
+which you will need python to be installed on your system. The script will aumatically do all of this automatically
+7Zip or winrar is also needed to extract files (if not installed, you'll have to do that manually.)
+
 
 .PARAMETER autoinstall
 It will autoinstall or upgrade all apps that can be downloaded using winget
+
+.PARAMETER activation
+It will activate windows and office
+
+.PARAMETER activation <string>
+Accepted <string> value : 
+- windows
+- office
 
 .NOTES
 0. Open PowerShell as Admin
@@ -30,8 +42,18 @@ param (
     [string]$activation
 )
 
-Set-Location "$env:USERPROFILE\Downloads"
+Set-Location "~\Downloads"
 
+if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContinue) {
+    Write-Host "`nWinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    $winrarInstalled = $true
+} elseif (Test-Path "${env:ProgramFiles}\7-Zip\7z.exe" -ErrorAction SilentlyContinue) {
+    Write-Host "`n7-Zip is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    $7zipInstalled = $true
+}
+
+
+#! ========================== FUNCTIONS ################################
 function WingetInstall {
     <#
     .SYNOPSIS
@@ -48,18 +70,44 @@ function WingetInstall {
     Write-Host "Done."
 }
 
-if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContinue) {
-    Write-Host "`nWinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
-    $winrarInstalled = $true
-} elseif (Test-Path "${env:ProgramFiles}\7-Zip\7z.exe" -ErrorAction SilentlyContinue) {
-    Write-Host "`n7-Zip is installed, will be using it to extract .rar files" -ForegroundColor Yellow
-    $7zipInstalled = $true
+function UnZip($SourceFile, $DestinationFile) {
+    <#
+    .PARAMETER SourceFile
+    Source file
+
+    .PARAMETER DestinationFile
+    Destination file
+    #>
+    if ($winrarInstalled) {
+        & "${env:ProgramFiles}\WinRAR\UnRAR.exe" x "$SourceFile" "$DestinationFile"
+    } elseif ($7zipInstalled) {
+        & "${env:ProgramFiles}\7-Zip\7z.exe" x "$SourceFile" -o"$DestinationFile"
+    } else {
+        Write-Host "`nYou need to extract $SourceFile" -ForegroundColor Red
+        return
+    }
 }
 
 function WingetInstallCommand($name, $source) {
     winget install $name --accept-package-agreements --accept-source-agreements --source $source
 }
 
+function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
+    # Get Start Menu directory (current user)
+    $startMenuPath = [Environment]::GetFolderPath("Programs")
+
+    # Create shortcut
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut("$startMenuPath\$ShortcutName")
+    # $shortcut.TargetPath = "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
+    $shortcut.TargetPath = "$SourceFile"
+    # $shortcut.WorkingDirectory = Split-Path "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
+    $shortcut.WorkingDirectory = Split-Path "$SourceFile"
+    $shortcut.Save()
+
+    Write-Host "`nStart Menu shortcut created: $startMenuPath\Circuit Wizard.lnk" -ForegroundColor Yellow
+    
+}
 #! ===================================================================
 #!                          -activation 
 #! ===================================================================
@@ -164,74 +212,76 @@ Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
 winget upgrade
 
 # https://ozh.github.io/ascii-tables/
-#Write-Host "
-#+----+------------------------------+-----------------+---------+--------+
-#| No |           Software           |     Source      | Version | Status |
-#+----+------------------------------+-----------------+---------+--------+
-#|  1 | ACL 9                        | GDrive          |         | OK     |
-#|  2 | Adobe Illustrator            | GDrive          |         | ?      |
-#|  3 | Adobe Photoshop              | GDrive          |         | ?      |
-#|  4 | Adobe Premier                | GDrive          |         | ?      |
-#|  5 | Android Studio               | winget          |         | OK     |
-#|  6 | AutoCad                      |                 |         |        |
-#|  7 | Balsamiq                     | winget          |         | OK     |
-#|  8 | CapCut                       | winget          |         | OK     |
-#|  9 | Circuit Wizard               |                 |         |        |
-#| 10 | CorelDraw                    | GDrive          |         | ?      |
-#| 11 | CX Programming               |                 |         |        |
-#| 12 | Draw.io                      | https://draw.io |         | OK     |
-#| 13 | Figma                        | winget          |         | OK     |
-#| 14 | Fluid UI                     | winget          |         | OK     |
-#| 15 | Java                         | winget          |       8 | OK     |
-#| 16 | JDK                          | winget          |      20 | OK     |
-#| 17 | Krishand Inventory 3.0       |                 |         |        |
-#| 18 | Minitab                      | GDrive          |         | OK     |
-#| 19 | Microsot Excel               | MAS (github)    |         | OK     |
-#| 20 | Microsoft Word               | MAS (github)    |         | OK     |
-#| 21 | Microsoft Visio              |                 |         |        |
-#| 22 | Microsoft Visual Studio Code | winget          |         | OK     |
-#| 23 | PHP                          | winget          |     8.4 | OK     |
-#| 24 | POM QM                       |                 |         |        |
-#| 25 | SPSS                         |                 |         |        |
-#| 26 | Star UML                     | winget          |         | OK     |
-#| 27 | XAMPP                        | winget          |     8.2 | OK     |
-#| 28 | Zahir                        | GDrive          |         | ?      |
-#| 29 | Data Simulasi 2012           | GDrive          |         | OK     |
-#+----+------------------------------+-----------------+---------+--------+
-#"
+<#
+Write-Host "
++----+------------------------------+-----------------+---------+--------+
+| No |           Software           |     Source      | Version | Status |
++----+------------------------------+-----------------+---------+--------+
+|  1 | ACL 9                        | GDrive          |         | OK     |
+|  2 | Adobe Illustrator            | GDrive          |         | ?      |
+|  3 | Adobe Photoshop              | GDrive          |         | ?      |
+|  4 | Adobe Premier                | GDrive          |         | ?      |
+|  5 | Android Studio               | winget          |         | OK     |
+|  6 | AutoCad                      |                 |         |        |
+|  7 | Balsamiq                     | winget          |         | OK     |
+|  8 | CapCut                       | winget          |         | OK     |
+|  9 | Circuit Wizard               |                 |         |        |
+| 10 | CorelDraw                    | GDrive          |         | ?      |
+| 11 | CX Programming               |                 |         |        |
+| 12 | Draw.io                      | https://draw.io |         | OK     |
+| 13 | Figma                        | winget          |         | OK     |
+| 14 | Fluid UI                     | winget          |         | OK     |
+| 15 | Java                         | winget          |       8 | OK     |
+| 16 | JDK                          | winget          |      20 | OK     |
+| 17 | Krishand Inventory 3.0       |                 |         |        |
+| 18 | Minitab                      | GDrive          |         | OK     |
+| 19 | Microsot Excel               | MAS (github)    |         | OK     |
+| 20 | Microsoft Word               | MAS (github)    |         | OK     |
+| 21 | Microsoft Visio              |                 |         |        |
+| 22 | Microsoft Visual Studio Code | winget          |         | OK     |
+| 23 | PHP                          | winget          |     8.4 | OK     |
+| 24 | POM QM                       |                 |         |        |
+| 25 | SPSS                         |                 |         |        |
+| 26 | Star UML                     | winget          |         | OK     |
+| 27 | XAMPP                        | winget          |     8.2 | OK     |
+| 28 | Zahir                        | GDrive          |         | ?      |
+| 29 | Data Simulasi 2012           | GDrive          |         | OK     |
++----+------------------------------+-----------------+---------+--------+
+"
+#>
 
 ##################################### !CUSTOM TABLE OBJECT #####################################
 $table = @(
-    [PSCustomObject]@{No=1;  Software='ACL 9';                     Source='GDrive';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';         Source='GDrive';          Version='';    Status='?'}
-    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';           Source='GDrive';          Version='';    Status='?'}
-    [PSCustomObject]@{No=4;  Software='Adobe Premier';             Source='GDrive';          Version='';    Status='?'}
-    [PSCustomObject]@{No=5;  Software='Android Studio';            Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=6;  Software='AutoCad';                   Source='';                Version='';    Status=''}
-    [PSCustomObject]@{No=7;  Software='Balsamiq';                  Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=8;  Software='CapCut';                    Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=9;  Software='Circuit Wizard';            Source='';                Version='';    Status='OK'}
-    [PSCustomObject]@{No=10; Software='CorelDraw';                 Source='GDrive';          Version='';    Status='SOON'}
-    [PSCustomObject]@{No=11; Software='CX Programming';            Source='';                Version='';    Status='SOON'}
-    [PSCustomObject]@{No=12; Software='Draw.io';                   Source='https://draw.io'; Version='';    Status='OK'}
-    [PSCustomObject]@{No=13; Software='Figma';                     Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=14; Software='Fluid UI';                  Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=14; Software='FluidSIM';                  Source='';                Version='';    Status='SOON'}
-    [PSCustomObject]@{No=15; Software='Java';                      Source='winget';          Version='8';   Status='OK'}
-    [PSCustomObject]@{No=16; Software='JDK';                       Source='winget';          Version='20';  Status='OK'}
-    [PSCustomObject]@{No=17; Software='Krishand Inventory 3.0';    Source='';                Version='3.0'; Status='OK'}
-    [PSCustomObject]@{No=18; Software='Minitab';                   Source='GDrive';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=19; Software='Microsot Excel';            Source='MAS (github)';    Version='';    Status='OK'}
-    [PSCustomObject]@{No=20; Software='Microsoft Word';            Source='MAS (github)';    Version='';    Status='OK'}
-    [PSCustomObject]@{No=21; Software='Microsoft Visio';           Source='';                Version='';    Status='SOON'}
-    [PSCustomObject]@{No=22; Software='Microsoft Visual Studio Code'; Source='winget';       Version='';    Status='OK'}
-    [PSCustomObject]@{No=23; Software='PHP';                       Source='winget';          Version='8.4'; Status='OK'}
-    [PSCustomObject]@{No=24; Software='POM QM';                    Source='';                Version='';    Status='OK'}
-    [PSCustomObject]@{No=25; Software='SPSS';                      Source='';                Version='';    Status='OK'}
-    [PSCustomObject]@{No=26; Software='Star UML';                  Source='winget';          Version='';    Status='OK'}
-    [PSCustomObject]@{No=27; Software='XAMPP';                     Source='winget';          Version='8.2'; Status='OK'}
-    [PSCustomObject]@{No=28; Software='Zahir';                     Source='GDrive';          Version='';    Status='?'}
-    [PSCustomObject]@{No=29; Software='Data Simulasi 2012';        Source='GDrive';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=1;  Software='ACL 9';                        Source='GDrive';          Version='-';         Status='OK'}
+    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2023';      Status='?'}
+    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='?'}
+    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='?'}
+    [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='';                Version='';          Status=''}
+    [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=8;  Software='CapCut';                       Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='';                Version='2.0';       Status='OK'}
+    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='?'}
+    [PSCustomObject]@{No=11; Software='CX Programming';               Source='';                Version='';          Status='OK'}
+    [PSCustomObject]@{No=12; Software='Draw.io';                      Source='https://draw.io'; Version='';          Status='OK'}
+    [PSCustomObject]@{No=13; Software='Figma';                        Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=14; Software='Fluid UI';                     Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='';                Version='';          Status='OK'}
+    [PSCustomObject]@{No=16; Software='Java';                         Source='winget';          Version='8';         Status='OK'}
+    [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='20';        Status='OK'}
+    [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web';             Version='3.0';       Status='OK'}
+    [PSCustomObject]@{No=19; Software='Minitab';                      Source='GDrive';          Version='17';        Status='OK'}
+    [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='';          Status='OK'}
+    [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='';          Status='OK'}
+    [PSCustomObject]@{No=22; Software='Microsoft Visio';              Source='GDrive';          Version='2024';      Status='VERYSOON'}
+    [PSCustomObject]@{No=23; Software='Microsoft Visual Studio Code'; Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=24; Software='PHP';                          Source='winget';          Version='8.4';       Status='OK'}
+    [PSCustomObject]@{No=25; Software='POM QM';                       Source='Web';             Version='Windows 5'; Status='OK'}
+    [PSCustomObject]@{No=26; Software='SPSS';                         Source='Web';             Version='25';        Status='OK'}
+    [PSCustomObject]@{No=27; Software='Star UML';                     Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=28; Software='XAMPP';                        Source='winget';          Version='8.2';       Status='OK'}
+    [PSCustomObject]@{No=29; Software='Zahir';                        Source='GDrive';          Version='6';         Status='OK'}
+    [PSCustomObject]@{No=30; Software='Data Simulasi 2012';           Source='GDrive';          Version='-';         Status='OK'}
 )
 
 
@@ -254,7 +304,7 @@ switch ($choose) {
             Write-Host "`nYou need to extract ACL 9.rar" -ForegroundColor Red
         }
     }
-    2 {
+    2 { #! BLM DI COBA
         Write-Host "
         pw : www.yasir252.com
         Download Adobe Illustrator 2022 Full Version
@@ -267,7 +317,7 @@ switch ($choose) {
         C:\Program Files\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows
         Enjoy brother!
         " -ForegroundColor Red
-        
+
         gdown --fuzzy "https://drive.google.com/file/d/1iHbLr-PkXe2BfbnyQlzki7WJiEV7wsEm/view?usp=sharing" # AILS2265.rar
         if ($winrarInstalled) {
             mkdir "AILS2265"
@@ -278,30 +328,36 @@ switch ($choose) {
         } else {
             Write-Host "`nYou need to extract AILS2265.rar" -ForegroundColor Red
         }
+
+        Set-Location "~\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\"
+        .\Set-up.exe
+
+        Write-Host "Press Enter ONLY IF THE INSTALATION IS FINISH! " -ForegroundColor Red 
+        Read-Host
+
+        Set-Location "~\Downloads\AILS2265\Crack Only\"
+        Copy-Item "Illustrator.exe" -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse
     } # adobe illustrator
-    3 {
-        Write-Host "
-        1.) Install the Adobe Photoshop 2023 (use autoplay.exe).
-
-        2.) Enjoy!
-
-        Note: If you encounter any issues with a previous installation / crack,
-        please uninstall Adobe Photoshop 2023 and delete those folders:
-
-        C:\Program Files (x86)\Common Files\Adobe\SLCache
-        C:\ProgramData\Adobe\SLStore" -ForegroundColor Red
-
-        try {
-            gdown --folder https://drive.google.com/drive/folders/1XV9ezecsbVu5FkpgW6NdxvkPzaThwDmU?usp=drive_link # probably doesn't work because of folders
+    3 { #! BLM DI COBA
+        gdown --fuzzy "https://drive.google.com/file/d/1YTyJnngcHi9abbbY-5RdOloVJ89o_Kdn/view?usp=sharing"
+       
+        # Delete previous instalation folder
+        if ((Test-Path "${env:\CommonProgramFiles(x86)}\Adobe\SLCache") -or (Test-Path "$env:ProgramData\Adobe\SLStore")) {
+            Remove-Item -Recurse -Force "${env:\CommonProgramFiles(x86)}\Adobe\SLCache"
+            Remove-Item -Recurse -Force "$env:ProgramData\Adobe\SLStore"
         }
-        catch {
+
+        if ($winrarInstalled) {
+            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x -p"123" "_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" ".\"
+        } elseif ($7zipInstalled) {
+            & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"123" "_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" -o".\"
+        } else {
+            Write-Host "`nYou need to extract _Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" -ForegroundColor Red
             return
         }
 
-        Write-Host "`nRemoving folder C:\Program Files (x86)\Common Files\Adobe\SLCache" -ForegroundColor Red
-        Remove-Item -Recurse -Verbose -Force "C:\Program Files (x86)\Common Files\Adobe\SLCache"
-        Write-Host "`nRemoving folder C:\Program Files (x86)\Common Files\Adobe\SLStore" -ForegroundColor Red
-        Remove-Item -Recurse -Verbose -Force "C:\ProgramData\Adobe\SLStore" -ForegroundColor Red
+        Set-Location "Adobe_Photoshop_2023_v24.2.0.315"
+        .\autoplay.exe
 
     } # adobe photoshop
     4 { gdown --fuzzy "" } # adobe premier
@@ -312,39 +368,68 @@ switch ($choose) {
     9 { 
         gdown --fuzzy "https://drive.google.com/file/d/1I6iz-uzUFr4FrwAOfx1sYqj6U_GUwqI0/view?usp=sharing"
 
-        if ($winrarInstalled) {
-            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x "Circuit Wizard Student Version.zip" ".\"
-        } elseif ($7zipInstalled) {
-            & "${env:ProgramFiles}\7-Zip\7z.exe" x "Circuit Wizard Student Version.zip" -o".\"
-        } else {
-            Write-Host "`nYou need to extract Circuit Wizard Student Version.zip" -ForegroundColor Red
-            return
-        }
+        UnZip "Circuit Wizard Student Version.zip" ".\"
 
         Set-Location "Circuit Wizard Student Version"
 
-        # Get Start Menu directory (current user)
-        $startMenuPath = [Environment]::GetFolderPath("Programs")
-
-        # Create shortcut
-        $shell = New-Object -ComObject WScript.Shell
-        $shortcut = $shell.CreateShortcut("$startMenuPath\Circuit Wizard.lnk")
-        $shortcut.TargetPath = "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
-        $shortcut.WorkingDirectory = Split-Path "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
-        $shortcut.Save()
-
-        Write-Host "`nStart Menu shortcut created: $startMenuPath\Circuit Wizard.lnk" -ForegroundColor Yellow
+        CreateShortcutStartMenu "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe" "Circuit Wizard.lnk"
 
         .\CktWiz.exe
     } # circuit wizard
-    10 { gdown --fuzzy "" } # coreldraw
-    11 {  } # cx programming
+    10 { #! MASIH GA BISA
+        gdown --fuzzy "https://drive.google.com/file/d/15hsrVd8088JI-No8UIeAOP96PzLgZSmc/view?usp=sharing"
+        
+        UnZip "CorelDRAW Graphics Suite X8 18.2.0.840 x64.zip" ".\"
+
+        Set-Location "CorelDRAW Graphics Suite X8 18.2.0.840 x64"
+        
+        Write-Host "
+        1. jika sudah terinstal hingga akhir, klik 'already purchased?'
+        jika tidak ada pilih product details -> already purchased
+        2. klik 'Enter Serial Number'
+        3. masukkan serial number 'DR18R39-S624MZZ-DFNHXR2-R2D5YEA'
+        4. authenticate
+        5. reopen corel draw
+        " -ForegroundColor Red
+
+        .\Setup.exe
+    } # coreldraw
+    11 {
+        gdown --fuzzy "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
+        if ($winrarInstalled) {
+            mkdir "CX Programmer"
+            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x -p"plc247.com" "[plc247.com]CxOne_V4.60.rar" ".\CX Programmer\"
+        } elseif ($7zipInstalled) {
+            mkdir "CX Programmer"
+            & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"plc247.com" "[plc247.com]CxOne_V4.60.rar" -o".\CX Programmer\"
+        } else {
+            Write-Host "`nYou need to extract [plc247.com]CxOne_V4.60.rar" -ForegroundColor Red
+            return
+        }
+
+        Set-Location "CX Programmer\CxOne_V4.60\"
+        .\setup.exe
+
+        Write-Host "License key: 1600 0285 8143 5387 or 1600 0325 7848 5341" -ForegroundColor Red
+    } # cx programming
     12 { Write-Host "https://draw.io atau winget install JGraph.Draw" }
     13 { WingetInstallCommand "Figma.Figma" "winget" } # figma
     14 { WingetInstallCommand "9NBLGGH4LVX9" "msstore" } # fluid ui
-    15 { WingetInstallCommand "Oracle".JavaRuntimeEnvironment "winget" } # java
-    16 { WingetInstallCommand "Oracle".JDK.20 "winget" } # jdk
-    17 { 
+    15 {
+        gdown --fuzzy "https://drive.google.com/file/d/1wFrPVIX1UHx7tS8ra4PPiDQSqoc0l0Lb/view?usp=drive_link"
+        
+        UnZip "festo fluidsim 4.2 PH-20231010T134944Z-001.rar" ".\"
+        Set-Location "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\"
+
+        CreateShortcutStartMenu "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\fl_sim_h.exe" "FluidSim Hydraulic.lnk" # Hydraulic
+        CreateShortcutStartMenu "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Pneumatic\bin\fl_sim_p.exe" "FluidSim Pneumatic.lnk" # Pneumatic
+
+        .\fl_sim_h.exe
+
+    } # FluidSim
+    16 { WingetInstallCommand "Oracle".JavaRuntimeEnvironment "winget" } # java
+    17 { WingetInstallCommand "Oracle".JDK.20 "winget" } # jdk
+    18 { 
         Invoke-WebRequest -Uri "https://www.pajak.net/download/inv03_300.exe" -OutFile "krishand-inventory-3.0.exe"
         
         Write-Host "Username: Admin" -ForegroundColor Red
@@ -352,38 +437,45 @@ switch ($choose) {
         Write-Host "`nNanti biasanya minta username & password saat login."
 
         .\krishand-inventory-3.0.exe
-     } # krishand inventory 3.0
-    18 { 
-        gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # f4-minitab17-setup.exe | minitab+
+    } # krishand inventory 3.0
+    19 { 
+        gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # minitab+
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         .\f4-minitab17-setup.exe
     }
-    19 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
-    20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
-    21 {
+    20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
+    21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
+    22 {
         gdown --fuzzy ""
+        # cmd /c setup /configure Configuration.xml
 
     } # visio
-    22 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
-    23 { WingetInstallCommand "PHP.PHP.8.4" "winget" } # php
-    24 { 
+    23 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
+    24 { WingetInstallCommand "PHP.PHP.8.4" "winget" } # php
+    25 { 
         Invoke-WebRequest -Uri "https://qm-for-windows.software.informer.com/download/?ca1e2f92" -OutFile POM-QM.exe
 
         .\POM-QM.exe
     } # POM QM
-    25 { 
-        gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link
-
-        gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link
+    26 { 
+        gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
+        gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
 
         Move-Item .\lservrc -Destination "C:\Program Files\IBM\SPSS\Statistics\25\" -Force 
 
         .\SPSS_Statistics_25.exe
     } # SPSS
-    26 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
-    27 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" } # xampp
-    28 { gdown --fuzzy "" } # zahir
+    27 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
+    28 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" } # xampp
     29 {
+        gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
+
+        UnZip "Master ZAHIR 6.11a.zip" ".\"
+
+        Set-Location "Master ZAHIR 6.11a"
+        .\setup.exe
+    } # zahir
+    30 {
         gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
         if ($winrarInstalled) { # if winrar is installed
             mkdir "DATA-SIMULASI 2012"
