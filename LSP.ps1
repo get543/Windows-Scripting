@@ -23,10 +23,20 @@ param (
     [switch]$autoinstall
 )
 
-if (Test-Path "${env:ProgramFiles}\WinRAR") {
+function WingetInstall {
+    $progressPreference = 'silentlyContinue'
+    Write-Host "Installing WinGet PowerShell module from PSGallery..." -ForegroundColor Yellow
+    Install-PackageProvider -Name NuGet -Force | Out-Null
+    Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
+    Write-Host "Using Repair-WinGetPackageManager cmdlet to bootstrap WinGet..." -ForegroundColor Yellow
+    Repair-WinGetPackageManager -AllUsers -ErrorAction SilentlyContinue
+    Write-Host "Done."
+}
+
+if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContinue) {
     Write-Host "`nWinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
     $winrarInstalled = $true
-} elseif (Test-Path "${env:ProgramFiles}\7-Zip") {
+} elseif (Test-Path "${env:ProgramFiles}\7-Zip\7z.exe" -ErrorAction SilentlyContinue) {
     Write-Host "`n7-Zip is installed, will be using it to extract .rar files" -ForegroundColor Yellow
     $7zipInstalled = $true
 }
@@ -37,6 +47,11 @@ if (Test-Path "${env:ProgramFiles}\WinRAR") {
 if ($autoinstall) {
     if (!$winrarInstalled -or !$7zipInstalled) {
         Write-Host "`nWinRAR or 7-Zip is not installed but still continue with the installation." -ForegroundColor Yellow 
+    }
+
+    if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Host "`nWinget is not installed!" -ForegroundColor Red
+        WingetInstall
     }
     
     #################### USING WINGET ####################
@@ -64,7 +79,7 @@ if ($autoinstall) {
         }
     }
     
-    if (!(Get-Command gdown) -and (Get-Command pip)) {
+    if (!(Get-Command gdown -ErrorAction SilentlyContinue) -and  (Get-Command pip -ErrorAction SilentlyContinue)) {
         pip install gdown
     }
     
@@ -76,7 +91,7 @@ if ($autoinstall) {
 #! ===================================================================
 #!                          NORMAL EXECUTION
 #! ===================================================================
-if (!(Get-Command gdown)) {
+if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
     Write-Host "`ngdown is not installed!" -ForegroundColor Red
     Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
     $installGdown = Read-Host
@@ -90,47 +105,88 @@ if (!(Get-Command gdown)) {
     }
 }
 
-if (Get-Command winget) {
-    Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
-    winget upgrade
+if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
+    Write-Host "`nWinget is not installed!" -ForegroundColor Red
+    WingetInstall
 }
 
+Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
+winget upgrade
+
 # https://ozh.github.io/ascii-tables/
-Write-Host "
-+----+------------------------------+-----------------+---------+--------+
-| No |           Software           |     Source      | Version | Status |
-+----+------------------------------+-----------------+---------+--------+
-|  1 | ACL 9                        | GDrive          |         | OK     |
-|  2 | Adobe Illustrator            | GDrive          |         | ?      |
-|  3 | Adobe Photoshop              | GDrive          |         | ?      |
-|  4 | Adobe Premier                | GDrive          |         | ?      |
-|  5 | Android Studio               | winget          |         | OK     |
-|  6 | AutoCad                      |                 |         |        |
-|  7 | Balsamiq                     | winget          |         | OK     |
-|  8 | CapCut                       | winget          |         | OK     |
-|  9 | Circuit Wizard               |                 |         |        |
-| 10 | CorelDraw                    | GDrive          |         | ?      |
-| 11 | CX Programming               |                 |         |        |
-| 12 | Draw.io                      | https://draw.io |         | OK     |
-| 13 | Figma                        | winget          |         | OK     |
-| 14 | Fluid UI                     | winget          |         | OK     |
-| 15 | Java                         | winget          |       8 | OK     |
-| 16 | JDK                          | winget          |      20 | OK     |
-| 17 | Krishand Inventory           |                 |         |        |
-| 18 | Minitab                      | GDrive          |         | OK     |
-| 19 | Microsot Excel               | MAS (github)    |         | OK     |
-| 20 | Microsoft Word               | MAS (github)    |         | OK     |
-| 21 | Microsoft Visio              |                 |         |        |
-| 22 | Microsoft Visual Studio Code | winget          |         | OK     |
-| 23 | PHP                          | winget          |     8.4 | OK     |
-| 24 | POM QM                       |                 |         |        |
-| 25 | SPSS                         |                 |         |        |
-| 26 | Star UML                     | winget          |         | OK     |
-| 27 | XAMPP                        | winget          |     8.2 | OK     |
-| 28 | Zahir                        | GDrive          |         | ?      |
-| 29 | Data Simulasi 2012           | GDrive          |         | OK     |
-+----+------------------------------+-----------------+---------+--------+
-"
+#Write-Host "
+#+----+------------------------------+-----------------+---------+--------+
+#| No |           Software           |     Source      | Version | Status |
+#+----+------------------------------+-----------------+---------+--------+
+#|  1 | ACL 9                        | GDrive          |         | OK     |
+#|  2 | Adobe Illustrator            | GDrive          |         | ?      |
+#|  3 | Adobe Photoshop              | GDrive          |         | ?      |
+#|  4 | Adobe Premier                | GDrive          |         | ?      |
+#|  5 | Android Studio               | winget          |         | OK     |
+#|  6 | AutoCad                      |                 |         |        |
+#|  7 | Balsamiq                     | winget          |         | OK     |
+#|  8 | CapCut                       | winget          |         | OK     |
+#|  9 | Circuit Wizard               |                 |         |        |
+#| 10 | CorelDraw                    | GDrive          |         | ?      |
+#| 11 | CX Programming               |                 |         |        |
+#| 12 | Draw.io                      | https://draw.io |         | OK     |
+#| 13 | Figma                        | winget          |         | OK     |
+#| 14 | Fluid UI                     | winget          |         | OK     |
+#| 15 | Java                         | winget          |       8 | OK     |
+#| 16 | JDK                          | winget          |      20 | OK     |
+#| 17 | Krishand Inventory 3.0       |                 |         |        |
+#| 18 | Minitab                      | GDrive          |         | OK     |
+#| 19 | Microsot Excel               | MAS (github)    |         | OK     |
+#| 20 | Microsoft Word               | MAS (github)    |         | OK     |
+#| 21 | Microsoft Visio              |                 |         |        |
+#| 22 | Microsoft Visual Studio Code | winget          |         | OK     |
+#| 23 | PHP                          | winget          |     8.4 | OK     |
+#| 24 | POM QM                       |                 |         |        |
+#| 25 | SPSS                         |                 |         |        |
+#| 26 | Star UML                     | winget          |         | OK     |
+#| 27 | XAMPP                        | winget          |     8.2 | OK     |
+#| 28 | Zahir                        | GDrive          |         | ?      |
+#| 29 | Data Simulasi 2012           | GDrive          |         | OK     |
+#+----+------------------------------+-----------------+---------+--------+
+#"
+
+##################################### !CUSTOM TABLE OBJECT #####################################
+$table = @(
+    [PSCustomObject]@{No=1;  Software='ACL 9';                     Source='GDrive';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';         Source='GDrive';          Version='';    Status='?'}
+    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';           Source='GDrive';          Version='';    Status='?'}
+    [PSCustomObject]@{No=4;  Software='Adobe Premier';             Source='GDrive';          Version='';    Status='?'}
+    [PSCustomObject]@{No=5;  Software='Android Studio';            Source='winget';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=6;  Software='AutoCad';                   Source='';                Version='';    Status=''}
+    [PSCustomObject]@{No=7;  Software='Balsamiq';                  Source='winget';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=8;  Software='CapCut';                    Source='winget';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=9;  Software='Circuit Wizard';            Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=10; Software='CorelDraw';                 Source='GDrive';          Version='';    Status='SOON'}
+    [PSCustomObject]@{No=11; Software='CX Programming';            Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=12; Software='Draw.io';                   Source='https://draw.io'; Version='';    Status='OK'}
+    [PSCustomObject]@{No=13; Software='Figma';                     Source='winget';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=14; Software='Fluid UI';                  Source='winget';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=14; Software='FluidSIM';                  Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=15; Software='Java';                      Source='winget';          Version='8';   Status='OK'}
+    [PSCustomObject]@{No=16; Software='JDK';                       Source='winget';          Version='20';  Status='OK'}
+    [PSCustomObject]@{No=17; Software='Krishand Inventory 3.0';    Source='';                Version='3.0';    Status='SOON'}
+    [PSCustomObject]@{No=18; Software='Minitab';                   Source='GDrive';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=19; Software='Microsot Excel';            Source='MAS (github)';    Version='';    Status='OK'}
+    [PSCustomObject]@{No=20; Software='Microsoft Word';            Source='MAS (github)';    Version='';    Status='OK'}
+    [PSCustomObject]@{No=21; Software='Microsoft Visio';           Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=22; Software='Microsoft Visual Studio Code'; Source='winget';       Version='';    Status='OK'}
+    [PSCustomObject]@{No=23; Software='PHP';                       Source='winget';          Version='8.4'; Status='OK'}
+    [PSCustomObject]@{No=24; Software='POM QM';                    Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=25; Software='SPSS';                      Source='';                Version='';    Status='SOON'}
+    [PSCustomObject]@{No=26; Software='Star UML';                  Source='winget';          Version='';    Status='OK'}
+    [PSCustomObject]@{No=27; Software='XAMPP';                     Source='winget';          Version='8.2'; Status='OK'}
+    [PSCustomObject]@{No=28; Software='Zahir';                     Source='GDrive';          Version='';    Status='?'}
+    [PSCustomObject]@{No=29; Software='Data Simulasi 2012';        Source='GDrive';          Version='';    Status='OK'}
+)
+
+
+$table | Format-Table -AutoSize # print table
+
 
 Write-Host "Choose number based on the table: " -NoNewline -ForegroundColor Yellow
 $choose = Read-Host
@@ -199,19 +255,19 @@ switch ($choose) {
 
     } # adobe photoshop
     4 { gdown --fuzzy "" } # adobe premier
-    5 { winget install Google.AndroidStudio } # android studio
-    6 {  }
-    7 { winget install Balsamiq.Wireframes } # balsamiq
-    8 { winget install XP9KN75RRB9NHS } # capcut
-    9 {  }
+    5 { winget install Google.AndroidStudio --accept-package-agreements --accept-source-agreements --source winget } # android studio
+    6 {  } # autocad
+    7 { winget install Balsamiq.Wireframes --accept-package-agreements --accept-source-agreements --source winget } # balsamiq
+    8 { winget install XP9KN75RRB9NHS --accept-package-agreements --accept-source-agreements --source msstore } # capcut
+    9 {  } # circuit wizard
     10 { gdown --fuzzy "" } # coreldraw
-    11 {  }
+    11 {  } # cx programming
     12 { Write-Host "https://draw.io atau winget install  JGraph.Draw" }
-    13 { winget install Figma.Figma } # figma
-    14 { winget install 9NBLGGH4LVX9 } # fluid ui
-    15 { winget install Oracle.JavaRuntimeEnvironment } # java
-    16 { winget install Oracle.JDK.20 } # jdk
-    17 {  }
+    13 { winget install Figma.Figma --accept-package-agreements --accept-source-agreements --source winget } # figma
+    14 { winget install 9NBLGGH4LVX9 --accept-package-agreements --accept-source-agreements --source msstore } # fluid ui
+    15 { winget install Oracle.JavaRuntimeEnvironment --accept-package-agreements --accept-source-agreements --source winget } # java
+    16 { winget install Oracle.JDK.20 --accept-package-agreements --accept-source-agreements --source winget } # jdk
+    17 {  } # krishand inventory 3.0
     18 { 
         gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # f4-minitab17-setup.exe | minitab+
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
@@ -219,13 +275,13 @@ switch ($choose) {
     }
     19 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
     20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
-    21 {  }
-    22 { winget install Microsoft.VisualStudioCode } # vscode
-    23 { winget install PHP.PHP.8.4 } # php
-    24 {  }
-    25 {  }
-    26 { winget install MKLabs.StarUML } # star uml
-    27 { winget install ApacheFriends.Xampp.8.2 } # xampp
+    21 {  } # visio
+    22 { winget install Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements --source winget } # vscode
+    23 { winget install PHP.PHP.8.4 --accept-package-agreements --accept-source-agreements --source winget } # php
+    24 {  } # POM QM
+    25 {  } # SPSS
+    26 { winget install MKLabs.StarUML --accept-package-agreements --accept-source-agreements --source winget } # star uml
+    27 { winget install ApacheFriends.Xampp.8.2 --accept-package-agreements --accept-source-agreements --source winget } # xampp
     28 { gdown --fuzzy "" } # zahir
     29 {
         gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
