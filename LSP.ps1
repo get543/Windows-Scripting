@@ -61,7 +61,7 @@ function WingetInstall {
     This block of code is official from microsoft's website.
     #>
 
-    $progressPreference = 'silentlyContinue'
+    $progressPreference = "SilentlyContinue"
     Write-Host "Installing WinGet PowerShell module from PSGallery..." -ForegroundColor Yellow
     Install-PackageProvider -Name NuGet -Force | Out-Null
     Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
@@ -89,23 +89,40 @@ function UnZip($SourceFile, $DestinationFile) {
 }
 
 function WingetInstallCommand($name, $source) {
+    <#
+    .PARAMETER name
+    The name or the Id of the app you want to install
+    
+    .PARAMETER source
+    winget or msstore
+    #>
+
     winget install $name --accept-package-agreements --accept-source-agreements --source $source
 }
 
 function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
+    <#
+    .DESCRIPTION
+    create shortcut to the start menu (user)
+
+    .PARAMETER SourceFile
+    The target file usually in .exe (something.exe)
+
+    .PARAMETER ShortcutName
+    The name of the shorcut created with .lnk extension (something.lnk)
+    #>
+
     # Get Start Menu directory (current user)
     $startMenuPath = [Environment]::GetFolderPath("Programs")
 
     # Create shortcut
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut("$startMenuPath\$ShortcutName")
-    # $shortcut.TargetPath = "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
     $shortcut.TargetPath = "$SourceFile"
-    # $shortcut.WorkingDirectory = Split-Path "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe"
     $shortcut.WorkingDirectory = Split-Path "$SourceFile"
     $shortcut.Save()
 
-    Write-Host "`nStart Menu shortcut created: $startMenuPath\Circuit Wizard.lnk" -ForegroundColor Yellow
+    Write-Host "`nStart Menu shortcut created: $startMenuPath\$ShortcutName" -ForegroundColor Yellow
     
 }
 #! ===================================================================
@@ -187,11 +204,20 @@ if ($autoinstall) {
 #! ===================================================================
 #!                          NORMAL EXECUTION
 #! ===================================================================
+if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
+    Write-Host "`nWinget is not installed!" -ForegroundColor Red
+    WingetInstall
+}
+
 if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
     Write-Host "`ngdown is not installed!" -ForegroundColor Red
     Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
     $installGdown = Read-Host
     if (($installGdown.Tolower() -eq "y") -or ($installGdown -eq "")) {
+        if (!(Get-Command pip -ErrorAction SilentlyContinue) -or !(Get-Command python -ErrorAction SilentlyContinue)) {
+            WingetInstallCommand "Python.Python.3.13" "winget"
+        }
+
         try {
             pip install gdown
         }
@@ -199,11 +225,6 @@ if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
             return Write-Host "`nOops, something's wrong. Maybe python or pip is not properly configured." -ForegroundColor Red
         }
     }
-}
-
-if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
-    Write-Host "`nWinget is not installed!" -ForegroundColor Red
-    WingetInstall
 }
 
 Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
@@ -292,15 +313,8 @@ $choose = Read-Host
 switch ($choose) {
     1 { 
         gdown --fuzzy "https://drive.google.com/file/d/13NuhwjDLhPBAQeGZDC90PA3HT2_wdXk8/view?usp=sharing" # ACL 9.rar
-        if ($winrarInstalled) {
-            mkdir "ACL 9"
-            & "${env:ProgramFiles}\WinRAR\UnRAR.exe" x "ACL 9.rar" ".\ACL 9\"
-        } elseif ($7zipInstalled) {
-            mkdir "ACL 9"
-            & "${env:ProgramFiles}\7-Zip\7z.exe" x "ACL 9.rar" -o".\ACL 9\"
-        } else {
-            Write-Host "`nYou need to extract ACL 9.rar" -ForegroundColor Red
-        }
+
+        UnZip "ACL 9.rar" ".\ACL 9\"
     }
     2 { #! BLM DI COBA
         Write-Host "
@@ -325,7 +339,10 @@ switch ($choose) {
             & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"www.yasir252.com" "AILS2265.rar" -o".\AILS2265\"
         } else {
             Write-Host "`nYou need to extract AILS2265.rar" -ForegroundColor Red
+            return
         }
+
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
 
         Set-Location "~\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\"
         .\Set-up.exe
@@ -354,6 +371,8 @@ switch ($choose) {
             return
         }
 
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+
         Set-Location "Adobe_Photoshop_2023_v24.2.0.315"
         .\autoplay.exe
 
@@ -368,6 +387,8 @@ switch ($choose) {
 
         UnZip "Circuit Wizard Student Version.zip" ".\"
 
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+
         Set-Location "Circuit Wizard Student Version"
 
         CreateShortcutStartMenu "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe" "Circuit Wizard.lnk"
@@ -378,6 +399,8 @@ switch ($choose) {
         gdown --fuzzy "https://drive.google.com/file/d/15hsrVd8088JI-No8UIeAOP96PzLgZSmc/view?usp=sharing"
         
         UnZip "CorelDRAW Graphics Suite X8 18.2.0.840 x64.zip" ".\"
+
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
 
         Set-Location "CorelDRAW Graphics Suite X8 18.2.0.840 x64"
         
@@ -405,6 +428,8 @@ switch ($choose) {
             return
         }
 
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+
         Set-Location "CX Programmer\CxOne_V4.60\"
         .\setup.exe
 
@@ -417,6 +442,9 @@ switch ($choose) {
         gdown --fuzzy "https://drive.google.com/file/d/1wFrPVIX1UHx7tS8ra4PPiDQSqoc0l0Lb/view?usp=drive_link"
         
         UnZip "festo fluidsim 4.2 PH-20231010T134944Z-001.rar" ".\"
+
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+
         Set-Location "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\"
 
         CreateShortcutStartMenu "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\fl_sim_h.exe" "FluidSim Hydraulic.lnk" # Hydraulic
@@ -445,6 +473,10 @@ switch ($choose) {
     21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
     22 {
         gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
+
+        UnZip "VISIO2024.zip" ".\"
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+
         Set-Location "VISIO2024"
         .\setup.exe /configure Configuration.xml
     } # visio
@@ -469,21 +501,16 @@ switch ($choose) {
         gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
 
         UnZip "Master ZAHIR 6.11a.zip" ".\"
+        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
 
         Set-Location "Master ZAHIR 6.11a"
         .\setup.exe
     } # zahir
     30 {
         gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
-        if ($winrarInstalled) { # if winrar is installed
-            mkdir "DATA-SIMULASI 2012"
-            & "${env:ProgramFiles}\WinRAR\UnRAR.exe" x "DATA-SIMULASI 2012.rar" ".\DATA-SIMULASI 2012\"
-        } elseif ($7zipInstalled) {
-            mkdir "DATA-SIMULASI 2012"
-            & "${env:ProgramFiles}\7-Zip\7z.exe" x "DATA-SIMULASI 2012.rar" -o".\DATA-SIMULASI 2012\"
-        } else {
-            Write-Host "`nYou need to extract DATA-SIMULASI 2012.rar" -ForegroundColor Red
-        }
+
+        mkdir "DATA-SIMULASI 2012"
+        UnZip "DATA-SIMULASI 2012.rar" ".\DATA-SIMLULASI 2012"
     }
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
