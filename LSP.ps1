@@ -23,15 +23,15 @@ Accepted <string> value :
 
 .EXAMPLE
 .\LSP.ps1 -autoinstall
-.\LSP.ps1 -activation
 
 .EXAMPLE
-.\LSP.ps1 -activation windows
 .\LSP.ps1 -activation office
 
 .EXAMPLE
 & ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
 
+.EXAMPLE
+irm https://bit.ly/scriptLSP | iex
 
 .NOTES
 0. Open PowerShell as Admin
