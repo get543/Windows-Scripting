@@ -21,6 +21,18 @@ Accepted <string> value :
 - windows
 - office
 
+.EXAMPLE
+.\LSP.ps1 -autoinstall
+.\LSP.ps1 -activation
+
+.EXAMPLE
+.\LSP.ps1 -activation windows
+.\LSP.ps1 -activation office
+
+.EXAMPLE
+& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
+
+
 .NOTES
 0. Open PowerShell as Admin
 1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
