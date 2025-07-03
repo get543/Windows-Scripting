@@ -103,18 +103,44 @@ function pythonpipupgrade() {
         pip install --upgrade $_.split('==')[0]
     }
 }
+function timer($amount, $unit) {
+    if ($unit -eq "sec") {
+        for ($i = $amount; $i -ge 0; $i--) {
+            Clear-Host
+            Write-Host $i
+            Start-Sleep 1
+        }
+    } elseif ($unit -eq "min") {
+        for ($i = ($amount * 60); $i -ge 0; $i--) {
+            Clear-Host
+            Write-Host $i
+            Start-Sleep 1
+        }
+    }
+
+    ShowNotification "Done!" "Timer Finished!"
+}
+function bash() {
+    & "${env:ProgramFiles}\Git\bin\bash.exe"
+}
+function convert() {
+    python E:\UDIN\Code\code-desktop\Python\Python-Currency-Converter\convert_currency.py $args
+}
+function temperature() {
+    python E:\UDIN\Code\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py $args
+}
 
 ######################## From My Linux Machine
 function codefolder() {
-    if (Test-Path -Path "F:\Code\code-desktop") {
-        Set-Location "F:\Code\code-desktop"
+    if (Test-Path -Path "E:\UDIN\Code\code-desktop") {
+        Set-Location "E:\UDIN\Code\code-desktop"
     } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop") {
         Set-Location "${env:USERPROFILE}\Documents\Code Folder\code-desktop"
     }
 }
 function kuliah() {
-    if (Test-Path -Path "F:\Kuliah\Mata Kuliah") {
-        Set-Location "F:\Kuliah\Mata Kuliah"
+    if (Test-Path -Path "E:\UDIN\Kuliah\Mata Kuliah") {
+        Set-Location "E:\UDIN\Kuliah\Mata Kuliah"
     } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Kuliah\Mata Kuliah") {
         Set-Location "${env:USERPROFILE}\Documents\Kuliah\Mata Kuliah"
     }
@@ -144,6 +170,9 @@ function reload() {
 function sync() {
     syncthing --no-browser
 }
+function hosts() {
+    code $env:SystemRoot\System32\drivers\etc\hosts
+}
 
 
 ######################## Windows Style Aliases
@@ -172,8 +201,8 @@ function SystemUpgrade() {
     )    
 
     if ($Option -eq "GUI") {
-        if (Test-Path -Path "F:\Code\WINDOWS\GUI") {
-            return & "F:\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
+        if (Test-Path -Path "E:\UDIN\Code\WINDOWS\GUI") {
+            return & "E:\UDIN\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
         } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI") {
             return & "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI\SystemUpgrade-GUI.ps1"
         }
@@ -242,7 +271,6 @@ function firefox() {
 function discord() {
     Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb RunAs
 }
-
 
 
 #######################################################################################################################

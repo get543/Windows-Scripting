@@ -19,13 +19,15 @@
     Toggle := !Toggle
 
     if (Toggle) {
-        ; Send "{Up down}"      ; Presses down up-arrow key.
-        Send "{W down}"         ; Presses down W key.
-        Send "{LShift down}"    ; Presses down Left Shift key.
+        ; Send "{Up down}"          ; Presses down up-arrow key.
+        ; Send "{W down}"           ; Presses down W key.
+        ; Send "{LShift down}"      ; Presses down Left Shift key.
+        Send "{Click down}"         ; Hold down Left Click
     } else {
         ; Send "{Up up}"        ; Releases up-arrow key.
-        Send "{W up}"           ; Releases W key.
-        Send "{LShift up}"      ; Releases Left Shift key.
+        ; Send "{W up}"           ; Releases W key.
+        ; Send "{LShift up}"      ; Releases Left Shift key.
+        Send "{Click up}"         ; Releases Left Click
     }
 }
 
