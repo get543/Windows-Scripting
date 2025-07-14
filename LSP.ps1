@@ -1,5 +1,6 @@
 <#
 .COMPONENT
+python
 gdown
 winrar or 7zip
 
@@ -243,7 +244,7 @@ Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
 winget upgrade
 
 # https://ozh.github.io/ascii-tables/
-<#
+<# !NOT NEEDED
 Write-Host "
 +----+------------------------------+-----------------+---------+--------+
 | No |           Software           |     Source      | Version | Status |
@@ -284,20 +285,20 @@ Write-Host "
 ##################################### !CUSTOM TABLE OBJECT #####################################
 $table = @(
     [PSCustomObject]@{No=1;  Software='ACL 9';                        Source='GDrive';          Version='-';         Status='OK'}
-    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2023';      Status='?'}
-    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='?'}
-    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='?'}
+    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2023';      Status='Untested'}
+    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='Untested'}
+    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='Untested'}
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='';                Version='';          Status=''}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=8;  Software='CapCut';                       Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='';                Version='2.0';       Status='OK'}
-    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='?'}
-    [PSCustomObject]@{No=11; Software='CX Programming';               Source='';                Version='';          Status='OK'}
+    [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='GDrive';          Version='2.0';       Status='OK'}
+    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='Untested'}
+    [PSCustomObject]@{No=11; Software='CX Programming';               Source='GDrive';          Version='4.60';      Status='OK'}
     [PSCustomObject]@{No=12; Software='Draw.io';                      Source='https://draw.io'; Version='';          Status='OK'}
     [PSCustomObject]@{No=13; Software='Figma';                        Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=14; Software='Fluid UI';                     Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='';                Version='';          Status='OK'}
+    [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='GDrive';          Version='4,2';       Status='OK'}
     [PSCustomObject]@{No=16; Software='Java';                         Source='winget';          Version='8';         Status='OK'}
     [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='20';        Status='OK'}
     [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web';             Version='3.0';       Status='OK'}
