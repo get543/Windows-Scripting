@@ -237,6 +237,9 @@ function USBScripts() {
 function WindowsUpdateFolder() {
     Set-Location "${env:windir}\SoftwareDistribution\Download"
 }
+function WinGetFolder {
+    Set-Location "${env:LOCALAPPDATA}\Microsoft\WinGet"
+}
 function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
