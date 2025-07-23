@@ -46,7 +46,7 @@ PowerShell One-Liner
 & ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation
 #>
 
-#TODO FOLDER DOWNLOAD ? (LIMIT 50 FOLDERS)
+
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
 
@@ -71,7 +71,7 @@ function WingetInstall {
     <#
     .SYNOPSIS
     Installs winget using powershell module.
-    This block of code is official from microsoft's website.
+    This code is official from microsoft's website.
     #>
 
     $progressPreference = "SilentlyContinue"
