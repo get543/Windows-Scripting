@@ -104,7 +104,7 @@ goto Start
 
 
 :Reset
-Ipconfig /flushdns
+ipconfig /flushdns
 del /s /q /f "%ALLUSERSPROFILE%\Application Data\Microsoft\Network\Downloader\qmgr*.dat" del /s /q /f "%ALLUSERSPROFILE%\Microsoft\Network\Downloader\qmgr*.dat"
 
 cd /d %windir%\system32
