@@ -12,6 +12,7 @@
 ; - page up      : reload script (turn off auto-clicker)
 ; - insert       : run ChangeOutputDevice.ps1 script
 ; - alt f1       : toggle twitch theatre mode & toggle vertical tabs
+; - scroll lock  : start replay buffer in OBS
 
 ^!z:: ; press ctrl + alt + z
 {
@@ -76,4 +77,10 @@ Insert:: ; press insert
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"',
         , 'Hide'  ; Hides the PowerShell window
     )
+}
+
+ScrollLock:: ; press scroll lock
+{
+    SetWorkingDir A_ProgramFiles "\obs-studio\bin\64bit" ; cd to OBS directory
+    Run "obs64.exe --startreplaybuffer"
 }
