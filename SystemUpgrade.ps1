@@ -905,6 +905,7 @@ function PipPackageUpgrade() {
         choco outdated
 
         Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
+        python.exe -m pip install --upgrade pip
         pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
         return
     } # user use -Option cleanup
