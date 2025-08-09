@@ -64,6 +64,7 @@ function sudo() {
         else { # powershell v1
             Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs
         }
+        exit
     }
 }
 Set-Alias -Name ll -Value Get-ChildItem
