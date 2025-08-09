@@ -82,5 +82,5 @@ Insert:: ; press insert
 ScrollLock:: ; press scroll lock
 {
     SetWorkingDir A_ProgramFiles "\obs-studio\bin\64bit" ; cd to OBS directory
-    Run "obs64.exe --startreplaybuffer -startminimized" 
+    Run "obs64.exe --minimize-to-tray --startreplaybuffer" 
 }
