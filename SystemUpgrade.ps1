@@ -862,7 +862,7 @@ function PipPackageUpgrade() {
             Write-Host "Type the package name! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
             Write-Host "Type 'all' if you want to upgrade all packages!" -ForegroundColor Green
             Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
-            Write-Host "Example : python hwinfo chocolatey" -ForegroundColor Red
+            Write-Host "Example : tensorflow numpy gdown" -ForegroundColor Red
             EmptyLine
 
             $pipUpgradeChoose = Read-Host -Prompt "Package name "
@@ -902,8 +902,6 @@ function PipPackageUpgrade() {
 
     # user add option automatically answers yes or half yes or upgrade only
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        choco outdated
-
         Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
         python.exe -m pip install --upgrade pip
         pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
@@ -926,6 +924,109 @@ function PipPackageUpgrade() {
         return
     }
 }
+
+function NpmPackageUpgrade() {
+    <#
+    .SYNOPSIS
+    Upgrade NPM Packages
+    
+    .DESCRIPTION
+    List outdated npm packages and user can choose which package to upgrade or
+    to upgrade all outdated npm packages to the latest version.
+
+    .NOTES
+    This function is not meant to run independently
+    This function only going to run if node is installed.
+    #>
+
+    function RunNpmUpgrade() {
+        <#
+        .SYNOPSIS
+        Main code function
+
+        .DESCRIPTION
+        This function consist of what actual commands that get run.
+
+        .NOTES
+        This function is not meant to run independently.
+        This function is always run if the user chose to run outer function.
+        #>
+
+        do {       
+            EmptyLine
+            Write-Host "List outdated npm packages globally..." -ForegroundColor Yellow
+            npm -g outdated
+
+            EmptyLine
+            Write-Host "List outdated npm packages locally..." -ForegroundColor Yellow
+            npm outdated
+
+            EmptyLine
+            Write-Host "Type the package name! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
+            Write-Host "Type 'all' if you want to upgrade all packages!" -ForegroundColor Green
+            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
+            Write-Host "Example : ytdl-core eslint nodemon" -ForegroundColor Red
+            EmptyLine
+
+            $npmUpgradeChoose = Read-Host -Prompt "Package name "
+
+            if ($npmUpgradeChoose.ToLower() -eq "all") {
+                Clear-Host
+
+                npm install -g npm@latest
+
+                $packages = npm outdated | Select-Object -Skip 2 | ForEach-Object {($_ -split "\s+")[0].Trim()}
+
+                $Array = $packages -Split " "
+
+                foreach ($package in $Array) {
+                    npm install $package@latest
+                }
+            }
+            elseif (!$npmUpgradeChoose -or $npmUpgradeChoose.ToLower() -eq "exit") {
+                EmptyLine
+                Write-Host "Exiting npm upgrade..." -ForegroundColor Yellow
+                break
+            }
+            else {
+                $Array = $npmUpgradeChoose.Split(" ")
+
+                foreach ($package in $Array) {
+                    npm install $package@latest
+                }
+            }
+
+            Start-Sleep 8
+            Clear-Host
+        } while ($true)
+    }
+
+    # user add option automatically answers yes or half yes or upgrade only
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
+        Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
+        npm install -g npm@latest
+        npm outdated | ForEach-Object { $_.split(' ')[0] } | ForEach-Object { npm install $_@latest }
+        return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
+        return
+    }
+
+    EmptyLine
+    Write-Host "Run npm upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline    
+    $NpmUpgradeOption = Read-Host
+
+    if (($NpmUpgradeOption.ToLower() -eq "y") -or ($NpmUpgradeOption -eq "")) {
+        RunNpmUpgrade
+    }
+    else {
+        EmptyLine
+        Write-Host "Skipping npm upgrade..." -ForegroundColor Yellow
+        return
+    }
+}
+
+
 
 <####################################################################>
 <#                       Main Function                              #>
@@ -991,6 +1092,11 @@ function Main() {
     # if python is installed, run update pip
     if ((Get-Command -Name python) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
         PipPackageUpgrade
+    }
+
+    # if node is installed, run update npm
+    if ((Get-Command -Name npm) -and (Test-Path "$env:ProgramFiles\nodejs")) {
+        NpmPackageUpgrade
     }
 
     EmptyLine
