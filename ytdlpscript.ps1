@@ -1,16 +1,68 @@
 <#
-## !COOL IDEA TO SHOW FORMAT BASED ON WHAT I ASKED FOR
+## !TODO SHOW FORMAT BASED ON WHAT I ASKED FOR
 Write-Output "ID      EXT   RESOLUTION FPS CH │   FILESIZE    TBR PROTO │ VCODEC           VBR ACODEC      ABR ASR MORE INFO"
 > yt-dlp -F https://www.youtube.com/watch?v=qgv5KybY1L8 | Where-Object { $_ -match "video only" }
-
-Downloads a youtube video using yt-dlp and stores it in the Downloads folder.
 #>
 
+<#
+.DESCRIPTION
+Downloads a youtube video (or any other website that yt-dlp supports) using yt-dlp and stores it in the Downloads folder.
+
+.PARAMETER Url
+The URL of the video to download.
+
+.PARAMETER F
+The format of the video to download.
+If using anything other than Valid values, it will list available formats
+Valid values: 1080, 1440, 2160, FHD, 2K, 4K
+
+.EXAMPLE
+.\ytdlpscript.ps1 -Url "https://www.youtube.com/watch?v=qgv5KybY1L8" -F 1080
+.\ytdlpscript.ps1 "https://www.youtube.com/watch?v=qgv5KybY1L8" -F 2k
+.\ytdlpscript.ps1 "https://www.youtube.com/watch?v=qgv5KybY1L8" -F sds
+#>
+
+param(
+	[Parameter(Position = 0, Mandatory = $false)]
+    [String] $Url,
+
+    [Parameter(ParameterSetName = "F", Position = 1)]
+    [String] $F
+)
 
 if (!(Get-Command -Name yt-dlp)) {
 	return "yt-dlp is not installed on your system or yt-dlp is not recognise as a command."
 }
 
+#! CHECK IF ARGUMENTS PROVIDED
+if ($Url -or $F) {
+	$OutputFormat = "~/Downloads/%(title)s.%(ext)s"
+
+	if ($F -eq "highest") {
+		$Format = "bestvideo+bestaudio/best --merge-output-format mp4"
+	} elseif ($F -eq "1080" -or $F.ToUpper() -eq "FHD") {
+		$SortOption = "-S res:1080,ext"
+		$Format = "bestvideo[height<=1080]+bestaudio/best --merge-output-format mp4"
+	} elseif ($F -eq "1440" -or $F.ToLower() -eq "2K") {
+		$SortOption = "-S res:1440,ext"
+		$Format = "bestvideo[height<=1440]+bestaudio/best --merge-output-format mp4"
+	} elseif ($F -eq "2160" -or $F.ToLower() -eq "4K") {
+		$SortOption = "-S res:2160,ext"
+		$Format = "bestvideo[height<=2160]+bestaudio/best --merge-output-format mp4"
+	} else {
+		return yt-dlp $Url --list-formats
+	}
+
+	yt-dlp $Url --list-formats
+
+	Write-Host "`nRun Command : yt-dlp --embed-chapters --embed-thumbnail --embed-subs $SortOption -f $Format -o $OutputFormat $Url`n" -ForegroundColor Yellow
+	
+	yt-dlp --embed-chapters --embed-thumbnail --embed-subs $SortOption -f $Format -o $OutputFormat $Url
+
+	return
+}
+
+###############################! RUN SCRIPT REGULARLY !###############################
 $Path = "~/Downloads"
 
 Write-Host  "---------------------------------------------------------"
@@ -62,9 +114,9 @@ if ($Option -eq 1) {
 	Write-Host "---------------------------------------------------------------------------------------------"
 	Write-Host "			--> The best $Resolution `"video only`" and the best `"audio only`" merged <--"
 
-	$SortOption = "-S res:$ResolutionFormat,ext" # best
-	$Format = "bestvideo+bestaudio/best --merge-output-format mp4" # best audio + best video merged into mp4
-	# $Format = "bestvideo[ext=webm]+bestaudio[ext=webm] --merge-output-format mp4" # best audio (webm) + best video (webm) merged into mp4
+	$SortOption = "-S res:$ResolutionFormat,ext" #? best
+	$Format = "bestvideo+bestaudio/best --merge-output-format mp4" #? best audio + best video merged into mp4
+	# $Format = "bestvideo[ext=webm]+bestaudio[ext=webm] --merge-output-format mp4" #? best audio (webm) + best video (webm) merged into mp4
 	$OutputFormat = "$Path/%(title)s.%(ext)s"
 }
 
@@ -136,6 +188,6 @@ elseif ($Option -eq 3) {
 }
 
 Write-Host "`nRun Command : " -ForegroundColor Red -NoNewline
-Write-Host "yt-dlp --embed-chapters $SortOption -f $Format -o $OutputFormat $Link" -ForegroundColor Yellow
+Write-Host "yt-dlp --embed-chapters --embed-thumbnail --embed-subs $SortOption -f $Format -o $OutputFormat $Link" -ForegroundColor Yellow
 
-yt-dlp --embed-chapters $SortOption -f $Format -o $OutputFormat $Link
+yt-dlp --embed-chapters --embed-thumbnail --embed-subs $SortOption -f $Format -o $OutputFormat $Link

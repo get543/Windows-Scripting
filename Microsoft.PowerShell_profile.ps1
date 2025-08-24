@@ -47,7 +47,7 @@ function sudo() {
     }
 
     if ($args.Count -gt 0) {
-        if (Test-Path("${env:PROGRAMFILES}\PowerShell\7\pwsh.exe")) { # powershell 7
+        if (Test-Path -Path "${env:PROGRAMFILES}\PowerShell\7\pwsh.exe") { # powershell 7
             Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs -ArgumentList "-NoExit", "-Command ${args}"
         }
         else { # powershell v1
@@ -55,10 +55,10 @@ function sudo() {
         }
     }
     else {
-        if (Test-Path("${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe")) { # windows terminal
+        if (Test-Path -Path "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe") { # windows terminal
             Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs
         }
-        elseif (Test-Path("${env:PROGRAMFILES}\PowerShell\7\pwsh.exe")) { # powershell 7
+        elseif (Test-Path -Path "${env:PROGRAMFILES}\PowerShell\7\pwsh.exe") { # powershell 7
             Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs
         }
         else { # powershell v1
@@ -125,10 +125,18 @@ function bash() {
     & "${env:ProgramFiles}\Git\bin\bash.exe"
 }
 function convert() {
-    python E:\UDIN\Code\code-desktop\Python\Python-Currency-Converter\convert_currency.py $args
+    if (Test-Path -Path "E:\UDIN\Code\code-desktop\Python\Python-Currency-Converter\convert_currency.py") {
+        python E:\UDIN\Code\code-desktop\Python\Python-Currency-Converter\convert_currency.py @args
+    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Currency-Converter\convert_currency.py") {
+        python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Currency-Converter\convert_currency.py" @args
+    }
 }
 function temperature() {
-    python E:\UDIN\Code\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py $args
+    if (Test-Path -Path "E:\UDIN\Code\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py") {
+        python E:\UDIN\Code\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py @args
+    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py") {
+        python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py" @args
+    }
 }
 
 ######################## From My Linux Machine
@@ -148,6 +156,9 @@ function kuliah() {
 }
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
+}
+function ytdlp() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ytdlpscript.ps1" @args
 }
 function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
@@ -196,24 +207,16 @@ function ShowNotification($title, $text) {
 
 ######### Run Scripts #########
 function SystemUpgrade() {
-    param(
-        [Parameter(ParameterSetName = 'Option')] [ValidateSet("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes", "half-yes","normal", "regular", "update", "upgrade", "cleanup", "deletetempfiles", "deletetemp")] [String] $Option,
-        [Parameter(ParameterSetName = 'GetHelp')] [ValidateSet("all", "full")] [String] $Help
-    )    
-
-    if ($Option -eq "GUI") {
+    # SystemUpgrade -Option GUI
+    if ($args[0].ToLower() -eq "-option" -and $args[1].ToLower() -eq "gui") {
         if (Test-Path -Path "E:\UDIN\Code\WINDOWS\GUI") {
             return & "E:\UDIN\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
         } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI") {
             return & "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI\SystemUpgrade-GUI.ps1"
         }
     }
-    
-    if ($Help) {
-        & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Help $Help
-    } else {
-        & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" -Option $Option
-    }
+
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" @args
 }
 function ChangeOutputDevice() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
@@ -247,6 +250,9 @@ function ChocolateyApps() {
 function AutoHotKeyFolder() {
     Set-Location "${env:USERPROFILE}\Documents\AutoHotkey"
 }
+function FirefoxProfile() {
+    Set-Location "${env:APPDATA}\Mozilla\Firefox\Profiles\jrecet5l.default-release"
+}
 
 function SignOut() {
     shutdown /L
@@ -262,10 +268,6 @@ function WindowsUpdateChoose($kbarticleid) {
 }
 function WindowsUpdateAll() {
     Get-WindowsUpdate -Install -AcceptAll
-}
-function FirefoxProfile() {
-    Set-Location "${env:APPDATA}\Mozilla\Firefox\Profiles\jrecet5l.default-release"
-    
 }
 
 ######################## Application Shortcut (admin)
