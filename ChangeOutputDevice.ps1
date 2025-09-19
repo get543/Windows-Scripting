@@ -26,17 +26,20 @@ function WindowsNotificationBalloon($text) {
 }
 
 $HeadphonesDeviceName = "*Headphones*"
-$SpeakersDeviceName = "*Output Monitor*"
-$SoundcardDeviceName = "*Output Mixer*"
+$SpeakersDeviceName = "*Output Monitor*" # act as speakers
+$FrontPanelDeviceName = "*Output Front Panel*" # act as speakers
+$SoundcardDeviceName = "*Output Mixer*" # act as headphones
 
 # if headphones is the default output then change it to speakers
 if (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName }) {
     Write-Host "Change default audio device to Speakers."
-    Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $SpeakersDeviceName } | Set-AudioDevice
+    Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $FrontPanelDeviceName } | Set-AudioDevice
     WindowsNotificationBalloon "Change default audio device to Speakers."
 } 
-# if speakers is default audio then change it to headphones
-elseif (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $SpeakersDeviceName }) {
+# if speakers/front panel is default audio then change it to headphones
+elseif (Get-AudioDevice -PlaybackCommunication | Where-Object { 
+    ($_.Type -eq "Playback" -and $_.Name -like $SpeakersDeviceName) -or ($_.Type -eq "Playback" -and $_.Name -like $FrontPanelDeviceName) }) {
+
     # if there's no headphone device output then change it to soundcard output
     if (!(Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName })) {
         Write-Host "Change default audio device to Output Mixer."
