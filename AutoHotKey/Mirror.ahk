@@ -8,6 +8,7 @@
 
 ; This program do screen mirroring with microphone loopback via keyboard shortcut.
 
+#Include "%A_ScriptDir%\Microphone Loopback.ahk"
 #Requires AutoHotkey v2.0
 
 ^+m:: ; press ctrl + shift + m
@@ -20,5 +21,5 @@
         Sleep 5000 ; Delay for 5s
     }
 
-    #Include "%A_ScriptDir%\Microphone Loopback.ahk"
+    MicrophoneLoopbackFunction() ; call the function from included file
 }

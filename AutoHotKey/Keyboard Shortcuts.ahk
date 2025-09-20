@@ -14,6 +14,9 @@
 ; - alt f1       : toggle twitch theatre mode & toggle vertical tabs
 ; - scroll lock  : start replay buffer in OBS
 
+; file needed :
+#Include "%A_ScriptDir%\Microphone Loopback.ahk"
+
 ^!z:: ; press ctrl + alt + z
 {
     static Toggle := 0
@@ -43,6 +46,11 @@
         Send "Gw juga bisa spam {Enter}"
         Sleep 100
     }
+}
+
+PrintScreen:: ; press print screen
+{ 
+    MicrophoneLoopbackFunction() ; call the function from included file
 }
 
 PgDn:: ; press page down
