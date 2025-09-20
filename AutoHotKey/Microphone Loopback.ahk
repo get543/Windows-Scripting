@@ -30,6 +30,4 @@ MicrophoneLoopbackFunction() {
     Sleep 500 ; Delay for 500ms
     WinActivate "Sound" ; Activate Sound window
     Click 197, 400 ; Click Ok
-
-    ExitApp
 }
