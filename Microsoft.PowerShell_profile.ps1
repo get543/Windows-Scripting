@@ -55,14 +55,15 @@ function sudo() {
         }
     }
     else {
+        # no arguments provided
         if (Test-Path -Path "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe") { # windows terminal
-            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs
+            Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList "-d `"${pwd}`""
         }
         elseif (Test-Path -Path "${env:PROGRAMFILES}\PowerShell\7\pwsh.exe") { # powershell 7
-            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs
+            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs -ArgumentList "-Command Set-Location -LiteralPath `"${pwd}`""
         }
         else { # powershell v1
-            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs
+            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs -ArgumentList "-Command Set-Location -LiteralPath `"${pwd}`""
         }
         exit
     }
