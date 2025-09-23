@@ -60,10 +60,10 @@ function sudo() {
             Start-Process "${env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -Verb RunAs -ArgumentList "-d `"${pwd}`""
         }
         elseif (Test-Path -Path "${env:PROGRAMFILES}\PowerShell\7\pwsh.exe") { # powershell 7
-            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs -ArgumentList "-Command Set-Location -LiteralPath `"${pwd}`""
+            Start-Process -FilePath "${PSHOME}\pwsh.exe" -Verb RunAs -WorkingDirectory "${pwd}"
         }
         else { # powershell v1
-            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs -ArgumentList "-Command Set-Location -LiteralPath `"${pwd}`""
+            Start-Process -FilePath "${env:SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe" -Verb RunAs -WorkingDirectory "${pwd}"
         }
         exit
     }
