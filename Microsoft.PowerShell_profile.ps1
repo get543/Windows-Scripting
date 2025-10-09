@@ -13,6 +13,9 @@ $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administ
 #######################################################################################################################
 
 ######################## Linux Style Aliases
+function whereis {
+    (Get-Command $args).Source
+}
 function touch($file) {
     "" | Out-File $file -Encoding ASCII
 }
