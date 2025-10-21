@@ -342,6 +342,62 @@ function WindowsUpdateScript() {
     }
 }
 
+function MSStoreUpdateScript() {
+    <#
+    .SYNOPSIS
+    Keeps Microsoft Store Apps Updated with a PowerShell Script
+    
+    .DESCRIPTION
+    This function checks for outdated Microsoft Store applications and upgrades it if the user chose to.
+    
+    .NOTES
+    This function is not meant to run independently.
+    #>
+
+    if (!(Get-Command -Name Update-InboxApp)) { return }
+
+    function RunMSStoreUpgrade() {
+        <#
+        .SYNOPSIS
+        Main code function
+
+        .DESCRIPTION
+        This function consist of what actual commands that get run.
+
+        .NOTES
+        This function is not meant to run independently.
+        This function is always run if the user chose to run outer function.
+        #>
+
+        EmptyLine
+        Write-Host "Updating Microsoft Store applications..." -ForegroundColor Yellow
+        powershell.exe -Command "Get-AppxPackage | Update-InboxApp" # must use powershell v5.1 or earlier
+        
+    }
+
+    # user add option automatically answers yes or half yes or upgrade only
+    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
+        RunMSStoreUpgrade
+        return
+    } # user use -Option cleanup
+    elseif ($AnswersCleanupArray -Contains $Option) {
+        return
+    }
+
+    Write-Host "Run Microsoft Store upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline
+    
+    $MSStoreUpgradeOption = Read-Host
+
+    if (($MSStoreUpgradeOption.ToLower() -eq "y") -or ($MSStoreUpgradeOption -eq "")) {
+        RunMSStoreUpgrade
+    }
+    else {
+        EmptyLine
+        Write-Host "Skipping Microsoft Store application update..." -ForegroundColor Yellow
+        return
+    }
+}
+
 function WingetUpdateScript() {
     <#
     .SYNOPSIS
@@ -822,6 +878,36 @@ function ChocolateyInstall() {
     }
 }
 
+function MSStoreUpdateScriptInstall() {
+    <#
+    .SYNOPSIS
+    Install MSStore Script
+
+    .DESCRIPTION
+    Install MSStore PowerShell module to be able to update Microsoft Store applications from the terminal.
+    It will install the script if the user chose to do so.
+    
+    .NOTES
+    This function is not meant to run independently.
+    This function only going to run if MSStore module is not installed.
+    #>
+
+    Write-Host "MSStore Module is not installed in this system." -ForegroundColor Red
+    Write-Host "Update-InboxApp is a PowerShell script that can update Microsoft Store applications through terminal." -ForegroundColor Green
+    Write-Host "Do you want to install 'Update-InboxApp' module ? [Y/n] " -ForegroundColor Cyan -NoNewline
+    $MSStoreInstallOption = Read-Host
+
+    if (($MSStoreInstallOption.ToLower() -eq "y") -or $MSStoreInstallOption -eq "") {
+        Install-Script Update-InboxApp
+    }
+    else {
+        EmptyLine
+        Write-Host "Skipping MSStore module install..." -ForegroundColor Yellow
+        return
+    }
+    
+}
+
 <# -------------------------------------------------------- #>
 <#                      DevTools                            #>
 <# -------------------------------------------------------- #>
@@ -1069,6 +1155,15 @@ function Main() {
     }
     else {
         WindowsUpdateScript
+    }
+    
+    EmptyLine
+    # install Update-InboxApp module if isn't already
+    if (!(Get-Command -Name "Update-InboxApp")) {
+        MSStoreUpdateScriptInstall
+    }
+    else {
+        MSStoreUpdateScript
     }
 
     EmptyLine
