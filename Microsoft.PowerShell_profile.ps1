@@ -234,6 +234,9 @@ function WinUtil() {
 function XAMPP() {
     & "${env:HOMEDRIVE}\xampp\xampp_shell.bat"
 }
+function AutoLaunch() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"
+}
 
 ######### Change Folder #########
 function Scripts() {
