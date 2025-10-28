@@ -33,6 +33,7 @@ $SoundcardDeviceName = "*Output Mixer*" # act as headphones
 # if headphones is the default output then change it to speakers
 if (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName }) {
     Write-Host "Change default audio device to Speakers."
+    
     Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $FrontPanelDeviceName } | Set-AudioDevice
     WindowsNotificationBalloon "Change default audio device to Speakers."
 } 
