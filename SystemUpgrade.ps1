@@ -988,6 +988,7 @@ function PipPackageUpgrade() {
 
     # user add option automatically answers yes or half yes or upgrade only
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
+        EmptyLine
         Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
         python.exe -m pip install --upgrade pip
         pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
