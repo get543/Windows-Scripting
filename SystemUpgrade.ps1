@@ -991,7 +991,10 @@ function PipPackageUpgrade() {
         EmptyLine
         Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
         python.exe -m pip install --upgrade pip
-        pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
+        # pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
+        pip list --outdated | Select-Object -Skip 2 | ForEach-Object {
+            pip install --upgrade ($_ -split "\s+")[0].Trim()
+        }
         return
     } # user use -Option cleanup
     elseif ($AnswersCleanupArray -Contains $Option) {
@@ -1090,7 +1093,7 @@ function NpmPackageUpgrade() {
 
     # user add option automatically answers yes or half yes or upgrade only
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
+        Write-Host "Updating all npm package(s)..." -ForegroundColor Yellow
         npm install -g npm@latest
         npm outdated | ForEach-Object { $_.split(' ')[0] } | ForEach-Object { npm install $_@latest }
         return
