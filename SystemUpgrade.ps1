@@ -1154,7 +1154,7 @@ function Main() {
     <# -------------------------------------------------------- #>
     EmptyLine
     # install PSWindowsUpdate module if isn't already
-    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable)) {
+    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable -ErrorAction SilentlyContinue)) {
         WindowsUpdateModuleInstall
     }
     else {
@@ -1163,7 +1163,7 @@ function Main() {
     
     EmptyLine
     # install Update-InboxApp module if isn't already
-    if (!(Get-Command -Name "Update-InboxApp")) {
+    if (!(Get-Command -Name "Update-InboxApp" -ErrorAction SilentlyContinue)) {
         MSStoreUpdateScriptInstall
     }
     else {
