@@ -1093,6 +1093,7 @@ function NpmPackageUpgrade() {
 
     # user add option automatically answers yes or half yes or upgrade only
     if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
+        EmptyLine
         Write-Host "Updating all npm package(s)..." -ForegroundColor Yellow
         npm install -g npm@latest
         npm outdated | ForEach-Object { $_.split(' ')[0] } | ForEach-Object { npm install $_@latest }
