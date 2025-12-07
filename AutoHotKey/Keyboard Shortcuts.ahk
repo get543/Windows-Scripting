@@ -1,18 +1,26 @@
 ﻿#Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; SendMode Input
-; SetWorkingDir %A_ScriptDir%
+;! Modify the existing tray menu
+A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 
-;! A bunch of keyboard shortcuts here
-; - ctrl alt z   : a toggle to Hold down any key defined in Send
-; - ctrl alt x   : always on top for currently active window
-; - ctrl alt .   : spam text for 100x
-; - page down    : auto click script for banana
-; - page up      : reload script (turn off auto-clicker)
-; - insert       : run ChangeOutputDevice.ps1 script
-; - alt f1       : toggle twitch theatre mode & toggle vertical tabs
-; - scroll lock  : start replay buffer in OBS
+A_TrayMenu.Add("Shortcut List", TrayHandler) ; Add your custom item to the bottom of the tray menu
+
+TrayHandler(ItemName, ItemPos, MyMenu)
+{
+    MsgBox("Available Keyboard Shortcuts: `n`n"
+        . "- Ctrl + Alt + Z`t: Toggle to hold down any key (right now is left click)`n"
+        . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
+        . "- Ctrl + Alt + .`t: Spam Text 100x`n"
+        . "- Print Screen`t: Microphone Loopback Toggle`n"
+        . "- Page Down`t: Auto Clicker`n"
+        . "- Page Up`t: Reload Script (Stop Auto Clicker)`n"
+        . "- Alt + F1`t`t: Toggle Twitch Theatre Mode & Vertical Tabs`n"
+        . "- Insert`t`t: Switch Output Device Script`n"
+        . "- Scroll Lock`t: Start OBS Replay Buffer"
+    )
+}
+
 
 ; file needed :
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
@@ -28,7 +36,7 @@
         ; Send "{LShift down}"      ; Presses down Left Shift key.
         Send "{Click down}"         ; Hold down Left Click
     } else {
-        ; Send "{Up up}"        ; Releases up-arrow key.
+        ; Send "{Up up}"          ; Releases up-arrow key.
         ; Send "{W up}"           ; Releases W key.
         ; Send "{LShift up}"      ; Releases Left Shift key.
         Send "{Click up}"         ; Releases Left Click
