@@ -1,0 +1,26 @@
+{
+    "$schema": "https://aka.ms/winget-settings.schema.json",
+    "network": {
+        "downloader": "wininet",
+        "doProgressTimeoutInSeconds": 60
+    },
+    "visual": {
+        "progressBar": "sixel",
+        "enableSixels": true
+    },
+    "uninstallBehavior": {
+        "purgePortablePackage": true
+    },
+    "telemetry": {
+        "disable": false
+    },
+    "experimentalFeatures": {
+       "resume": true,
+       "fonts": true
+    }
+
+    // For documentation on these settings, see: https://aka.ms/winget-settings
+    // "source": {
+    //    "autoUpdateIntervalInMinutes": 5
+    // },
+}
