@@ -61,10 +61,6 @@ $HeadphonesDeviceName = if ($env:HEADPHONES_DEVICE_NAME) { "*$env:HEADPHONES_DEV
 $SpeakersDeviceName = if ($env:SPEAKERS_DEVICE_NAME) { "*$env:SPEAKERS_DEVICE_NAME*" } else { "*Output Front Panel*" } # act as speakers
 $SoundcardDeviceName = if ($env:SOUNDCARD_DEVICE_NAME) { "*$env:SOUNDCARD_DEVICE_NAME*" } else { "*Output Mixer*" } # act as headphones
 
-Write-Host $HeadphonesDeviceName
-Write-Host $SpeakersDeviceName
-Write-Host $SoundcardDeviceName
-
 function WindowsNotificationBalloon($text) {
     # windows 10 notification balloon
     Add-Type -AssemblyName System.Windows.Forms
