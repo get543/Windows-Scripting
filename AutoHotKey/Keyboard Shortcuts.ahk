@@ -4,10 +4,7 @@
 ;! Modify the existing tray menu
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 
-A_TrayMenu.Add("Shortcut List", TrayHandler) ; Add your custom item to the bottom of the tray menu
-
-TrayHandler(ItemName, ItemPos, MyMenu)
-{
+A_TrayMenu.Add("Shortcut List", (*) => 
     MsgBox("Available Keyboard Shortcuts: `n`n"
         . "- Ctrl + Alt + Z`t: Toggle to hold down any key (right now is left click)`n"
         . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
@@ -19,7 +16,14 @@ TrayHandler(ItemName, ItemPos, MyMenu)
         . "- Insert`t`t: Switch Output Device Script`n"
         . "- Scroll Lock`t: Start OBS Replay Buffer"
     )
-}
+) ; Add your custom item to the bottom of the tray menu
+
+A_TrayMenu.Add("Set Output Device from Script", (*) => 
+    RunWait(
+        'powershell.exe -ExecutionPolicy Bypass -File "'
+        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1" -SetDevice'
+    )
+) ; Add your custom item to the bottom of the tray menu
 
 
 ; file needed :

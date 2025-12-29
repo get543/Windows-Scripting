@@ -18,9 +18,9 @@ Requires the AudioDeviceCmdlets module
 Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser
 
 To set custom device names, set the following user environment variables:
-[System.Environment]::SetEnvironmentVariable("HEADPHONES_DEVICE_NAME", "*Headphones*", "User")
-[System.Environment]::SetEnvironmentVariable("SPEAKERS_DEVICE_NAME", "*Output Front Panel*", "User")
-[System.Environment]::SetEnvironmentVariable("SOUNDCARD_DEVICE_NAME", "*Output Mixer*", "User")
+[System.Environment]::SetEnvironmentVariable("HEADPHONES_DEVICE_NAME", "Headphones", "Machine")
+[System.Environment]::SetEnvironmentVariable("SPEAKERS_DEVICE_NAME", "Output Monitor", "Machine")
+[System.Environment]::SetEnvironmentVariable("SOUNDCARD_DEVICE_NAME", "Output Mixer", "Machine")
 
 or this :
 $env:SPEAKERS_DEVICE_NAME = "Output Front Panel"
@@ -33,7 +33,7 @@ param (
 )
 
 if ($SetDevice) {
-    Write-Host "`nAvailable Playback Audio Devices:"
+    Write-Host "`nAvailable Playback Audio Devices :"
     Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" } | Select-Object Index, Default, DefaultCommunication, Name | Format-Table -AutoSize
     
     Write-Host "`nCurrent Environment Variable Values:" -ForegroundColor Green
@@ -42,10 +42,16 @@ if ($SetDevice) {
     Write-Host "SOUNDCARD_DEVICE_NAME = $env:SOUNDCARD_DEVICE_NAME"
     
 
-    Write-Host "`nTo set custom device names, run this command:" -ForegroundColor Green
+    Write-Host "`nTo set custom device names, run this command or type this in the prompt :" -ForegroundColor Red
+    Write-Host "`nTemporalily for current session :" -ForegroundColor Green
     Write-Host '$env:HEADPHONES_DEVICE_NAME = "your speaker name"'
     Write-Host '$env:SPEAKERS_DEVICE_NAME = "your headphones name"'
     Write-Host '$env:SOUNDCARD_DEVICE_NAME = "your soundcard name"'
+
+    Write-Host "`nPermanently for all sessions (Machine = for all user, User = current user only) :" -ForegroundColor Green
+    Write-Host '[System.Environment]::SetEnvironmentVariable("HEADPHONES_DEVICE_NAME", "Headphones", "Machine")'
+    Write-Host '[System.Environment]::SetEnvironmentVariable("SPEAKERS_DEVICE_NAME", "Output Monitor", "Machine")'
+    Write-Host '[System.Environment]::SetEnvironmentVariable("SOUNDCARD_DEVICE_NAME", "Output Mixer", "Machine")'
 
     Write-Host "`nSet new device : " -ForegroundColor Yellow -NoNewline
     $envcommand = Read-Host
