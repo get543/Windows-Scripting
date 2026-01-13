@@ -6,10 +6,10 @@ A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 
 A_TrayMenu.Add("Shortcut List", (*) => 
     MsgBox("Available Keyboard Shortcuts: `n`n"
-        . "- Ctrl + Alt + Z`t: Toggle to hold down any key (right now is left click)`n"
+        . "- Print Screen`t: Toggle to hold down any key (right now is left click)`n"
         . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
         . "- Ctrl + Alt + .`t: Spam Text 100x`n"
-        . "- Print Screen`t: Microphone Loopback Toggle`n"
+        . "- Ctrl + Alt O`t: Microphone Loopback Toggle`n"
         . "- Page Down`t: Auto Clicker`n"
         . "- Page Up`t: Reload Script (Stop Auto Clicker)`n"
         . "- Alt + F1`t`t: Toggle Twitch Theatre Mode & Vertical Tabs`n"
@@ -29,7 +29,7 @@ A_TrayMenu.Add("Set Output Device from Script", (*) =>
 ; file needed :
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
 
-^!z:: ; press ctrl + alt + z
+PrintScreen:: ; press print screen
 {
     static Toggle := 0
     Toggle := !Toggle
@@ -60,7 +60,7 @@ A_TrayMenu.Add("Set Output Device from Script", (*) =>
     }
 }
 
-PrintScreen:: ; press print screen
+^!o:: ; press ctrl + alt + o
 { 
     MicrophoneLoopbackFunction() ; call the function from included file
 }
