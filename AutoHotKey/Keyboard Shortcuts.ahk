@@ -9,7 +9,7 @@ A_TrayMenu.Add("Shortcut List", (*) =>
         . "- Print Screen`t: Toggle to hold down any key (right now is left click)`n"
         . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
         . "- Ctrl + Alt + .`t: Spam Text 100x`n"
-        . "- Ctrl + Alt O`t: Microphone Loopback Toggle`n"
+        . "- Ctrl + Alt + O`t: Microphone Loopback Toggle`n"
         . "- Page Down`t: Auto Clicker`n"
         . "- Page Up`t: Reload Script (Stop Auto Clicker)`n"
         . "- Alt + F1`t`t: Toggle Twitch Theatre Mode & Vertical Tabs`n"
