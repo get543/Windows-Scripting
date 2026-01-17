@@ -41,8 +41,44 @@ function df() {
 function export() {
     $env:PATH -Replace ";", "`n"
 }
-function uptime() {
-    Get-Uptime -Since
+function uptime {
+    try {
+        # find date/time format
+        $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
+        $timeFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.LongTimePattern
+
+        # check powershell version
+        if ($PSVersionTable.PSVersion.Major -eq 5) {
+            $lastBoot = (Get-WmiObject win32_operatingsystem).LastBootUpTime
+            $bootTime = [System.Management.ManagementDateTimeConverter]::ToDateTime($lastBoot)
+
+            # reformat lastBoot
+            $lastBoot = $bootTime.ToString("$dateFormat $timeFormat")
+        } else {
+            # the Get-Uptime cmdlet was introduced in PowerShell 6.0
+            $lastBoot = (Get-Uptime -Since).ToString("$dateFormat $timeFormat")
+            $bootTime = [System.DateTime]::ParseExact($lastBoot, "$dateFormat $timeFormat", [System.Globalization.CultureInfo]::InvariantCulture)
+        }
+
+        # Format the start time
+        $formattedBootTime = $bootTime.ToString("dddd, MMMM dd, yyyy HH:mm:ss", [System.Globalization.CultureInfo]::InvariantCulture) + " [$lastBoot]"
+        Write-Host "System started on: $formattedBootTime" -ForegroundColor DarkGray
+
+        # calculate uptime
+        $uptime = (Get-Date) - $bootTime
+
+        # Uptime in days, hours, minutes, and seconds
+        $days = $uptime.Days
+        $hours = $uptime.Hours
+        $minutes = $uptime.Minutes
+        $seconds = $uptime.Seconds
+
+        # Uptime output
+        Write-Host ("Uptime: {0} days, {1} hours, {2} minutes, {3} seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
+
+    } catch {
+        Write-Error "An error occurred while retrieving system uptime."
+    }
 }
 function sudo() {
     if ($isAdmin) {
@@ -100,8 +136,10 @@ function reboot() {
 function poweroff() {
     shutdown /s /t 0 /c "Shutdown system"
 }
-function ipaddr() {
-    (ipconfig | Select-String -Pattern "IPv4 Address. . . . . . . . . . . : (.{1,50}\d)").Matches.Groups[1].Value
+function ip() {
+    if ($args -eq "addr" -or $args -eq "a" -or $args -eq "address") {
+        (ipconfig | Select-String -Pattern "IPv4 Address. . . . . . . . . . . : (.{1,50}\d)").Matches.Groups[1].Value
+    }
 }
 function pythonpipupgrade() {
     pip list --format freeze | ForEach-Object {
@@ -178,16 +216,16 @@ function mirror() {
     phone
 }
 function editrc() {
-    code $PROFILE
+    & $PROFILE
 }
 function reload() {
-    & $PROFILE
+    . $PROFILE
 }
 function sync() {
     syncthing --no-browser
 }
 function hosts() {
-    code $env:SystemRoot\System32\drivers\etc\hosts
+    & $env:SystemRoot\System32\drivers\etc\hosts
 }
 
 
@@ -290,9 +328,17 @@ function discord() {
 #                                  Requirement for Oh-My-Posh, Chocolatey, Winget                                     #
 #######################################################################################################################
 # Import PowerShell Theme from oh-my-posh
-oh-my-posh init pwsh --config $env:POSH_THEMES_PATH/takuya.omp.json | Invoke-Expression
+# More Themes : https://ohmypo.sh/docs/themes
+oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/refs/heads/main/themes/takuya.omp.json | Invoke-Expression
 
+if (!(Get-Module -ListAvailable -Name Terminal-Icons -ErrorAction SilentlyContinue)) {
+    Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
+}
 Import-Module -Name Terminal-Icons
+
+if (!(Get-Module -ListAvailable -Name posh-git -ErrorAction SilentlyContinue)) {
+    Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
+}
 Import-Module posh-git
 
 # Import the Chocolatey Profile that contains the necessary code to enable
@@ -320,6 +366,9 @@ Remove-Variable identity
 Remove-Variable principal
 #f45873b3-b655-43a6-b217-97c00aa0db58 PowerToys CommandNotFound module
 
+if (!(Get-Module -ListAvailable -Name Microsoft.WinGet.CommandNotFound -ErrorAction SilentlyContinue)) {
+    Install-Module -Name Microsoft.WinGet.CommandNotFound -Scope CurrentUser -Force -SkipPublisherCheck
+}
 Import-Module -Name Microsoft.WinGet.CommandNotFound
 #f45873b3-b655-43a6-b217-97c00aa0db58
 

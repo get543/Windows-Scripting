@@ -19,10 +19,7 @@ Write-Host "Choose your option : " -ForegroundColor Blue -NoNewline
 $Option = Read-Host
 
 if ($Option -eq 1) {
-    if (Get-Command -Name Get-AppxPackage) {
-        Write-Host "Uninstalling using Get-AppxPackage"
-    }
-    elseif (Get-Command -Name winget) {
+    if (Get-Command -Name winget) {
         do {
             Clear-Host
             Write-Host "Listing all application installed on the system..." -ForegroundColor Yellow
@@ -56,10 +53,7 @@ if ($Option -eq 1) {
     }
 }
 elseif ($Option -eq 2) {
-    if (Get-Command -Name Get-AppxPackage) {
-        Write-Host "Searching app name using Get-AppxPackage"
-    }
-    elseif (Get-Command -Name winget) {
+    if (Get-Command -Name winget) {
         do {
             Clear-Host
             Write-Host "Type 'exit' or leave it empty to skip!" -ForegroundColor Green
