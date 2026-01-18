@@ -25,6 +25,13 @@ A_TrayMenu.Add("Set Output Device from Script", (*) =>
     )
 ) ; Add your custom item to the bottom of the tray menu
 
+A_TrayMenu.Add("Auto Launch Apps", (*) => 
+    RunWait(
+        'powershell.exe -ExecutionPolicy Bypass -File "'
+        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApps.ps1"'
+    )
+) ; Add your custom item to the bottom of the tray menu
+
 
 ; file needed :
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
