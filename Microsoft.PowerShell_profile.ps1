@@ -329,7 +329,7 @@ function discord() {
 #######################################################################################################################
 # Import PowerShell Theme from oh-my-posh
 # More Themes : https://ohmypo.sh/docs/themes
-oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/refs/heads/main/themes/takuya.omp.json | Invoke-Expression
+oh-my-posh init pwsh --config $env:POSH_THEMES_PATH/takuya.omp.json| Invoke-Expression
 
 if (!(Get-Module -ListAvailable -Name Terminal-Icons -ErrorAction SilentlyContinue)) {
     Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
