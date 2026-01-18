@@ -141,6 +141,9 @@ function ip() {
         (ipconfig | Select-String -Pattern "IPv4 Address. . . . . . . . . . . : (.{1,50}\d)").Matches.Groups[1].Value
     }
 }
+function pubip() {
+    (Invoke-WebRequest http://ifconfig.me/ip).Content
+}
 function pythonpipupgrade() {
     pip list --format freeze | ForEach-Object {
         pip install --upgrade $_.split('==')[0]
