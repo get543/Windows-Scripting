@@ -27,8 +27,8 @@ A_TrayMenu.Add("Set Output Device from Script", (*) =>
 
 A_TrayMenu.Add("Auto Launch Apps", (*) => 
     RunWait(
-        'powershell.exe -ExecutionPolicy Bypass -File "'
-        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApps.ps1"'
+        '*RunAs powershell.exe -ExecutionPolicy Bypass -File "' 
+        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"'
     )
 ) ; Add your custom item to the bottom of the tray menu
 
