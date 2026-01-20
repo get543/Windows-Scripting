@@ -8,17 +8,8 @@ Use to uninstall windows default applications.
 
 # Source: https://gist.github.com/ThioJoe/5cc29231c5cb1a8f051df28a69073f77
 
-Write-Host "                                       Uninstalling System Application                                          " -ForegroundColor Blue
-Write-Host " --------------------------------------------------------------------------------------------------------------- "
-Write-Host "|   No  |           Option              |                                   Why ?                               |"
-Write-Host " --------------------------------------------------------------------------------------------------------------- "
-Write-Host "|   1   |        Uninstall Package      |  Because you want to uninstall windows default windows applications   |"
-Write-Host "|   2   |   Search Application By Name  |  Because on winget sometimes the Id got cutoff (idk why)              |"
-Write-Host " --------------------------------------------------------------------------------------------------------------- "
-Write-Host "Choose your option : " -ForegroundColor Blue -NoNewline
-$Option = Read-Host
 
-if ($Option -eq 1) {
+function uninstaller() {
     if (Get-Command -Name winget) {
         do {
             Clear-Host
@@ -27,6 +18,7 @@ if ($Option -eq 1) {
 
             Write-Host
             Write-Host "Type the Id! Type 'exit' or leave it empty to skip!" -ForegroundColor Green
+            Write-Host "Type '2' to search apps" -ForegroundColor Green
             Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
             Write-Host "Example : king.com.CandyCrushSaga_kgqvnymyfvs32 Joplin.Joplin 9NKSQGP7F2NH {024A6CF5-627D-497F-980B-B9A6EC5C40AF}_is1" -ForegroundColor Red
             Write-Host
@@ -35,6 +27,10 @@ if ($Option -eq 1) {
 
             if ((!$WingetAppId) -or ($WingetAppId -eq 'exit'.ToLower())) {
                 Write-Host "`nExit Uninstalling Application..." -ForegroundColor Yellow
+                break
+            }
+            elseif ($WingetAppId -eq "2") {
+                searchApps
                 break
             }
             else {
@@ -52,17 +48,23 @@ if ($Option -eq 1) {
         } while ($true)
     }
 }
-elseif ($Option -eq 2) {
+
+function searchApps() {
     if (Get-Command -Name winget) {
         do {
             Clear-Host
             Write-Host "Type 'exit' or leave it empty to skip!" -ForegroundColor Green
+            Write-Host "Type '1' to uninstall some apps" -ForegroundColor Green
             Write-Host "Only type 1 application!`n" -ForegroundColor Green
 
             $WingetAppName = Read-Host -Prompt "App Name "
 
             if ((!$WingetAppName) -or ($WingetAppName -eq 'exit'.ToLower())) {
                 Write-Host "`nExit Searching Application..." -ForegroundColor Yellow
+                break
+            }
+            elseif ($WingetAppName -eq "1") {
+                uninstaller
                 break
             }
             else {
@@ -76,3 +78,22 @@ elseif ($Option -eq 2) {
         } while ($true)
     }
 }
+
+# ===================================================================================================================================================
+Write-Host "                                       Uninstalling System Application                                          " -ForegroundColor Blue
+Write-Host " --------------------------------------------------------------------------------------------------------------- "
+Write-Host "|   No  |           Option              |                                   Why ?                               |"
+Write-Host " --------------------------------------------------------------------------------------------------------------- "
+Write-Host "|   1   |        Uninstall Package      |  Because you want to uninstall windows default windows applications   |"
+Write-Host "|   2   |   Search Application By Name  |  Because on winget sometimes the Id got cutoff (idk why)              |"
+Write-Host " --------------------------------------------------------------------------------------------------------------- "
+Write-Host "Choose your option : " -ForegroundColor Blue -NoNewline
+$Option = Read-Host
+
+if ($Option -eq 1) {
+    uninstaller
+}
+elseif ($Option -eq 2) {
+    searchApps
+}
+# ===================================================================================================================================================
