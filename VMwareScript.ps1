@@ -25,10 +25,17 @@ param(
     [ValidateSet(
         "fedora",
         "arch",
-        "kali"
+        "kali",
+        "windows"
     )]
     [String] $AutoLaunch
 )
+
+#! Check if VMWare Workstation is installed
+if (!(Test-Path "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe")) {
+    Write-Host "VMWare Workstation is not installed. Exiting script." -ForegroundColor Red
+    return
+}
 
 #! Autolaunch VMs
 if ($AutoLaunch -eq "fedora") {
@@ -37,6 +44,8 @@ if ($AutoLaunch -eq "fedora") {
     & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\ArchLinux\Arch Linux.vmx"
 } elseif ($AutoLaunch -eq "kali") {
     & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\KaliLinux\Kali Linux.vmx"
+} elseif ($AutoLaunch -eq "windows") {
+    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "E:\FileHistory\VM Image File\Windows 11\Windows 11.vmx"
 }
 
 
