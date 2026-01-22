@@ -813,6 +813,9 @@ function WindowsUpdateModuleInstall() {
         Write-Host "Skipping PSWindowsUpdate module install..." -ForegroundColor Yellow
         return
     }
+
+    # run windows update after installing the module
+    WindowsUpdateScript
 }
 
 function WingetInstall() {
@@ -845,6 +848,9 @@ function WingetInstall() {
         Write-Host "Skip installing winget package manager..." -ForegroundColor Yellow
         return
     }
+
+    # Run update function to update winget applications after installing winget
+    WingetUpdateScript
 }
 
 function ChocolateyInstall() {
@@ -876,6 +882,9 @@ function ChocolateyInstall() {
         Write-Host "Skip installing Chocolatey package manager..." -ForegroundColor Yellow
         return
     }
+
+    # Run update function to update chocolatey applications after installing chocolatey
+    ChocolateyUpdateScript
 }
 
 function MSStoreUpdateScriptInstall() {
@@ -905,7 +914,9 @@ function MSStoreUpdateScriptInstall() {
         Write-Host "Skipping MSStore module install..." -ForegroundColor Yellow
         return
     }
-    
+
+    # run MSStore update after installing the module
+    MSStoreUpdateScript
 }
 
 <# -------------------------------------------------------- #>
@@ -1173,7 +1184,7 @@ function Main() {
 
     EmptyLine
     # install winget if it isn't already
-    if (!(Get-Command -Name winget) -and !(Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe")) {
+    if (!(Get-Command -Name winget -ErrorAction SilentlyContinue) -and !(Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe")) {
         WingetInstall
     }
     else {
@@ -1182,7 +1193,7 @@ function Main() {
 
     EmptyLine
     # install chocolatey if isn't already
-    if (!(Get-Command -Name choco) -and !(Test-Path "$env:ChocolateyInstall\choco.exe")) {
+    if (!(Get-Command -Name choco -ErrorAction SilentlyContinue) -and !(Test-Path "$env:ChocolateyInstall\choco.exe")) {
         ChocolateyInstall
     }
     else {
@@ -1190,12 +1201,12 @@ function Main() {
     }
 
     # if python is installed, run update pip
-    if ((Get-Command -Name python) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
+    if ((Get-Command -Name python -ErrorAction SilentlyContinue) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
         PipPackageUpgrade
     }
 
     # if node is installed, run update npm
-    if ((Get-Command -Name npm) -and (Test-Path "$env:ProgramFiles\nodejs")) {
+    if ((Get-Command -Name npm -ErrorAction SilentlyContinue) -and (Test-Path "$env:ProgramFiles\nodejs")) {
         NpmPackageUpgrade
     }
 
