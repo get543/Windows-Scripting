@@ -6,7 +6,7 @@ Script to enable or disable required VMWare services, autolaunch specific VMs
 Autolaunch specified VMs
 
 .EXAMPLE
-.\VMWareScript.ps1 -AutoLaunch fedora
+.\VMWareScript.ps1 -AutoLaunch fedora -DontToggleServices
 
 .EXAMPLE
 .\VMWareScript.ps1 -AutoLaunch arch
@@ -28,7 +28,8 @@ param(
         "kali",
         "windows"
     )]
-    [String] $AutoLaunch
+    [String] $AutoLaunch,
+    [Switch] $DontToggleServices
 )
 
 #! Check if VMWare Workstation is installed
@@ -41,7 +42,7 @@ if (!(Test-Path "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe"))
 if ($AutoLaunch -eq "fedora") {
     & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\FedoraLinux\Fedora Linux.vmx"
 } elseif ($AutoLaunch -eq "arch") {
-    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\ArchLinux\Arch Linux.vmx"
+    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\Arch Linux\Arch Linux.vmx"
 } elseif ($AutoLaunch -eq "kali") {
     & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\KaliLinux\Kali Linux.vmx"
 } elseif ($AutoLaunch -eq "windows") {
@@ -60,6 +61,10 @@ if ($AutoLaunch -eq "fedora") {
 #     Write-Host "Stop VMWare Worksation Player."
 #     $VMWareProcess | Stop-Process -Force
 # }
+
+if ($DontToggleServices) {
+    return
+}
 
 #! Enable or Disable required services
 $Services = @("VMware DHCP Service", "VMware NAT Service", "VMware USB Arbitration Service")
