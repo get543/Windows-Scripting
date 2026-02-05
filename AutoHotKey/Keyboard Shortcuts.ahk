@@ -3,7 +3,6 @@
 
 ;! Modify the existing tray menu
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
-
 A_TrayMenu.Add("Shortcut List", (*) => 
     MsgBox("Available Keyboard Shortcuts: `n`n"
         . "- Print Screen`t: Toggle to hold down any key (right now is left click)`n"
@@ -32,6 +31,14 @@ A_TrayMenu.Add("Auto Launch Apps", (*) =>
     )
 ) ; Add your custom item to the bottom of the tray menu
 
+A_TrayMenu.Add("Enable Discord RPC (E:\UDIN\Code\DISCORD-RPC)", (*) => 
+    RunWait(
+        'powershell.exe -Command "cd E:\UDIN\Code\DISCORD-RPC; npm run test"', , 'Hide'
+    )
+) ; Add your custom item to the bottom of the tray menu
+
+A_TrayMenu.Add() ; Add a separator line to the existing tray menu
+A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tray menu
 
 ; file needed :
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
