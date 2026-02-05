@@ -13,7 +13,7 @@ $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administ
 #######################################################################################################################
 
 ######################## Linux Style Aliases
-function whereis {
+function whereis() {
     (Get-Command $args).Source
 }
 function touch($file) {
@@ -41,7 +41,7 @@ function df() {
 function export() {
     $env:PATH -Replace ";", "`n"
 }
-function uptime {
+function uptime() {
     try {
         # find date/time format
         $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
@@ -219,7 +219,7 @@ function mirror() {
     phone
 }
 function editrc() {
-    & $PROFILE
+    code $PROFILE
 }
 function reload() {
     . $PROFILE
@@ -270,7 +270,7 @@ function NetSpeedMonitor() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\NetSpeedMonitor.ps1"
 }
 function WinUtil() {
-    Invoke-WebRequest -useb "https://christitus.com/win" | Invoke-Expression
+    Invoke-RestMethod "https://christitus.com/win" | Invoke-Expression
 }
 function XAMPP() {
     & "${env:HOMEDRIVE}\xampp\xampp_shell.bat"
