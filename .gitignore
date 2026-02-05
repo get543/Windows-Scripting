@@ -11,3 +11,5 @@ ToggleMonitor.*
 DisableMonitor.*
 EnableMonitor.*
 state.txt
+
+static-sites/
