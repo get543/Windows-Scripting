@@ -22,6 +22,7 @@ Accepted <string> value :
 - windows
 - office
 
+
 .EXAMPLE
 .\LSP.ps1 -autoinstall
 
@@ -32,12 +33,13 @@ Accepted <string> value :
 & ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
 
 .EXAMPLE
-irm https://bit.ly/scriptLSP | iex
+irm bit.ly/scriptLSP | iex
+
 
 .NOTES
 0. Open PowerShell as Admin
 1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-2. Run this: Invoke-RestMethod https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | Invoke-Expression
+2. Run this: irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
 
 .NOTES
 PowerShell One-Liner
@@ -49,6 +51,7 @@ PowerShell One-Liner
 
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
+#TODO WHAT IF PC'S INTERNET IS SLOW ⁉ CURRENTLY NO SOLUTION
 
 param (
     [switch]$autoinstall,
@@ -58,10 +61,10 @@ param (
 Set-Location "~\Downloads"
 
 if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContinue) {
-    Write-Host "`nWinRAR is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    Write-Host "`nWinRAR is installed, will be using it to extract .rar files`n" -ForegroundColor Yellow
     $winrarInstalled = $true
 } elseif (Test-Path "${env:ProgramFiles}\7-Zip\7z.exe" -ErrorAction SilentlyContinue) {
-    Write-Host "`n7-Zip is installed, will be using it to extract .rar files" -ForegroundColor Yellow
+    Write-Host "`n7-Zip is installed, will be using it to extract .rar files`n" -ForegroundColor Yellow
     $7zipInstalled = $true
 }
 
@@ -101,14 +104,28 @@ function UnZip($SourceFile, $DestinationFile) {
     }
 }
 
-function WingetInstallCommand($name, $source) {
+function WingetInstallCommand($name, $source, $id, $patern) {
     <#
     .PARAMETER name
     The name or the Id of the app you want to install
     
     .PARAMETER source
     winget or msstore
+
+    .PARAMETER id
+    The base id to search for latest version. Example: PHP.PHP
+
+    .PARAMETER patern
+    The pattern to match the latest version. Example: PHP\.PHP\.\d+\.\d+ (for PHP.PHP.x.x)
     #>
+
+    if ($id -and $patern) {
+        $name = (winget search "$id" --source winget |
+            Select-String -Pattern $patern |
+            ForEach-Object { $_.Matches.Value } |
+            Sort-Object |
+            Select-Object -Last 1)
+    }
 
     winget install $name --accept-package-agreements --accept-source-agreements --source $source
 }
@@ -138,6 +155,8 @@ function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
     Write-Host "`nStart Menu shortcut created: $startMenuPath\$ShortcutName" -ForegroundColor Yellow
     
 }
+
+
 #! ===================================================================
 #!                          -activation 
 #! ===================================================================
@@ -168,15 +187,18 @@ if ($activation -eq "office") {
 #!                          -autoinstall
 #! ===================================================================
 if ($autoinstall) {
-    if (!$winrarInstalled -or !$7zipInstalled) {
-        Write-Host "`nWinRAR or 7-Zip is not installed but still continue with the installation." -ForegroundColor Yellow 
+    # CHECK IF WINRAR OR 7ZIP IS INSTALLED
+    if (!$winrarInstalled) {
+        if (!$7zipInstalled) {
+            Write-Host "`nWinRAR or 7-Zip is not installed but continuing anyway..." -ForegroundColor Yellow 
+        }
     }
 
     if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
         Write-Host "`nWinget is not installed!" -ForegroundColor Red
         WingetInstall
     }
-    
+
     #################### USING WINGET ####################
     $appArray = @("android-studio", "balsamiq", "capcut", "figma", "fluid ui", "jre", "vscode", "staruml", "php")
     
@@ -184,11 +206,11 @@ if ($autoinstall) {
         if (winget list $app -eq "No installed package found matching input criteria.") {
             if ($app -eq "jre") {
                 WingetInstallCommand "Oracle.JavaRuntimeEnvironment" "winget"
-                WingetInstallCommand "Oracle.JDK.20" "winget"
+                WingetInstallCommand "Oracle.JDK.25" "winget" "Oracle.JDK" "Oracle\.JDK\.\d+"
 
             } elseif ($app -eq "php") {
-                WingetInstallCommand "PHP.PHP.8.4" "winget"
-                WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget"
+                WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+"
+                WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
                 
             } elseif ($app -eq "capcut") {
                 WingetInstallCommand "XP9KN75RRB9NHS" "msstore"
@@ -203,8 +225,8 @@ if ($autoinstall) {
     
     if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
         if (!(Get-Command pip -ErrorAction SilentlyContinue)) {
-            Write-Host "`nInstalling Python 3.13" -ForegroundColor Yellow
-            WingetInstallCommand "Python.Python.3.13" "winget"
+            Write-Host "`nInstalling Latest Python3 Version`n" -ForegroundColor Yellow
+            WingetInstallCommand "python3" "winget"
         }
         pip install gdown
     }
@@ -228,7 +250,7 @@ if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
     $installGdown = Read-Host
     if (($installGdown.Tolower() -eq "y") -or ($installGdown -eq "")) {
         if (!(Get-Command pip -ErrorAction SilentlyContinue) -or !(Get-Command python -ErrorAction SilentlyContinue)) {
-            WingetInstallCommand "Python.Python.3.13" "winget"
+            WingetInstallCommand "python3" "winget"
         }
 
         try {
@@ -239,9 +261,6 @@ if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
         }
     }
 }
-
-Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
-winget upgrade
 
 # https://ozh.github.io/ascii-tables/
 <# !NOT NEEDED
@@ -287,31 +306,31 @@ $table = @(
     [PSCustomObject]@{No=1;  Software='ACL 9';                        Source='GDrive';          Version='-';         Status='OK'}
     [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2023';      Status='Untested'}
     [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='Untested'}
-    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='Untested'}
+    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='Not Done'}
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='';                Version='';          Status=''}
+    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='-';         Status='Not Done'}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=8;  Software='CapCut';                       Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='GDrive';          Version='2.0';       Status='OK'}
     [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='Untested'}
     [PSCustomObject]@{No=11; Software='CX Programming';               Source='GDrive';          Version='4.60';      Status='OK'}
-    [PSCustomObject]@{No=12; Software='Draw.io';                      Source='https://draw.io'; Version='';          Status='OK'}
+    [PSCustomObject]@{No=12; Software='Draw.io';                      Source='https://draw.io'; Version='-';         Status='OK'}
     [PSCustomObject]@{No=13; Software='Figma';                        Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=14; Software='Fluid UI';                     Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='GDrive';          Version='4,2';       Status='OK'}
     [PSCustomObject]@{No=16; Software='Java';                         Source='winget';          Version='8';         Status='OK'}
-    [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='20';        Status='OK'}
+    [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='> 20';      Status='OK'}
     [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web';             Version='3.0';       Status='OK'}
     [PSCustomObject]@{No=19; Software='Minitab';                      Source='GDrive';          Version='17';        Status='OK'}
-    [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='';          Status='OK'}
-    [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='';          Status='OK'}
+    [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='-';         Status='OK'}
+    [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='-';         Status='OK'}
     [PSCustomObject]@{No=22; Software='Microsoft Visio';              Source='GDrive';          Version='2024';      Status='OK'}
     [PSCustomObject]@{No=23; Software='Microsoft Visual Studio Code'; Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=24; Software='PHP';                          Source='winget';          Version='8.4';       Status='OK'}
-    [PSCustomObject]@{No=25; Software='POM QM';                       Source='Web';             Version='Windows 5'; Status='OK'}
-    [PSCustomObject]@{No=26; Software='SPSS';                         Source='Web';             Version='25';        Status='OK'}
+    [PSCustomObject]@{No=24; Software='PHP';                          Source='winget';          Version='> 8.5';     Status='OK'}
+    [PSCustomObject]@{No=25; Software='POM QM';                       Source='Web Link';        Version='Windows 5'; Status='OK'}
+    [PSCustomObject]@{No=26; Software='SPSS';                         Source='Web Link';        Version='25';        Status='OK'}
     [PSCustomObject]@{No=27; Software='Star UML';                     Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=28; Software='XAMPP';                        Source='winget';          Version='8.2';       Status='OK'}
+    [PSCustomObject]@{No=28; Software='XAMPP';                        Source='winget';          Version='> 8.2';     Status='OK'}
     [PSCustomObject]@{No=29; Software='Zahir';                        Source='GDrive';          Version='6';         Status='OK'}
     [PSCustomObject]@{No=30; Software='Data Simulasi 2012';           Source='GDrive';          Version='-';         Status='OK'}
 )
@@ -323,11 +342,18 @@ $table | Format-Table -AutoSize # print table
 Write-Host "Choose number based on the table: " -NoNewline -ForegroundColor Yellow
 $choose = Read-Host
 
+
+# Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
+# winget upgrade
+
+
 switch ($choose) {
     1 { 
         gdown --fuzzy "https://drive.google.com/file/d/13NuhwjDLhPBAQeGZDC90PA3HT2_wdXk8/view?usp=sharing" # ACL 9.rar
 
         UnZip "ACL 9.rar" ".\ACL 9\"
+
+        Write-Host "`nDone." -ForegroundColor Yellow
     }
     2 { #! BLM DI COBA
         Write-Host "
@@ -355,13 +381,12 @@ switch ($choose) {
             return
         }
 
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "~\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\"
         .\Set-up.exe
 
-        Write-Host "Press Enter ONLY IF THE INSTALATION IS FINISH! " -ForegroundColor Red 
-        Read-Host
+        Write-Host "Press Enter ONLY IF THE INSTALATION IS FINISHED! " -BackgroundColor Red; Read-Host
 
         Set-Location "~\Downloads\AILS2265\Crack Only\"
         Copy-Item "Illustrator.exe" -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse
@@ -384,15 +409,15 @@ switch ($choose) {
             return
         }
 
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Adobe_Photoshop_2023_v24.2.0.315"
         .\autoplay.exe
 
     } # adobe photoshop
-    4 { gdown --fuzzy "" } # adobe premier
+    4 { Write-Host "`nI don't know how to do this one." } # adobe premier
     5 { WingetInstallCommand "Google.AndroidStudio" "winget" } # android studio
-    6 { Write-Host "I don't know how to do this one." } # autocad
+    6 { Write-Host "`nI don't know how to do this one." } #? autocad https://drive.google.com/drive/u/4/folders/1jR6n1IuMZ6QUIO_xu5nm3JzqEYagBwNG
     7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } # balsamiq
     8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } # capcut
     9 { 
@@ -400,7 +425,7 @@ switch ($choose) {
 
         UnZip "Circuit Wizard Student Version.zip" ".\"
 
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Circuit Wizard Student Version"
 
@@ -408,12 +433,13 @@ switch ($choose) {
 
         .\CktWiz.exe
     } # circuit wizard
-    10 { #! MASIH GA BISA
+    10 { #! MASIH GA BISA (FILE'S GONE)
+        #? https://drive.google.com/drive/u/4/folders/1jR6n1IuMZ6QUIO_xu5nm3JzqEYagBwNG
         gdown --fuzzy "https://drive.google.com/file/d/15hsrVd8088JI-No8UIeAOP96PzLgZSmc/view?usp=sharing"
         
         UnZip "CorelDRAW Graphics Suite X8 18.2.0.840 x64.zip" ".\"
 
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "CorelDRAW Graphics Suite X8 18.2.0.840 x64"
         
@@ -441,7 +467,7 @@ switch ($choose) {
             return
         }
 
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "CX Programmer\CxOne_V4.60\"
         .\setup.exe
@@ -456,7 +482,7 @@ switch ($choose) {
         
         UnZip "festo fluidsim 4.2 PH-20231010T134944Z-001.rar" ".\"
 
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\"
 
@@ -466,8 +492,8 @@ switch ($choose) {
         .\fl_sim_h.exe
 
     } # FluidSim
-    16 { WingetInstallCommand "Oracle".JavaRuntimeEnvironment "winget" } # java
-    17 { WingetInstallCommand "Oracle".JDK.20 "winget" } # jdk
+    16 { WingetInstallCommand "Oracle.JavaRuntimeEnvironment" "winget" } # java
+    17 { WingetInstallCommand "Oracle.JDK.25" "winget" "Oracle.JDK" "Oracle\.JDK\.\d+" } # jdk
     18 { 
         Invoke-WebRequest -Uri "https://www.pajak.net/download/inv03_300.exe" -OutFile "krishand-inventory-3.0.exe"
         
@@ -478,23 +504,23 @@ switch ($choose) {
         .\krishand-inventory-3.0.exe
     } # krishand inventory 3.0
     19 { 
-        gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link"; # minitab+
+        gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link";
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         .\f4-minitab17-setup.exe
-    }
+    } # minitab+
     20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
     21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
     22 {
         gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
 
         UnZip "VISIO2024.zip" ".\"
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "VISIO2024"
         .\setup.exe /configure Configuration.xml
     } # visio
     23 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
-    24 { WingetInstallCommand "PHP.PHP.8.4" "winget" } # php
+    24 { WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+" } # php
     25 { 
         Invoke-WebRequest -Uri "https://qm-for-windows.software.informer.com/download/?ca1e2f92" -OutFile POM-QM.exe
 
@@ -504,27 +530,33 @@ switch ($choose) {
         gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
         gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
 
-        Move-Item .\lservrc -Destination "C:\Program Files\IBM\SPSS\Statistics\25\" -Force 
+        Move-Item .\lservrc -Destination "${env:ProgramFiles}\IBM\SPSS\Statistics\25\" -Force 
 
         .\SPSS_Statistics_25.exe
     } # SPSS
     27 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
-    28 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" } # xampp
+    28 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+" } # xampp
     29 {
         gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
 
         UnZip "Master ZAHIR 6.11a.zip" ".\"
-        Write-Host "Press Enter ONLY IF DONE EXTRACTING.." -NoNewline -ForegroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Master ZAHIR 6.11a"
         .\setup.exe
     } # zahir
     30 {
+        if (Test-Path ".\DATA-SIMULASI 2012\") {
+            Write-Host "`nDATA-SIMULASI 2012 folder already exists, continuing anyway..." -ForegroundColor Red
+        }
+
         gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
 
         mkdir "DATA-SIMULASI 2012"
-        UnZip "DATA-SIMULASI 2012.rar" ".\DATA-SIMLULASI 2012"
-    }
+        UnZip "DATA-SIMULASI 2012.rar" ".\DATA-SIMULASI 2012"
+
+        Write-Host "`nDone." -ForegroundColor Yellow
+    } # Data-Simulasi 2012
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
 
