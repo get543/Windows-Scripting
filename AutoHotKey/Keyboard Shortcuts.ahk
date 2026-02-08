@@ -13,6 +13,7 @@ A_TrayMenu.Add("Shortcut List", (*) =>
         . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
         . "- Ctrl + Alt + .`t: Spam Text 100x`n"
         . "- Ctrl + Alt + O`t: Microphone Loopback Toggle`n"
+        . "- Ctrl + Alt + M`t: Start Scrcpy + Microphone Loopback`n"
         . "- Page Down`t: Auto Clicker`n"
         . "- Page Up`t: Reload Script (Stop Auto Clicker)`n"
         . "- Alt + F1`t`t: Toggle Twitch Theatre Mode & Vertical Tabs`n"
@@ -82,6 +83,19 @@ PrintScreen:: ; press print screen
 
 ^!o:: ; press ctrl + alt + o
 { 
+    MicrophoneLoopbackFunction() ; call the function from included file
+}
+
+^!m:: ; press ctrl + alt + m
+{
+    ; if there's no scrcpy.exe window active    
+    if not (WinExist("ahk_exe scrcpy.exe"))
+    {
+        ; Sends a hotkey presses
+        Send "^!p" ; Opens a scrcpy no console (ctrl + alt + p)
+        Sleep 5000 ; Delay for 5s
+    }
+
     MicrophoneLoopbackFunction() ; call the function from included file
 }
 
