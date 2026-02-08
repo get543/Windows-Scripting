@@ -1,6 +1,10 @@
 ﻿#Requires AutoHotkey v2.0
 #SingleInstance Force
 
+;! Remove the default Exit from the tray menu
+A_TrayMenu.Delete("E&xit")
+A_TrayMenu.Add("Edit Script", (*) => Edit())
+
 ;! Modify the existing tray menu
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Shortcut List", (*) => 
@@ -31,7 +35,9 @@ A_TrayMenu.Add("Auto Launch Apps", (*) =>
     )
 ) ; Add your custom item to the bottom of the tray menu
 
-A_TrayMenu.Add("Enable Discord RPC (E:\UDIN\Code\DISCORD-RPC)", (*) => 
+A_TrayMenu.Add("Enable Discord RPC", (*) => 
+    TrayTip("Enabled in E:\UDIN\Code\Discord-RPC", "The Discord RPC has been enabled.", 1 16 32) ; TrayTip Text, Title, Options
+
     RunWait(
         'powershell.exe -Command "cd E:\UDIN\Code\DISCORD-RPC; npm run test"', , 'Hide'
     )
