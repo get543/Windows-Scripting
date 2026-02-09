@@ -58,6 +58,8 @@ param (
     [string]$activation
 )
 
+if (!$isAdmin) { return Write-Host "`nMust Be Run As Admin!" -ForegroundColor Red }
+
 Set-Location "~\Downloads"
 
 if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContinue) {
@@ -83,6 +85,10 @@ function WingetInstall {
     Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
     Write-Host "Using Repair-WinGetPackageManager cmdlet to bootstrap WinGet..." -ForegroundColor Yellow
     Repair-WinGetPackageManager -AllUsers -ErrorAction SilentlyContinue
+
+    # CRITICAL: Refresh PATH immediately after install
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
+
     Write-Host "Done."
 }
 
@@ -102,6 +108,14 @@ function UnZip($SourceFile, $DestinationFile) {
         Write-Host "`nYou need to extract $SourceFile" -ForegroundColor Red
         return
     }
+}
+
+function RefreshPath() {
+    <#
+    .SYNOPSIS
+    Refreshes the PATH environment variable in the current session.
+    #>
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
 }
 
 function WingetInstallCommand($name, $source, $id, $patern) {
@@ -199,6 +213,9 @@ if ($autoinstall) {
         WingetInstall
     }
 
+    # CRITICAL: Refresh PATH immediately after install
+    RefreshPath
+
     #################### USING WINGET ####################
     $appArray = @("android-studio", "balsamiq", "capcut", "figma", "fluid ui", "jre", "vscode", "staruml", "php")
     
@@ -228,9 +245,13 @@ if ($autoinstall) {
             Write-Host "`nInstalling Latest Python3 Version`n" -ForegroundColor Yellow
             WingetInstallCommand "python3" "winget"
         }
+
+        # CRITICAL: Refresh PATH immediately after install
+        RefreshPath
+
         pip install gdown
     }
-    
+
     Write-Host "`nOk so you've reached the end of the script" -ForegroundColor Red
     return
 }
@@ -252,6 +273,9 @@ if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
         if (!(Get-Command pip -ErrorAction SilentlyContinue) -or !(Get-Command python -ErrorAction SilentlyContinue)) {
             WingetInstallCommand "python3" "winget"
         }
+
+        # CRITICAL: Refresh PATH immediately after install
+        RefreshPath
 
         try {
             pip install gdown
@@ -343,18 +367,18 @@ Write-Host "Choose number based on the table: " -NoNewline -ForegroundColor Yell
 $choose = Read-Host
 
 
-# Write-Host "`nUpdating winget source..." -ForegroundColor Yellow
-# winget upgrade
-
-
 switch ($choose) {
-    1 { 
+    1 {
+        if (Test-Path "ACL 9.rar") {
+            Write-Host "`nACL 9 folder already exists, continuing anyway..." -ForegroundColor Red
+        }
+
         gdown --fuzzy "https://drive.google.com/file/d/13NuhwjDLhPBAQeGZDC90PA3HT2_wdXk8/view?usp=sharing" # ACL 9.rar
 
         UnZip "ACL 9.rar" ".\ACL 9\"
 
         Write-Host "`nDone." -ForegroundColor Yellow
-    }
+    } # ACL 9.rar
     2 { #! BLM DI COBA
         Write-Host "
         pw : www.yasir252.com
@@ -560,5 +584,5 @@ switch ($choose) {
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
 
-
-
+# CRITICAL: Refresh PATH immediately after install
+RefreshPath
