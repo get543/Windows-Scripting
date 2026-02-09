@@ -101,7 +101,7 @@ function UnZip($SourceFile, $DestinationFile) {
     Destination file
     #>
     if ($winrarInstalled) {
-        & "${env:ProgramFiles}\WinRAR\UnRAR.exe" x "$SourceFile" "$DestinationFile"
+        & "${env:ProgramFiles}\WinRAR\WinRAR.exe" -o+ x "$SourceFile" "$DestinationFile"
     } elseif ($7zipInstalled) {
         & "${env:ProgramFiles}\7-Zip\7z.exe" x "$SourceFile" -o"$DestinationFile"
     } else {
@@ -334,17 +334,17 @@ $table = @(
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='-';         Status='Not Done'}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=8;  Software='CapCut';                       Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=8;  Software='CapCut';                       Source='MS Store';        Version='newest';    Status='OK'}
     [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='GDrive';          Version='2.0';       Status='OK'}
-    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='Untested'}
+    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='Not Done'}
     [PSCustomObject]@{No=11; Software='CX Programming';               Source='GDrive';          Version='4.60';      Status='OK'}
     [PSCustomObject]@{No=12; Software='Draw.io';                      Source='https://draw.io'; Version='-';         Status='OK'}
     [PSCustomObject]@{No=13; Software='Figma';                        Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=14; Software='Fluid UI';                     Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=14; Software='Fluid UI';                     Source='MS Store';        Version='newest';    Status='OK'}
     [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='GDrive';          Version='4,2';       Status='OK'}
     [PSCustomObject]@{No=16; Software='Java';                         Source='winget';          Version='8';         Status='OK'}
     [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='> 20';      Status='OK'}
-    [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web';             Version='3.0';       Status='OK'}
+    [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web Link';             Version='3.0';       Status='OK'}
     [PSCustomObject]@{No=19; Software='Minitab';                      Source='GDrive';          Version='17';        Status='OK'}
     [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='-';         Status='OK'}
     [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='-';         Status='OK'}
@@ -405,7 +405,7 @@ switch ($choose) {
             return
         }
 
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "~\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\"
         .\Set-up.exe
@@ -433,7 +433,7 @@ switch ($choose) {
             return
         }
 
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Adobe_Photoshop_2023_v24.2.0.315"
         .\autoplay.exe
@@ -449,7 +449,7 @@ switch ($choose) {
 
         UnZip "Circuit Wizard Student Version.zip" ".\"
 
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Circuit Wizard Student Version"
 
@@ -457,26 +457,34 @@ switch ($choose) {
 
         .\CktWiz.exe
     } # circuit wizard
-    10 { #! MASIH GA BISA (FILE'S GONE)
-        #? https://drive.google.com/drive/u/4/folders/1jR6n1IuMZ6QUIO_xu5nm3JzqEYagBwNG
-        gdown --fuzzy "https://drive.google.com/file/d/15hsrVd8088JI-No8UIeAOP96PzLgZSmc/view?usp=sharing"
+    10 { #! MASIH GA BISA
+        gdown --fuzzy "https://drive.google.com/file/d/1_2AOYgETZlChXHvhNrlYqHM5dVNq9jui/view?usp=drive_link"
         
-        UnZip "CorelDRAW Graphics Suite X8 18.2.0.840 x64.zip" ".\"
+        UnZip "CorelDRAW Graphics Suite 2021 v23.0.0.363.7z" ".\"
 
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
-        Set-Location "CorelDRAW Graphics Suite X8 18.2.0.840 x64"
+        Set-Location "CorelDRAW Graphics Suite 2021 v23.0.0.363\Setup"
         
+        .\Setup.exe
+
         Write-Host "
-        1. jika sudah terinstal hingga akhir, klik 'already purchased?'
-        jika tidak ada pilih product details -> already purchased
-        2. klik 'Enter Serial Number'
-        3. masukkan serial number 'DR18R39-S624MZZ-DFNHXR2-R2D5YEA'
-        4. authenticate
-        5. reopen corel draw
+        Instructions :
+
+        1. Install the program from the given setup.
+        2. Install the application as trial.
+        3. Don't run the application yet and close from system tray or task manager if running.
+        4. Extract the `"Crack Fix.zip`" to C:\Program Files\Corel\CorelDRAW Graphics Suite 2021\Programs64. Replace all the files.
+        5. Boom! Now you can use the program without any interruptions.
+        6. That's it, Enjoy now ;)
         " -ForegroundColor Red
 
-        .\Setup.exe
+        Write-Host "`nPress Enter ONLY IF THE INSTALATION IS FINISHED! " -BackgroundColor Red; Read-Host
+
+        Write-Host "`nCopying crack files..." -ForegroundColor Yellow
+        Copy-Item "..\Crack Fix\*" -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64" -Force -Recurse -Verbose
+
+
     } # coreldraw
     11 {
         gdown --fuzzy "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
@@ -491,7 +499,7 @@ switch ($choose) {
             return
         }
 
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "CX Programmer\CxOne_V4.60\"
         .\setup.exe
@@ -506,7 +514,7 @@ switch ($choose) {
         
         UnZip "festo fluidsim 4.2 PH-20231010T134944Z-001.rar" ".\"
 
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\"
 
@@ -538,7 +546,7 @@ switch ($choose) {
         gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
 
         UnZip "VISIO2024.zip" ".\"
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "VISIO2024"
         .\setup.exe /configure Configuration.xml
@@ -564,7 +572,7 @@ switch ($choose) {
         gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
 
         UnZip "Master ZAHIR 6.11a.zip" ".\"
-        Write-Host "Press Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Master ZAHIR 6.11a"
         .\setup.exe
