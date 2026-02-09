@@ -52,6 +52,7 @@ PowerShell One-Liner
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
 #TODO WHAT IF PC'S INTERNET IS SLOW ⁉ CURRENTLY NO SOLUTION
+#TODO AUTOCAD, ADOBE PREMIER, CORELDRAW
 
 param (
     [switch]$autoinstall,
@@ -92,18 +93,29 @@ function WingetInstall {
     Write-Host "Done."
 }
 
-function UnZip($SourceFile, $DestinationFile) {
+function UnZip($SourceFile, $DestinationFile, $Password) {
     <#
     .PARAMETER SourceFile
     Source file
 
     .PARAMETER DestinationFile
     Destination file
+
+    .PARAMETER Password
+    Password to extract the file (if any)
     #>
     if ($winrarInstalled) {
-        & "${env:ProgramFiles}\WinRAR\WinRAR.exe" -o+ x "$SourceFile" "$DestinationFile"
+        if ($Password) {
+            Start-Process -FilePath "${env:ProgramFiles}\WinRAR\WinRAR.exe" -ArgumentList "-o+", "x", "-p`"$Password`"", "`"$SourceFile`"", "`"$DestinationFile`"" -Wait -NoNewWindow
+        } else {
+            Start-Process -FilePath "${env:ProgramFiles}\WinRAR\WinRAR.exe" -ArgumentList "-o+", "x", "`"$SourceFile`"", "`"$DestinationFile`"" -Wait -NoNewWindow
+        }
     } elseif ($7zipInstalled) {
-        & "${env:ProgramFiles}\7-Zip\7z.exe" x "$SourceFile" -o"$DestinationFile"
+        if ($Password) {
+            Start-Process -FilePath "${env:ProgramFiles}\7-Zip\7z.exe" -ArgumentList "x", "-p`"$Password`"", "`"$SourceFile`"", "-o`"$DestinationFile`"", "-aoa" -Wait -NoNewWindow
+        } else {
+            Start-Process -FilePath "${env:ProgramFiles}\7-Zip\7z.exe" -ArgumentList "x", "`"$SourceFile`"", "-o`"$DestinationFile`"", "-aoa" -Wait -NoNewWindow
+        }
     } else {
         Write-Host "`nYou need to extract $SourceFile" -ForegroundColor Red
         return
@@ -328,9 +340,9 @@ Write-Host "
 ##################################### !CUSTOM TABLE OBJECT #####################################
 $table = @(
     [PSCustomObject]@{No=1;  Software='ACL 9';                        Source='GDrive';          Version='-';         Status='OK'}
-    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2023';      Status='Untested'}
-    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='Untested'}
-    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='Not Done'}
+    [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2022';      Status='OK'}
+    [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='OK'}
+    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023?';      Status='Not Done'}
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='-';         Status='Not Done'}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
@@ -368,7 +380,7 @@ $choose = Read-Host
 
 
 switch ($choose) {
-    1 {
+    1 { #* ACL 9
         if (Test-Path "ACL 9.rar") {
             Write-Host "`nACL 9 folder already exists, continuing anyway..." -ForegroundColor Red
         }
@@ -378,44 +390,21 @@ switch ($choose) {
         UnZip "ACL 9.rar" ".\ACL 9\"
 
         Write-Host "`nDone." -ForegroundColor Yellow
-    } # ACL 9.rar
-    2 { #! BLM DI COBA
-        Write-Host "
-        pw : www.yasir252.com
-        Download Adobe Illustrator 2022 Full Version
-        Extract the file with Winrar 6.1
-        When finished, run the setup.exe file
-        Press the install button and wait for it to finish
-        Next, open the Crack Adobe Illustrator . folder
-        Copy the .exe file
-        Paste and replace at
-        C:\Program Files\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows
-        Enjoy brother!
-        " -ForegroundColor Red
-
+    }
+    2 { #* adobe illustrator 2022
         gdown --fuzzy "https://drive.google.com/file/d/1iHbLr-PkXe2BfbnyQlzki7WJiEV7wsEm/view?usp=sharing" # AILS2265.rar
-        if ($winrarInstalled) {
-            mkdir "AILS2265"
-            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x -p"www.yasir252.com" "AILS2265.rar" ".\AILS2265\"
-        } elseif ($7zipInstalled) {
-            mkdir "AILS2265"
-            & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"www.yasir252.com" "AILS2265.rar" -o".\AILS2265\"
-        } else {
-            Write-Host "`nYou need to extract AILS2265.rar" -ForegroundColor Red
-            return
-        }
 
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        UnZip "AILS2265.rar" ".\AILS2265\" "www.yasir252.com"
 
         Set-Location "~\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\"
         .\Set-up.exe
 
-        Write-Host "Press Enter ONLY IF THE INSTALATION IS FINISHED! " -BackgroundColor Red; Read-Host
+        Write-Host "Press Enter ONLY IF THE INSTALATION HAS FINISHED! " -BackgroundColor Red; Read-Host
 
         Set-Location "~\Downloads\AILS2265\Crack Only\"
-        Copy-Item "Illustrator.exe" -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse
-    } # adobe illustrator
-    3 { #! BLM DI COBA
+        Copy-Item "Illustrator.exe" -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse -Verbose
+    }
+    3 { #* adobe photoshop 2023
         gdown --fuzzy "https://drive.google.com/file/d/1YTyJnngcHi9abbbY-5RdOloVJ89o_Kdn/view?usp=sharing"
        
         # Delete previous instalation folder
@@ -424,48 +413,42 @@ switch ($choose) {
             Remove-Item -Recurse -Force "$env:ProgramData\Adobe\SLStore"
         }
 
-        if ($winrarInstalled) {
-            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x -p"123" "_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" ".\"
-        } elseif ($7zipInstalled) {
-            & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"123" "_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" -o".\"
-        } else {
-            Write-Host "`nYou need to extract _Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" -ForegroundColor Red
-            return
-        }
-
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        UnZip "_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" ".\" "123"
 
         Set-Location "Adobe_Photoshop_2023_v24.2.0.315"
         .\autoplay.exe
+    }
+    4 { Write-Host "`nI don't know how to do this one." } #* adobe premier
+    5 { WingetInstallCommand "Google.AndroidStudio" "winget" } #* android studio
+    6 { #* autocad
+        gdown --fuzzy "https://drive.google.com/file/d/1tbQd2jrk_m83GOyaIH6vY5tZBs2a9RFc/view?usp=drive_link"
 
-    } # adobe photoshop
-    4 { Write-Host "`nI don't know how to do this one." } # adobe premier
-    5 { WingetInstallCommand "Google.AndroidStudio" "winget" } # android studio
-    6 { Write-Host "`nI don't know how to do this one." } #? autocad https://drive.google.com/drive/u/4/folders/1jR6n1IuMZ6QUIO_xu5nm3JzqEYagBwNG
-    7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } # balsamiq
-    8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } # capcut
-    9 { 
+        UnZip "Autocadd2025[www.civilmdc.com].rar" ".\" "www.civilmdc.com"
+
+        Set-Location "Autocadd2025[www.civilmdc.com]"
+
+        .\Setup.exe
+    }
+    7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } #* balsamiq
+    8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } #* capcut
+    9 { #* circuit wizard
         gdown --fuzzy "https://drive.google.com/file/d/1I6iz-uzUFr4FrwAOfx1sYqj6U_GUwqI0/view?usp=sharing"
 
         UnZip "Circuit Wizard Student Version.zip" ".\"
-
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Circuit Wizard Student Version"
 
         CreateShortcutStartMenu "$env:USERPROFILE\Downloads\Circuit Wizard Student Version\CktWiz.exe" "Circuit Wizard.lnk"
 
         .\CktWiz.exe
-    } # circuit wizard
-    10 { #! MASIH GA BISA
+    }
+    10 { #* coreldraw #! MASIH GA BISA
         gdown --fuzzy "https://drive.google.com/file/d/1_2AOYgETZlChXHvhNrlYqHM5dVNq9jui/view?usp=drive_link"
         
         UnZip "CorelDRAW Graphics Suite 2021 v23.0.0.363.7z" ".\"
 
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        Set-Location "CorelDRAW Graphics Suite 2021 v23.0.0.363 (x64) + Fix {CracksHash}\Setup"
 
-        Set-Location "CorelDRAW Graphics Suite 2021 v23.0.0.363\Setup"
-        
         .\Setup.exe
 
         Write-Host "
@@ -479,42 +462,27 @@ switch ($choose) {
         6. That's it, Enjoy now ;)
         " -ForegroundColor Red
 
-        Write-Host "`nPress Enter ONLY IF THE INSTALATION IS FINISHED! " -BackgroundColor Red; Read-Host
+        Write-Host "`nPress Enter ONLY IF THE INSTALATION HAS FINISHED.." -NoNewline -BackgroundColor Red; Read-Host
 
-        Write-Host "`nCopying crack files..." -ForegroundColor Yellow
         Copy-Item "..\Crack Fix\*" -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64" -Force -Recurse -Verbose
-
-
-    } # coreldraw
-    11 {
+    }
+    11 { #* cx programming
         gdown --fuzzy "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
-        if ($winrarInstalled) {
-            mkdir "CX Programmer"
-            & "${env:ProgramFiles}\WinRAR\WinRAR.exe" x -p"plc247.com" "[plc247.com]CxOne_V4.60.rar" ".\CX Programmer\"
-        } elseif ($7zipInstalled) {
-            mkdir "CX Programmer"
-            & "${env:ProgramFiles}\7-Zip\7z.exe" x -p"plc247.com" "[plc247.com]CxOne_V4.60.rar" -o".\CX Programmer\"
-        } else {
-            Write-Host "`nYou need to extract [plc247.com]CxOne_V4.60.rar" -ForegroundColor Red
-            return
-        }
 
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
+        UnZip "[plc247.com]CxOne_V4.60.rar" ".\CX Programmer\" "plc247.com"
 
         Set-Location "CX Programmer\CxOne_V4.60\"
         .\setup.exe
 
         Write-Host "License key: 1600 0285 8143 5387 or 1600 0325 7848 5341" -ForegroundColor Red
-    } # cx programming
+    }
     12 { Write-Host "https://draw.io atau winget install JGraph.Draw" }
-    13 { WingetInstallCommand "Figma.Figma" "winget" } # figma
-    14 { WingetInstallCommand "9NBLGGH4LVX9" "msstore" } # fluid ui
-    15 {
+    13 { WingetInstallCommand "Figma.Figma" "winget" } #* figma
+    14 { WingetInstallCommand "9NBLGGH4LVX9" "msstore" } #* fluid ui
+    15 { #* FluidSim
         gdown --fuzzy "https://drive.google.com/file/d/1wFrPVIX1UHx7tS8ra4PPiDQSqoc0l0Lb/view?usp=drive_link"
         
         UnZip "festo fluidsim 4.2 PH-20231010T134944Z-001.rar" ".\"
-
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\"
 
@@ -522,11 +490,10 @@ switch ($choose) {
         CreateShortcutStartMenu "festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Pneumatic\bin\fl_sim_p.exe" "FluidSim Pneumatic.lnk" # Pneumatic
 
         .\fl_sim_h.exe
-
-    } # FluidSim
+    }
     16 { WingetInstallCommand "Oracle.JavaRuntimeEnvironment" "winget" } # java
     17 { WingetInstallCommand "Oracle.JDK.25" "winget" "Oracle.JDK" "Oracle\.JDK\.\d+" } # jdk
-    18 { 
+    18 {  #* krishand inventory 3.0
         Invoke-WebRequest -Uri "https://www.pajak.net/download/inv03_300.exe" -OutFile "krishand-inventory-3.0.exe"
         
         Write-Host "Username: Admin" -ForegroundColor Red
@@ -534,61 +501,58 @@ switch ($choose) {
         Write-Host "`nNanti biasanya minta username & password saat login."
 
         .\krishand-inventory-3.0.exe
-    } # krishand inventory 3.0
-    19 { 
+    }
+    19 { #* minitab+
         gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link";
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         .\f4-minitab17-setup.exe
-    } # minitab+
+    }
     20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
     21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
     22 {
         gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
 
         UnZip "VISIO2024.zip" ".\"
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "VISIO2024"
         .\setup.exe /configure Configuration.xml
-    } # visio
+    } #* visio
     23 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
     24 { WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+" } # php
-    25 { 
+    25 { #* POM QM
         Invoke-WebRequest -Uri "https://qm-for-windows.software.informer.com/download/?ca1e2f92" -OutFile POM-QM.exe
 
         .\POM-QM.exe
-    } # POM QM
-    26 { 
+    }
+    26 {  #* SPSS
         gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
         gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
 
         Move-Item .\lservrc -Destination "${env:ProgramFiles}\IBM\SPSS\Statistics\25\" -Force 
 
         .\SPSS_Statistics_25.exe
-    } # SPSS
+    }
     27 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
     28 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+" } # xampp
-    29 {
+    29 { #* zahir
         gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
 
         UnZip "Master ZAHIR 6.11a.zip" ".\"
-        Write-Host "`nPress Enter ONLY IF IT'S DONE EXTRACTING.." -NoNewline -BackgroundColor Red; Read-Host
 
         Set-Location "Master ZAHIR 6.11a"
         .\setup.exe
-    } # zahir
-    30 {
+    }
+    30 { #* Data-Simulasi 2012
         if (Test-Path ".\DATA-SIMULASI 2012\") {
             Write-Host "`nDATA-SIMULASI 2012 folder already exists, continuing anyway..." -ForegroundColor Red
         }
 
         gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
 
-        mkdir "DATA-SIMULASI 2012"
         UnZip "DATA-SIMULASI 2012.rar" ".\DATA-SIMULASI 2012"
 
         Write-Host "`nDone." -ForegroundColor Yellow
-    } # Data-Simulasi 2012
+    }
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
 
