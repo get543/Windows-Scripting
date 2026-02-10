@@ -52,7 +52,7 @@ PowerShell One-Liner
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
 #TODO WHAT IF PC'S INTERNET IS SLOW ⁉ CURRENTLY NO SOLUTION
-#TODO AUTOCAD, ADOBE PREMIER, CORELDRAW
+#TODO AUTOCAD, CORELDRAW
 
 param (
     [switch]$autoinstall,
@@ -162,11 +162,15 @@ function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
     create shortcut to the start menu (user)
 
     .PARAMETER SourceFile
-    The target file usually in .exe (something.exe)
+    The target file usually in .exe (Exampe: something.exe)
 
     .PARAMETER ShortcutName
-    The name of the shorcut created with .lnk extension (something.lnk)
+    The name of the shorcut created with .lnk extension (Example: something.lnk)
     #>
+
+    if (!(Test-Path $SourceFile)) {
+        return Write-Host "`nSource file $SourceFile not found, cannot create shortcut!" -ForegroundColor Red
+    }
 
     # Get Start Menu directory (current user)
     $startMenuPath = [Environment]::GetFolderPath("Programs")
@@ -342,7 +346,7 @@ $table = @(
     [PSCustomObject]@{No=1;  Software='ACL 9';                        Source='GDrive';          Version='-';         Status='OK'}
     [PSCustomObject]@{No=2;  Software='Adobe Illustrator';            Source='GDrive';          Version='2022';      Status='OK'}
     [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='OK'}
-    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023?';      Status='Not Done'}
+    [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='OK'}
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='-';         Status='Not Done'}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
@@ -356,7 +360,7 @@ $table = @(
     [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='GDrive';          Version='4,2';       Status='OK'}
     [PSCustomObject]@{No=16; Software='Java';                         Source='winget';          Version='8';         Status='OK'}
     [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='> 20';      Status='OK'}
-    [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web Link';             Version='3.0';       Status='OK'}
+    [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web Link';        Version='3.0';       Status='OK'}
     [PSCustomObject]@{No=19; Software='Minitab';                      Source='GDrive';          Version='17';        Status='OK'}
     [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='-';         Status='OK'}
     [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='-';         Status='OK'}
@@ -369,6 +373,7 @@ $table = @(
     [PSCustomObject]@{No=28; Software='XAMPP';                        Source='winget';          Version='> 8.2';     Status='OK'}
     [PSCustomObject]@{No=29; Software='Zahir';                        Source='GDrive';          Version='6';         Status='OK'}
     [PSCustomObject]@{No=30; Software='Data Simulasi 2012';           Source='GDrive';          Version='-';         Status='OK'}
+    [PSCustomObject]@{No=31; Software='Block Adobe Unlicense';        Source='GDrive & Github'; Version='-';         Status='OK'}
 )
 
 
@@ -396,13 +401,15 @@ switch ($choose) {
 
         UnZip "AILS2265.rar" ".\AILS2265\" "www.yasir252.com"
 
-        Set-Location "~\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\"
-        .\Set-up.exe
+        Start-Process -FilePath "Set-up.exe" `
+            -WorkingDirectory "$env:USERPROFILE\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\" -Wait
 
-        Write-Host "Press Enter ONLY IF THE INSTALATION HAS FINISHED! " -BackgroundColor Red; Read-Host
-
-        Set-Location "~\Downloads\AILS2265\Crack Only\"
-        Copy-Item "Illustrator.exe" -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse -Verbose
+        if (Test-Path "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows") {
+            Copy-Item "$env:USERPROFILE\Downloads\AILS2265\Crack Only\Illustrator.exe" `
+                -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse -Verbose
+        } else {
+            Write-Host "`nAdobe Illustrator 2022 installation folder not found, cannot copy crack files!" -ForegroundColor Red
+        }
     }
     3 { #* adobe photoshop 2023
         gdown --fuzzy "https://drive.google.com/file/d/1YTyJnngcHi9abbbY-5RdOloVJ89o_Kdn/view?usp=sharing"
@@ -418,16 +425,40 @@ switch ($choose) {
         Set-Location "Adobe_Photoshop_2023_v24.2.0.315"
         .\autoplay.exe
     }
-    4 { Write-Host "`nI don't know how to do this one." } #* adobe premier
+    4 { #* adobe premier
+        gdown --fuzzy "https://drive.google.com/file/d/1gQN1_cxghX2LfNTOCZo0GfsvwJW96q33/view?usp=drive_link"
+
+        UnZip "PremierePro2023[www.yasir252.com].rar" ".\" "www.yasir252.com"
+        
+        Set-Location "PremierePro2023.23.6.0.65"
+
+        .\Set-up.exe
+    }
     5 { WingetInstallCommand "Google.AndroidStudio" "winget" } #* android studio
     6 { #* autocad
+        #! MASIH GA BISA
+        # TODO AutoCAD
         gdown --fuzzy "https://drive.google.com/file/d/1tbQd2jrk_m83GOyaIH6vY5tZBs2a9RFc/view?usp=drive_link"
 
         UnZip "Autocadd2025[www.civilmdc.com].rar" ".\" "www.civilmdc.com"
 
-        Set-Location "Autocadd2025[www.civilmdc.com]"
+        $diskImg = Mount-DiskImage `
+            -ImagePath "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025_x64.part1_Downloadly.ir\Autodesk AutoCAD 2025 x64\AutoCAD_2025_English_Win_64bit_Downloadly.ir.iso" `
+            -NoDriveLetter
+            -PassThru
 
-        .\Setup.exe
+        $volInfo = $diskImg | Get-Volume
+        mountvol "Y:" $volInfo.UniqueId
+
+        Start-Process -FilePath "Y:\Setup.exe" -WorkingDirectory "Y:\" -Wait
+
+        Start-Process -FilePath ".\nlm11-19-4-1-ipv4-ipv6-win64.msi" -WorkingDirectory "Y:\" -Wait
+
+        Stop-Process -Force lmgrd
+        Stop-Process -Force adskflex
+
+        Copy-Item "Y:\Crack\adskflex.exe" "$env:SystemDrive\Autodesk\Network License Manager\" -Force -Recurse -Verbose
+
     }
     7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } #* balsamiq
     8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } #* capcut
@@ -442,14 +473,17 @@ switch ($choose) {
 
         .\CktWiz.exe
     }
-    10 { #* coreldraw #! MASIH GA BISA
+    10 { #* coreldraw
+        #! MASIH GA BISA (NEED TO DISABLE ANTIVIRUS)
+        # TODO CORELDRAW https://www.nesabamedia.com/cara-install-dan-aktivasi-coreldraw-x8/
         gdown --fuzzy "https://drive.google.com/file/d/1_2AOYgETZlChXHvhNrlYqHM5dVNq9jui/view?usp=drive_link"
         
         UnZip "CorelDRAW Graphics Suite 2021 v23.0.0.363.7z" ".\"
 
-        Set-Location "CorelDRAW Graphics Suite 2021 v23.0.0.363 (x64) + Fix {CracksHash}\Setup"
-
-        .\Setup.exe
+        Start-Process
+            -FilePath "Setup.exe" `
+            -WorkingDirectory "$env:USERPROFILE\Downloads\CorelDRAW Graphics Suite 2021 v23.0.0.363 (x64) + Fix {CracksHash}\Setup\" `
+            -Wait
 
         Write-Host "
         Instructions :
@@ -461,8 +495,6 @@ switch ($choose) {
         5. Boom! Now you can use the program without any interruptions.
         6. That's it, Enjoy now ;)
         " -ForegroundColor Red
-
-        Write-Host "`nPress Enter ONLY IF THE INSTALATION HAS FINISHED.." -NoNewline -BackgroundColor Red; Read-Host
 
         Copy-Item "..\Crack Fix\*" -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64" -Force -Recurse -Verbose
     }
@@ -524,7 +556,7 @@ switch ($choose) {
 
         .\POM-QM.exe
     }
-    26 {  #* SPSS
+    26 { #* SPSS
         gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
         gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
 
@@ -552,6 +584,25 @@ switch ($choose) {
         UnZip "DATA-SIMULASI 2012.rar" ".\DATA-SIMULASI 2012"
 
         Write-Host "`nDone." -ForegroundColor Yellow
+    }
+    31 { #* Block Adobe Unlicense
+        Write-Host "`nDownloading and installing Adobe GenP Patch v3.7.1..." -ForegroundColor Red
+        gdown --fuzzy "https://drive.google.com/file/d/1O0F8XqLu5mxAjoZpExLLL0DCzhSWRVVL/view?usp=drive_link"
+
+        UnZip "GenP371[www.yasir252.com].rar" ".\" "www.yasir252.com"
+
+        Set-Location "Adobe GenP Patch v3.7.1"
+        .\GenP-v3.7.1.exe
+
+        Write-Host "`nSee this picture for instructions : https://www.yasir252.com/wp-content/uploads/2025/06/adobe-genp-patch-remove-pop-up.jpg" -ForegroundColor Red
+        
+        Write-Host "`nSource : https://www.yasir252.com/en/applications/adobe-premiere-pro-2023-free-download-pc-final/" -ForegroundColor Red
+
+        Write-Host "`nAlso updating hosts file to block adobe activation servers..." -ForegroundColor Red
+        Invoke-RestMethod "https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/config/hosts" | Out-File "$env:windir\System32\drivers\etc\hosts"
+
+        Write-Host "`nRunning CTT Tool, Look for Anything related to Adobe..." -ForegroundColor Red
+        Invoke-Expression christitus.com/win | Invoke-Expression
     }
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
