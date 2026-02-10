@@ -104,7 +104,7 @@ function WingetInstall {
     Write-Host "Done."
 }
 
-function UnZip($SourceFile, $DestinationFile, $Password) {
+function UnZip($SourceFile, $DestinationFile, $Passwd) {
     <#
     .PARAMETER SourceFile
     Source file
@@ -112,18 +112,18 @@ function UnZip($SourceFile, $DestinationFile, $Password) {
     .PARAMETER DestinationFile
     Destination file
 
-    .PARAMETER Password
+    .PARAMETER Passwd
     Password to extract the file (if any)
     #>
     if ($winrarInstalled) {
-        if ($Password) {
-            Start-Process -FilePath "${env:ProgramFiles}\WinRAR\WinRAR.exe" -ArgumentList "-o+", "x", "-p`"$Password`"", "`"$SourceFile`"", "`"$DestinationFile`"" -Wait -NoNewWindow
+        if ($Passwd) {
+            Start-Process -FilePath "${env:ProgramFiles}\WinRAR\WinRAR.exe" -ArgumentList "-o+", "x", "-p`"$Passwd`"", "`"$SourceFile`"", "`"$DestinationFile`"" -Wait -NoNewWindow
         } else {
             Start-Process -FilePath "${env:ProgramFiles}\WinRAR\WinRAR.exe" -ArgumentList "-o+", "x", "`"$SourceFile`"", "`"$DestinationFile`"" -Wait -NoNewWindow
         }
     } elseif ($7zipInstalled) {
-        if ($Password) {
-            Start-Process -FilePath "${env:ProgramFiles}\7-Zip\7z.exe" -ArgumentList "x", "-p`"$Password`"", "`"$SourceFile`"", "-o`"$DestinationFile`"", "-aoa" -Wait -NoNewWindow
+        if ($Passwd) {
+            Start-Process -FilePath "${env:ProgramFiles}\7-Zip\7z.exe" -ArgumentList "x", "-p`"$Passwd`"", "`"$SourceFile`"", "-o`"$DestinationFile`"", "-aoa" -Wait -NoNewWindow
         } else {
             Start-Process -FilePath "${env:ProgramFiles}\7-Zip\7z.exe" -ArgumentList "x", "`"$SourceFile`"", "-o`"$DestinationFile`"", "-aoa" -Wait -NoNewWindow
         }
