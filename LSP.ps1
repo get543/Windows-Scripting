@@ -405,8 +405,10 @@ switch ($choose) {
             -WorkingDirectory "$env:USERPROFILE\Downloads\AILS2265\Adobe.Illustrator.2022.v26.5.0.223.x64\Setup\" -Wait
 
         if (Test-Path "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows") {
-            Copy-Item "$env:USERPROFILE\Downloads\AILS2265\Crack Only\Illustrator.exe" `
-                -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" -Force -Recurse -Verbose
+            Copy-Item `
+                -Path "$env:USERPROFILE\Downloads\AILS2265\Crack Only\Illustrator.exe" `
+                -Destination "$env:ProgramFiles\Adobe\Adobe Illustrator 2022\Support Files\Contents\Windows" `
+                -Force -Recurse -Verbose
         } else {
             Write-Host "`nAdobe Illustrator 2022 installation folder not found, cannot copy crack files!" -ForegroundColor Red
         }
@@ -450,15 +452,19 @@ switch ($choose) {
         $volInfo = $diskImg | Get-Volume
         mountvol "Y:" $volInfo.UniqueId
 
-        Start-Process -FilePath "Y:\Setup.exe" -WorkingDirectory "Y:\" -Wait
+        Start-Process -FilePath "Y:\Setup.exe" -WorkingDirectory "Y:\"
 
-        Start-Process -FilePath ".\nlm11-19-4-1-ipv4-ipv6-win64.msi" -WorkingDirectory "Y:\" -Wait
+        Start-Process -FilePath ".\nlm11-19-4-1-ipv4-ipv6-win64.msi" -WorkingDirectory "Y:\Crack" -Wait
 
         Stop-Process -Force lmgrd
         Stop-Process -Force adskflex
 
         Copy-Item "Y:\Crack\adskflex.exe" "$env:SystemDrive\Autodesk\Network License Manager\" -Force -Recurse -Verbose
 
+        Copy-Item `
+            -Path "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025.1_Update_Only_x64_Downloadly.ir\Autodesk AutoCAD 2025.1 Update Only x64\Crack\netapi32.dll" `
+            -Destination "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\" `
+            -Force -Recurse -Verbose
     }
     7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } #* balsamiq
     8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } #* capcut
@@ -496,7 +502,10 @@ switch ($choose) {
         6. That's it, Enjoy now ;)
         " -ForegroundColor Red
 
-        Copy-Item "..\Crack Fix\*" -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64" -Force -Recurse -Verbose
+        Copy-Item `
+            -Path "..\Crack Fix\*" `
+            -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64" `
+            -Force -Recurse -Verbose
     }
     11 { #* cx programming
         gdown --fuzzy "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
@@ -541,14 +550,14 @@ switch ($choose) {
     }
     20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
     21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
-    22 {
+    22 { #* visio
         gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
 
         UnZip "VISIO2024.zip" ".\"
 
         Set-Location "VISIO2024"
         .\setup.exe /configure Configuration.xml
-    } #* visio
+    }
     23 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
     24 { WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+" } # php
     25 { #* POM QM
@@ -602,7 +611,7 @@ switch ($choose) {
         Invoke-RestMethod "https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/config/hosts" | Out-File "$env:windir\System32\drivers\etc\hosts"
 
         Write-Host "`nRunning CTT Tool, Look for Anything related to Adobe..." -ForegroundColor Red
-        Invoke-Expression christitus.com/win | Invoke-Expression
+        Invoke-Expression "https://christitus.com/win" | Invoke-Expression
     }
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
 }
