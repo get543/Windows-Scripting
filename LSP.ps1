@@ -22,32 +22,43 @@ Accepted <string> value :
 - windows
 - office
 
-
 .EXAMPLE
+.\LSP.ps1
+
 .\LSP.ps1 -autoinstall
 
-.EXAMPLE
+.\LSP.ps1 -activation windows
+
 .\LSP.ps1 -activation office
 
 .EXAMPLE
+& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP)))
+
 & ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
+
+& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation windows
+
+& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation office
 
 .EXAMPLE
 irm bit.ly/scriptLSP | iex
+
+irm https://bit.ly/scriptLSP | iex
+
+irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
 
 
 .NOTES
 0. Open PowerShell as Admin
 1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-2. Run this: irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
+2. Run this: irm bit.ly/scriptLSP | iex
 
 .NOTES
-PowerShell One-Liner
-
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation
+1. You need to run PowerShell as Admin
+2. You need gdown installed (pip install gdown), which needs python installed (the script will autoinstall python if not found)
+3. You need WinRar or 7Zip installed to extract .rar files automatically
+4. You need winget installed (the script will autoinstall it if not found)
 #>
-
 
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
@@ -59,7 +70,7 @@ param (
     [string]$activation
 )
 
-if (!$isAdmin) { return Write-Host "`nMust Be Run As Admin!" -ForegroundColor Red }
+if (!$isAdmin) { return Write-Host "`nMUST RUN AS ADMIN!" -ForegroundColor Red }
 
 Set-Location "~\Downloads"
 
@@ -348,28 +359,28 @@ $table = @(
     [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='OK'}
     [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='OK'}
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='-';         Status='Not Done'}
+    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='2025';      Status='BROKEN'}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=8;  Software='CapCut';                       Source='MS Store';        Version='newest';    Status='OK'}
     [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='GDrive';          Version='2.0';       Status='OK'}
-    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='Not Done'}
+    [PSCustomObject]@{No=10; Software='CorelDraw';                    Source='GDrive';          Version='X8';        Status='OK'}
     [PSCustomObject]@{No=11; Software='CX Programming';               Source='GDrive';          Version='4.60';      Status='OK'}
     [PSCustomObject]@{No=12; Software='Draw.io';                      Source='https://draw.io'; Version='-';         Status='OK'}
     [PSCustomObject]@{No=13; Software='Figma';                        Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=14; Software='Fluid UI';                     Source='MS Store';        Version='newest';    Status='OK'}
     [PSCustomObject]@{No=15; Software='FluidSIM';                     Source='GDrive';          Version='4,2';       Status='OK'}
     [PSCustomObject]@{No=16; Software='Java';                         Source='winget';          Version='8';         Status='OK'}
-    [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='> 20';      Status='OK'}
+    [PSCustomObject]@{No=17; Software='JDK';                          Source='winget';          Version='> 25';      Status='OK'}
     [PSCustomObject]@{No=18; Software='Krishand Inventory 3.0';       Source='Web Link';        Version='3.0';       Status='OK'}
     [PSCustomObject]@{No=19; Software='Minitab';                      Source='GDrive';          Version='17';        Status='OK'}
-    [PSCustomObject]@{No=20; Software='Microsot Excel';               Source='MAS (github)';    Version='-';         Status='OK'}
-    [PSCustomObject]@{No=21; Software='Microsoft Word';               Source='MAS (github)';    Version='-';         Status='OK'}
-    [PSCustomObject]@{No=22; Software='Microsoft Visio';              Source='GDrive';          Version='2024';      Status='OK'}
-    [PSCustomObject]@{No=23; Software='Microsoft Visual Studio Code'; Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=24; Software='PHP';                          Source='winget';          Version='> 8.5';     Status='OK'}
-    [PSCustomObject]@{No=25; Software='POM QM';                       Source='Web Link';        Version='Windows 5'; Status='OK'}
-    [PSCustomObject]@{No=26; Software='SPSS';                         Source='Web Link';        Version='25';        Status='OK'}
-    [PSCustomObject]@{No=27; Software='Star UML';                     Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=20; Software='Excel, PowerPoint, Word';      Source='MAS (github)';    Version='-';         Status='OK'}
+    [PSCustomObject]@{No=21; Software='Microsoft Visio';              Source='GDrive';          Version='2024';      Status='OK'}
+    [PSCustomObject]@{No=22; Software='Microsoft Visual Studio Code'; Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=23; Software='PHP';                          Source='winget';          Version='> 8.5';     Status='OK'}
+    [PSCustomObject]@{No=24; Software='POM QM';                       Source='Web Link';        Version='Windows 5'; Status='OK'}
+    [PSCustomObject]@{No=25; Software='SPSS';                         Source='Web Link';        Version='25';        Status='OK'}
+    [PSCustomObject]@{No=26; Software='Star UML';                     Source='winget';          Version='newest';    Status='OK'}
+    [PSCustomObject]@{No=27; Software='Tableau';                      Source='GDrive';          Version='2023';      Status='OK'}
     [PSCustomObject]@{No=28; Software='XAMPP';                        Source='winget';          Version='> 8.2';     Status='OK'}
     [PSCustomObject]@{No=29; Software='Zahir';                        Source='GDrive';          Version='6';         Status='OK'}
     [PSCustomObject]@{No=30; Software='Data Simulasi 2012';           Source='GDrive';          Version='-';         Status='OK'}
@@ -418,8 +429,8 @@ switch ($choose) {
        
         # Delete previous instalation folder
         if ((Test-Path "${env:\CommonProgramFiles(x86)}\Adobe\SLCache") -or (Test-Path "$env:ProgramData\Adobe\SLStore")) {
-            Remove-Item -Recurse -Force "${env:\CommonProgramFiles(x86)}\Adobe\SLCache"
-            Remove-Item -Recurse -Force "$env:ProgramData\Adobe\SLStore"
+            Remove-Item -Recurse -Force -Verbose "${env:\CommonProgramFiles(x86)}\Adobe\SLCache"
+            Remove-Item -Recurse -Force -Verbose "$env:ProgramData\Adobe\SLStore"
         }
 
         UnZip "_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar" ".\" "123"
@@ -439,7 +450,98 @@ switch ($choose) {
     5 { WingetInstallCommand "Google.AndroidStudio" "winget" } #* android studio
     6 { #* autocad
         #! MASIH GA BISA
-        # TODO AutoCAD
+        #! NEED TO DISABLE ANTIVIRUS
+
+        <#! THE INSTRUCTIONS
+        1) Install Autodesk Application - Do Not Start it yet 
+
+        2) Install the Autodesk network license manager (v11.19.4) from crack folder (NLM.msi Update 8) 
+            -Default install is "C:\Autodesk\Network License Manager"
+            -Stop any running instance (lmgrd, adskflex) if you have one
+            -Replace adskflex.exe by cracked one
+        
+        3) Replace the netapi32.dll - \Program Files (x86)\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\
+
+        4) Edit lic.dat and change HOSTNAME and MAC to suit your configuration (if you are not sure start LMTOOLS Utility and go to 
+        System Settings, your HOSTNAME and MAC will be listed)
+        You can change vendor port too and add your previous licenses of course :)
+        Save lic.dat where you want (we suggest to "C:\Autodesk\Network License Manager" folder)
+
+
+        5) You have 2 options:
+            1)Start Network License Manager manually :
+            Run the license manager with "lmgrd.exe -z -c lic.dat" from "C:\Autodesk\Network License Manager" folder
+            Or  
+            2)Create a Service: (suggested)
+            Start LMTOOLS Utility (lmtools.exe GUI) from "C:\Autodesk\Network License Manager" folder
+        - in 'config services', add a "Autodesk' service name
+                                choose C:\Autodesk\Network License Manager\lmgrd.exe for path to lmgrd
+                                choose X:\path\where\you\saved\lic.dat for path to license file
+                                choose a empty file to have debug logs (optional)
+                                tick 'start server at power up' and 'use services'
+                                Click Save
+        - in 'service/license file' choose configuration using services and tick 'ignore license file path env var" (dont click that if you 
+                                    you wanna use a ditributed licensing .. or you will have to edit or create a Licpath.lic file)                 
+        - in 'start/stop/read' click 'start server'
+                                click 'rereadlicense file'
+        - in 'server status' click 'perform status enquiry'   
+                                check that you have 'adskflex: UP v11.18.0'
+                                check features are activated : Users of 87545ACD_2022_0F:  (Total of 100 licenses issued;  Total of 0 licenses in use) for example
+        - in 'server diags' check all featured can be checked out 
+        - check logs also win 'config services' if you configured it
+
+        7) Start Your Autodesk Application
+        - When prompted select "Use a network license"
+        - Select "Single license server"
+        - Use 127.0.0.1, localhost or where the flexlm daemon is installed (syntax could be port@server). 
+
+
+        NOTE: in some cases after restart your computer still requires license path go in services.msc and make autodesk license server run automatic mode.
+        NOTE: This is mixed Magnitude - xforce i made so welcome use it as you like.
+
+        
+
+        ########################################
+        TOTAL domination again for your pleasure
+        Smoke it!
+        ########################################
+
+
+
+        You Could also set a distributed license system, having one machine serving them all
+
+        For that matter
+        you need to Set the ADSKFLEX_LICENSE_FILE environment variable on the client machine (the procedure varies depending on the operating system). 
+
+        To set the environment variable
+
+        Use the procedure described for your operating system to set the environment variable:
+
+        For Windows 7/8/10: 
+
+            Right-click Computer and click Properties, or, in the Control Panel select System and Maintenance > System
+            Click Advanced system settings and select the Advanced tab.
+            Click Environment Variables.
+            In the Environment Variables dialog box, under System Variables, click New.
+            In the New System Variable dialog box, enter ADSKFLEX_LICENSE_FILE in the Variable Name field.
+            In the Variable Value field, enter an at sign (@) followed by the host name of each license server to which you want to point the client. Separate each server name with a semicolon (;). For example:
+
+            @server1;@server2;@server3
+
+        Dont forget to open your firewall, you may also need to check the LICPATH.LIC file in root of the installed application in case you have issues
+
+
+        If you still want to use 2018-19-20-21 applications, simply add their features with the corrected signature into our new lic.dat license file.
+        
+        Block hosts:
+        127.0.0.1 genuine-software.autodesk.com
+        127.0.0.1 genuine-software1.autodesk.com
+        127.0.0.1 genuine-software2.autodesk.com
+
+        =================
+
+        #>
+
         gdown --fuzzy "https://drive.google.com/file/d/1tbQd2jrk_m83GOyaIH6vY5tZBs2a9RFc/view?usp=drive_link"
 
         UnZip "Autocadd2025[www.civilmdc.com].rar" ".\" "www.civilmdc.com"
@@ -447,7 +549,6 @@ switch ($choose) {
         $diskImg = Mount-DiskImage `
             -ImagePath "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025_x64.part1_Downloadly.ir\Autodesk AutoCAD 2025 x64\AutoCAD_2025_English_Win_64bit_Downloadly.ir.iso" `
             -NoDriveLetter
-            -PassThru
 
         $volInfo = $diskImg | Get-Volume
         mountvol "Y:" $volInfo.UniqueId
@@ -459,12 +560,29 @@ switch ($choose) {
         Stop-Process -Force lmgrd
         Stop-Process -Force adskflex
 
-        Copy-Item "Y:\Crack\adskflex.exe" "$env:SystemDrive\Autodesk\Network License Manager\" -Force -Recurse -Verbose
+        if ((Test-Path "$env:SystemDrive\Autodesk\Network License Manager\") -and
+            (Test-Path "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\")) {
+
+            Copy-Item "Y:\Crack\adskflex.exe" "$env:SystemDrive\Autodesk\Network License Manager\" -Force -Recurse -Verbose
+            
+            Copy-Item `
+                -Path "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025.1_Update_Only_x64_Downloadly.ir\Autodesk AutoCAD 2025.1 Update Only x64\Crack\netapi32.dll" `
+                -Destination "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\" `
+                -Force -Recurse -Verbose
+        } else {
+            Write-Host "`nDestination folder not found, cannot copy crack files!" -ForegroundColor Red
+        }
 
         Copy-Item `
-            -Path "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025.1_Update_Only_x64_Downloadly.ir\Autodesk AutoCAD 2025.1 Update Only x64\Crack\netapi32.dll" `
+            -Path "C:\Users\admin\Downloads\Autodesk_AutoCAD_2025.1_Update_Only_x64_Downloadly.ir\Autodesk AutoCAD 2025.1 Update Only x64\Crack\netapi32.dll" `
             -Destination "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\" `
             -Force -Recurse -Verbose
+
+        # Start-Process `
+        #     -FilePath "AdskNLM.exe" `
+        #     -WorkingDirectory "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025_x64_new_Crack_Downloadly.ir\Autodesk AutoCAD 2025 x64 new Crack" `
+        #     -Verb RunAs
+        #     -Wait
     }
     7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } #* balsamiq
     8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } #* capcut
@@ -480,13 +598,14 @@ switch ($choose) {
         .\CktWiz.exe
     }
     10 { #* coreldraw
-        #! MASIH GA BISA (NEED TO DISABLE ANTIVIRUS)
-        # TODO CORELDRAW https://www.nesabamedia.com/cara-install-dan-aktivasi-coreldraw-x8/
+        #! NEED TO DISABLE ANTIVIRUS
         gdown --fuzzy "https://drive.google.com/file/d/1_2AOYgETZlChXHvhNrlYqHM5dVNq9jui/view?usp=drive_link"
         
         UnZip "CorelDRAW Graphics Suite 2021 v23.0.0.363.7z" ".\"
 
-        Start-Process
+        Write-Host "`nIf installation is finished and scripts gets stuck, just end CorelDRAW process from task manager." -ForegroundColor Red
+
+        Start-Process `
             -FilePath "Setup.exe" `
             -WorkingDirectory "$env:USERPROFILE\Downloads\CorelDRAW Graphics Suite 2021 v23.0.0.363 (x64) + Fix {CracksHash}\Setup\" `
             -Wait
@@ -497,15 +616,19 @@ switch ($choose) {
         1. Install the program from the given setup.
         2. Install the application as trial.
         3. Don't run the application yet and close from system tray or task manager if running.
-        4. Extract the `"Crack Fix.zip`" to C:\Program Files\Corel\CorelDRAW Graphics Suite 2021\Programs64. Replace all the files.
+        4. Copy everything from `"Crack Fix`" to C:\Program Files\Corel\CorelDRAW Graphics Suite 2021\Programs64\. Replace all the files.
         5. Boom! Now you can use the program without any interruptions.
         6. That's it, Enjoy now ;)
         " -ForegroundColor Red
 
-        Copy-Item `
-            -Path "..\Crack Fix\*" `
-            -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64" `
-            -Force -Recurse -Verbose
+        if (Test-Path "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64\") {
+            Copy-Item `
+                -Path "$env:USERPROFILE\Downloads\CorelDRAW Graphics Suite 2021 v23.0.0.363 (x64) + Fix {CracksHash}\Crack Fix\Crack Fix\*" `
+                -Destination "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64\" `
+                -Force -Recurse -Verbose
+        } else {
+            Write-Host "`nDestination folder not found, cannot copy crack files!" -ForegroundColor Red
+        }
     }
     11 { #* cx programming
         gdown --fuzzy "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
@@ -548,9 +671,16 @@ switch ($choose) {
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         .\f4-minitab17-setup.exe
     }
-    20 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (excel)
-    21 { Invoke-RestMethod https://get.activated.win | Invoke-Expression } # https://massgrave.dev/ (word)
-    22 { #* visio
+    20 { #* https://massgrave.dev/ (Excel, OneNote, PowerPoint, Word, OneDrive)
+        Invoke-WebRequest `
+            -Uri "https://c2rsetup.officeapps.live.com/c2r/download.aspx?ProductreleaseID=O365AppsBasicRetail&platform=x64&language=en-us&version=O16GA" `
+            -OutFile "OfficeSetup.exe"
+
+        Start-Process -FilePath ".\OfficeSetup.exe" -Wait
+
+        & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /Ohook
+    }
+    21 { #* visio
         gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
 
         UnZip "VISIO2024.zip" ".\"
@@ -558,14 +688,14 @@ switch ($choose) {
         Set-Location "VISIO2024"
         .\setup.exe /configure Configuration.xml
     }
-    23 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
-    24 { WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+" } # php
-    25 { #* POM QM
+    22 { WingetInstallCommand "Microsoft.VisualStudioCode" "winget" } # vscode
+    23 { WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+" } # php
+    24 { #* POM QM
         Invoke-WebRequest -Uri "https://qm-for-windows.software.informer.com/download/?ca1e2f92" -OutFile POM-QM.exe
 
         .\POM-QM.exe
     }
-    26 { #* SPSS
+    25 { #* SPSS
         gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
         gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
 
@@ -573,7 +703,43 @@ switch ($choose) {
 
         .\SPSS_Statistics_25.exe
     }
-    27 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
+    26 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
+    27 { #* Tableau
+        gdown --fuzzy "https://drive.google.com/file/d/1NHNDnIcG0q6b4rfBJcYPxzKa9oEGMHop/view?usp=drive_link"
+
+        UnZip "Tableau Desktop 2023.1.0 (x64).kuyhAa.7z" ".\"
+        
+        Start-Process `
+            -FilePath "TableauDesktop-64bit-2023-1-0_Downloadly.ir.exe" `
+            -WorkingDirectory "$env:USERPROFILE\Downloads\Tableau Desktop 2023.1.0 (x64).kuyhAa\" -Wait
+        
+        Write-Host "
+        1. Copy `"tabui.dll`" to C:\Program Files\Tableau\Tableau 2023.1\bin
+        2. Copy `"tableau_003e2900_tsf.data`" to C:\ProgramData\FLEXnet (It's hidden)
+        3. Open application, Close the license window
+        4. Use software
+
+        NOTE: If you've registered software as trial, remove tableau_003e2900_tsf.data (& every relevent backups)
+        from C:\ProgramData\FLEXnet, then do from step 2 above.
+        " -ForegroundColor Red
+
+        if ((Test-Path "${env:ProgramFiles}\Tableau\Tableau 2023.1\bin\") -and 
+            (Test-Path "${env:ProgramData}\FLEXnet\")) {
+    
+            Copy-Item `
+                -Path "$env:USERPROFILE\Downloads\Tableau Desktop 2023.1.0 (x64).kuyhAa\_Jamu\tabui.dll" `
+                -Destination "${env:ProgramFiles}\Tableau\Tableau 2023.1\bin\" `
+                -Force -Recurse -Verbose
+    
+            Copy-Item `
+                -Path "$env:USERPROFILE\Downloads\Tableau Desktop 2023.1.0 (x64).kuyhAa\_Jamu\tableau_003e2900_tsf.data" `
+                -Destination "${env:ProgramData}\FLEXnet\" `
+                -Force -Recurse -Verbose
+        } else {
+            Write-Host "`nDestination folders not found, cannot copy crack files!" -ForegroundColor Red
+        }
+        
+    }
     28 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+" } # xampp
     29 { #* zahir
         gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
@@ -610,7 +776,7 @@ switch ($choose) {
         Write-Host "`nAlso updating hosts file to block adobe activation servers..." -ForegroundColor Red
         Invoke-RestMethod "https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/config/hosts" | Out-File "$env:windir\System32\drivers\etc\hosts"
 
-        Write-Host "`nRunning CTT Tool, Look for Anything related to Adobe..." -ForegroundColor Red
+        Write-Host "`nRunning CTT Tool... `nLook for anything related to Adobe and remove it or apply tweaks" -ForegroundColor Red
         Invoke-Expression "https://christitus.com/win" | Invoke-Expression
     }
     Default { Write-Host "`nWrong option try again." -ForegroundColor Red }
