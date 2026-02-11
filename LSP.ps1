@@ -63,7 +63,6 @@ irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/L
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
 #TODO WHAT IF PC'S INTERNET IS SLOW ⁉ CURRENTLY NO SOLUTION
-#TODO AUTOCAD, CORELDRAW
 
 param (
     [switch]$autoinstall,
@@ -359,7 +358,7 @@ $table = @(
     [PSCustomObject]@{No=3;  Software='Adobe Photoshop';              Source='GDrive';          Version='2023';      Status='OK'}
     [PSCustomObject]@{No=4;  Software='Adobe Premier';                Source='GDrive';          Version='2023';      Status='OK'}
     [PSCustomObject]@{No=5;  Software='Android Studio';               Source='winget';          Version='newest';    Status='OK'}
-    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='2025';      Status='BROKEN'}
+    [PSCustomObject]@{No=6;  Software='AutoCad';                      Source='GDrive';          Version='2025';      Status='OK'}
     [PSCustomObject]@{No=7;  Software='Balsamiq';                     Source='winget';          Version='newest';    Status='OK'}
     [PSCustomObject]@{No=8;  Software='CapCut';                       Source='MS Store';        Version='newest';    Status='OK'}
     [PSCustomObject]@{No=9;  Software='Circuit Wizard';               Source='GDrive';          Version='2.0';       Status='OK'}
@@ -448,141 +447,18 @@ switch ($choose) {
         .\Set-up.exe
     }
     5 { WingetInstallCommand "Google.AndroidStudio" "winget" } #* android studio
-    6 { #* autocad
-        #! MASIH GA BISA
+    6 { #* autocad 2023 Portable
         #! NEED TO DISABLE ANTIVIRUS
+        gdown --fuzzy "https://drive.google.com/file/d/1tEJr0CHnqhepEl03raAgs3DK_TGU1CMN/view?usp=drive_link"
 
-        <#! THE INSTRUCTIONS
-        1) Install Autodesk Application - Do Not Start it yet 
+        UnZip "ACAD.2023.x64.Portable.rar" ".\ACAD.2023.x64.Portable\"
 
-        2) Install the Autodesk network license manager (v11.19.4) from crack folder (NLM.msi Update 8) 
-            -Default install is "C:\Autodesk\Network License Manager"
-            -Stop any running instance (lmgrd, adskflex) if you have one
-            -Replace adskflex.exe by cracked one
-        
-        3) Replace the netapi32.dll - \Program Files (x86)\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\
+        Start-Process `
+            -FilePath "AutoCad.exe" `
+            -WorkingDirectory "${env:USERPROFILE}\Downloads\ACAD.2023.x64.Portable\" `
+            -Verb RunAs
 
-        4) Edit lic.dat and change HOSTNAME and MAC to suit your configuration (if you are not sure start LMTOOLS Utility and go to 
-        System Settings, your HOSTNAME and MAC will be listed)
-        You can change vendor port too and add your previous licenses of course :)
-        Save lic.dat where you want (we suggest to "C:\Autodesk\Network License Manager" folder)
-
-
-        5) You have 2 options:
-            1)Start Network License Manager manually :
-            Run the license manager with "lmgrd.exe -z -c lic.dat" from "C:\Autodesk\Network License Manager" folder
-            Or  
-            2)Create a Service: (suggested)
-            Start LMTOOLS Utility (lmtools.exe GUI) from "C:\Autodesk\Network License Manager" folder
-        - in 'config services', add a "Autodesk' service name
-                                choose C:\Autodesk\Network License Manager\lmgrd.exe for path to lmgrd
-                                choose X:\path\where\you\saved\lic.dat for path to license file
-                                choose a empty file to have debug logs (optional)
-                                tick 'start server at power up' and 'use services'
-                                Click Save
-        - in 'service/license file' choose configuration using services and tick 'ignore license file path env var" (dont click that if you 
-                                    you wanna use a ditributed licensing .. or you will have to edit or create a Licpath.lic file)                 
-        - in 'start/stop/read' click 'start server'
-                                click 'rereadlicense file'
-        - in 'server status' click 'perform status enquiry'   
-                                check that you have 'adskflex: UP v11.18.0'
-                                check features are activated : Users of 87545ACD_2022_0F:  (Total of 100 licenses issued;  Total of 0 licenses in use) for example
-        - in 'server diags' check all featured can be checked out 
-        - check logs also win 'config services' if you configured it
-
-        7) Start Your Autodesk Application
-        - When prompted select "Use a network license"
-        - Select "Single license server"
-        - Use 127.0.0.1, localhost or where the flexlm daemon is installed (syntax could be port@server). 
-
-
-        NOTE: in some cases after restart your computer still requires license path go in services.msc and make autodesk license server run automatic mode.
-        NOTE: This is mixed Magnitude - xforce i made so welcome use it as you like.
-
-        
-
-        ########################################
-        TOTAL domination again for your pleasure
-        Smoke it!
-        ########################################
-
-
-
-        You Could also set a distributed license system, having one machine serving them all
-
-        For that matter
-        you need to Set the ADSKFLEX_LICENSE_FILE environment variable on the client machine (the procedure varies depending on the operating system). 
-
-        To set the environment variable
-
-        Use the procedure described for your operating system to set the environment variable:
-
-        For Windows 7/8/10: 
-
-            Right-click Computer and click Properties, or, in the Control Panel select System and Maintenance > System
-            Click Advanced system settings and select the Advanced tab.
-            Click Environment Variables.
-            In the Environment Variables dialog box, under System Variables, click New.
-            In the New System Variable dialog box, enter ADSKFLEX_LICENSE_FILE in the Variable Name field.
-            In the Variable Value field, enter an at sign (@) followed by the host name of each license server to which you want to point the client. Separate each server name with a semicolon (;). For example:
-
-            @server1;@server2;@server3
-
-        Dont forget to open your firewall, you may also need to check the LICPATH.LIC file in root of the installed application in case you have issues
-
-
-        If you still want to use 2018-19-20-21 applications, simply add their features with the corrected signature into our new lic.dat license file.
-        
-        Block hosts:
-        127.0.0.1 genuine-software.autodesk.com
-        127.0.0.1 genuine-software1.autodesk.com
-        127.0.0.1 genuine-software2.autodesk.com
-
-        =================
-
-        #>
-
-        gdown --fuzzy "https://drive.google.com/file/d/1tbQd2jrk_m83GOyaIH6vY5tZBs2a9RFc/view?usp=drive_link"
-
-        UnZip "Autocadd2025[www.civilmdc.com].rar" ".\" "www.civilmdc.com"
-
-        $diskImg = Mount-DiskImage `
-            -ImagePath "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025_x64.part1_Downloadly.ir\Autodesk AutoCAD 2025 x64\AutoCAD_2025_English_Win_64bit_Downloadly.ir.iso" `
-            -NoDriveLetter
-
-        $volInfo = $diskImg | Get-Volume
-        mountvol "Y:" $volInfo.UniqueId
-
-        Start-Process -FilePath "Y:\Setup.exe" -WorkingDirectory "Y:\"
-
-        Start-Process -FilePath ".\nlm11-19-4-1-ipv4-ipv6-win64.msi" -WorkingDirectory "Y:\Crack" -Wait
-
-        Stop-Process -Force lmgrd
-        Stop-Process -Force adskflex
-
-        if ((Test-Path "$env:SystemDrive\Autodesk\Network License Manager\") -and
-            (Test-Path "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\")) {
-
-            Copy-Item "Y:\Crack\adskflex.exe" "$env:SystemDrive\Autodesk\Network License Manager\" -Force -Recurse -Verbose
-            
-            Copy-Item `
-                -Path "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025.1_Update_Only_x64_Downloadly.ir\Autodesk AutoCAD 2025.1 Update Only x64\Crack\netapi32.dll" `
-                -Destination "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\" `
-                -Force -Recurse -Verbose
-        } else {
-            Write-Host "`nDestination folder not found, cannot copy crack files!" -ForegroundColor Red
-        }
-
-        Copy-Item `
-            -Path "C:\Users\admin\Downloads\Autodesk_AutoCAD_2025.1_Update_Only_x64_Downloadly.ir\Autodesk AutoCAD 2025.1 Update Only x64\Crack\netapi32.dll" `
-            -Destination "${env:ProgramFiles(x86)}\Common Files\Autodesk Shared\AdskLicensing\Current\AdskLicensingAgent\" `
-            -Force -Recurse -Verbose
-
-        # Start-Process `
-        #     -FilePath "AdskNLM.exe" `
-        #     -WorkingDirectory "${env:USERPROFILE}\Downloads\Autodesk_AutoCAD_2025_x64_new_Crack_Downloadly.ir\Autodesk AutoCAD 2025 x64 new Crack" `
-        #     -Verb RunAs
-        #     -Wait
+        CreateShortcutStartMenu "${env:USERPROFILE}\Downloads\ACAD.2023.x64.Portable\AutoCad.exe" "AutoCad 2023 Portable.lnk"
     }
     7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } #* balsamiq
     8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } #* capcut
