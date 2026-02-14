@@ -9,7 +9,7 @@ A_TrayMenu.Add("Edit Script", (*) => Edit())
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Shortcut List", (*) => 
     MsgBox("Available Keyboard Shortcuts: `n`n"
-        . "- Print Screen`t: Toggle to hold down any key (right now is left click)`n"
+        . "- Alt + `` `t: Toggle to hold down any key (right now is left click)`n"
         . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
         . "- Ctrl + Alt + .`t: Spam Text 100x`n"
         . "- Ctrl + Alt + O`t: Microphone Loopback Toggle`n"
@@ -50,7 +50,7 @@ A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tr
 ; file needed :
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
 
-PrintScreen:: ; press print screen
+!`:: ; press alt + `
 {
     static Toggle := 0
     Toggle := !Toggle
