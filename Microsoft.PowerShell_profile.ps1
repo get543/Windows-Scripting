@@ -20,7 +20,7 @@ function touch($file) {
     "" | Out-File $file -Encoding ASCII
 }
 function pkill($name) {
-    Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
+    taskkill /IM "${name}.exe" /F 2>$null
 }
 function find($name) {
     Get-ChildItem -Recurse -Filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
