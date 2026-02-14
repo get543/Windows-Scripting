@@ -252,8 +252,8 @@ function ShowNotification($title, $text) {
 
 ######### Run Scripts #########
 function SystemUpgrade() {
-    # SystemUpgrade -Option GUI
-    if ($args[0].ToLower() -eq "-option" -and $args[1].ToLower() -eq "gui") {
+    # SystemUpgrade -GUI
+    if ($args.Count -gt 0 -and $args.ToLower() -eq "-gui") {
         if (Test-Path -Path "E:\UDIN\Code\WINDOWS\GUI") {
             return & "E:\UDIN\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
         } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI") {
