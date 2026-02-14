@@ -1,64 +1,39 @@
 <#
-TODO ValidateSet: Find a way to make it shorter
-- (https://adamtheautomator.com/powershell-validateset/) 
-- (https://java2blog.com/check-if-array-contains-element-powershell/)
-- (https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.3&viewFallbackFrom=powershell-7.1#dynamic-validateset-values)
-
-TODO Help Menu: Find a way to make it prettier
-#>
-
-<#
-.DESCRIPTION
-This is a script that will update windows and applications on your system, if you install all the required powershell module. This will also update all the powershell module that is installed on your system.
-
-.PARAMETER Help
-Display a help message which is basically the same thing as this one. Valid values : all
-
-.PARAMETER Option
-Open up an option on how you want to run the script. Valid values : yes, assume-yes, assumeyes, answersyes, answers-yes, half-yes, normal, regular
-
-.EXAMPLE
-.\SystemUpgrade.ps1 -help all
-
-.EXAMPLE
-.\SystemUpgrade.ps1 -option yes
-
-.EXAMPLE
-.\SystemUpgrade.ps1 -option normal
-
 .SYNOPSIS
-Use to update windows and/or update your applications.
-And with extra tools, like clean all temporary folders and old Windows Updates.
-And another extra tools is check for system corruption files.
+A comprehensive script to update Windows, applications, and perform system maintenance.
+
+.DESCRIPTION
+This script provides functionality to update PowerShell modules, Windows Updates,
+Microsoft Store applications (via Winget), Winget packages, Chocolatey packages,
+Pip packages, and NPM packages. It also includes tools to scan for and fix system
+corruption, and to perform system cleanup by deleting temporary files and
+emptying the Recycle Bin. The script supports both interactive and automated execution
+through switch parameters.
+
+.NOTES
+Ensure PowerShell is run as an administrator for full functionality.
+
+.LINK
+https://github.com/get543/Windows-Scripting/blob/main/SystemUpgrade.ps1
 #>
 
+[CmdletBinding()]
 param(
-    [Parameter(ParameterSetName = 'Option')]
-    [ValidateSet(
-        "yes",
-        "assume-yes",
-        "assumeyes",
-        "answersyes",
-        "answers-yes",
-        "half-yes",
-        "normal",
-        "regular",
-        "update",
-        "upgrade",
-        "cleanup",
-        "deletetempfiles",
-        "deletetemp"
-    )]
-    [String] $Option,
+    [Parameter(HelpMessage = "Upgrade all possible packages and modules.")]
+    [switch]$Upgrade,
 
-    [Parameter(ParameterSetName = 'GetHelp')]
-    [ValidateSet("all", "full")]
-    [String] $Help
+    [Parameter(HelpMessage = "Cleanup temporary files and folders.")]
+    [switch]$Cleanup,
+
+    [Parameter(HelpMessage = "Scan for system file corruption.")]
+    [switch]$Scan,
+
+    [Parameter(HelpMessage = "Automatically answer 'yes' to all interactive prompts.")]
+    [switch]$YesToAll,
+
+    [Parameter(HelpMessage = "Display this help message.")]
+    [switch]$Help
 )
-
-$AnswersYesArray = @("yes", "assume-yes", "assumeyes", "answersyes", "answers-yes")
-$AnswersUpgradeArray = @("update", "upgrade")
-$AnswersCleanupArray = @("cleanup", "deletetempfiles", "deletetemp")
 
 $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $Principal = New-Object Security.Principal.WindowsPrincipal $Identity
@@ -96,53 +71,23 @@ function NotAdminMessage() {
 function HelpMenu() {
     <#
     .SYNOPSIS
-    Help Menu Function
-    
-    .DESCRIPTION
-    Show the help menu for all things that this script can do
-    
-    .EXAMPLE
-    .\SystemUpgrade.ps1 -Help all
-    
-    .EXAMPLE
-    .\SystemUpgrade.ps1 -Help full
-    
-    .NOTES
-    This function is not meant to run independently
+    Displays the help message for the script.
     #>
-    Write-Host "This is a Help Command for this script." -ForegroundColor Cyan
-    Write-Host "Example: .\SystemUpgrade.ps1 [parameter] [the option]"
-
+    Write-Host "This script helps with system upgrade, cleanup, and maintenance tasks." -ForegroundColor Cyan
+    Write-Host "You can combine switches to perform multiple actions."
     EmptyLine
-    Write-Host "[parameter] :" -ForegroundColor Green
-    Write-Host "> -help -> Display this help message."
-    Write-Host "> -option -> An option on how you want to run the script."
-    Write-Host "Example: .\SystemUpgrade.ps1 -help" -ForegroundColor Red
-
+    Write-Host "PARAMETERS:" -ForegroundColor Green
+    Write-Host "  -Upgrade      Upgrade all possible packages and modules."
+    Write-Host "  -Cleanup      Cleanup temporary files and folders."
+    Write-Host "  -Scan         Scan for system file corruption."
+    Write-Host "  -YesToAll     Automatically answer 'yes' to all interactive prompts."
+    Write-Host "  -Help         Display this help message."
     EmptyLine
-    Write-Host "-option [the option] :" -ForegroundColor Green
-    Write-Host "> yes -> Automatically answers yes to every questions."
-    Write-Host "> assume-yes -> Automatically answers yes to every questions."
-    Write-Host "> assumeyes -> Automatically answers yes to every questions."
-    Write-Host "> answersyes -> Automatically answers yes to every questions."
-    Write-Host "> answers-yes -> Automatically answers yes to every questions."
-    Write-Host "> half-yes -> Answers yes to all questions except for winget."
-    Write-Host "> upgrade -> Answers yes to all questions for upgrades only."
-    Write-Host "> update -> Answers yes to all questions for upgrades only."
-    Write-Host "> cleanup -> Answers yes to delete temporary files script."
-    Write-Host "> deletetempfiles -> Answers yes to delete temporary files script."
-    Write-Host "> deletetemp -> Answers yes to delete temporary files script."
-
-    Write-Host "> normal -> Run the script normally."
-    Write-Host "> regular -> Run the script normally."
-    Write-Host "Example: .\SystemUpgrade.ps1 -option yes" -ForegroundColor Red
-    Write-Host "Example: .\SystemUpgrade.ps1 -option normal" -ForegroundColor Red
-
-    EmptyLine
-    Write-Host "-help [the option] :" -ForegroundColor Green
-    Write-Host "> all"
-    Write-Host "> full"
-    Write-Host "Example: .\SystemUpgrade.ps1 -help all" -ForegroundColor Red
+    Write-Host "EXAMPLES:" -ForegroundColor Green
+    Write-Host "  .PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1 -Upgrade -Cleanup"
+    Write-Host "  .PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1 -Upgrade -YesToAll"
+    Write-Host "  .PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1 -Scan"
+    Write-Host "  Get-Help .PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1 -Full"
 }
 
 function Title() {
@@ -196,935 +141,625 @@ function UpdatePowershellModule() {
     This function is not meant to run independently
     #>
 
-    if (!(Get-Command -Name Update-Module)) {
-        Write-Host "There's no Update-Module command. So the script will skip this process." -ForegroundColor Blue
+    if (!(Get-Command -Name Update-Module -ErrorAction SilentlyContinue)) {
+        Write-Host "The 'Update-Module' command is not available. Skipping PowerShell module updates." -ForegroundColor Blue
         return
     }
 
-    function RunUpdateModule() {
-        <#
-        .SYNOPSIS
-        Main code function
+    $shouldUpdate = $false
+    if ($YesToAll.IsPresent -or $Upgrade.IsPresent) {
+        $shouldUpdate = $true
+    } else {
+        $UpdateModuleOption = Read-Host -Prompt "Update all PowerShell modules? [Y/n]"
+        if (($UpdateModuleOption.ToLower() -eq "y") -or ($UpdateModuleOption -eq "")) {
+            $shouldUpdate = $true
+        }
+    }
 
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
+    if ($shouldUpdate) {
+        Write-Host "Updating all PowerShell modules..." -ForegroundColor Yellow
+        try {
+            # We use -Force to ensure all modules are updated, even if they are already up-to-date.
+            Update-Module -Force -AcceptLicense -ErrorAction Stop
+        }
+        catch {
+            Write-Warning "An error occurred while updating PowerShell modules."
+            Write-Warning $_.Exception.Message
+        }
+    } else {
+        EmptyLine
+        Write-Host "Skipping PowerShell module updates." -ForegroundColor Yellow
+    }
+}
 
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
+function Invoke-WindowsUpdate {
+    <#
+    .SYNOPSIS
+    Checks for, installs, and manages Windows Updates using the PSWindowsUpdate module.
+    #>
 
-        Write-Host "Checking update for all PowerShell modules..." -ForegroundColor Yellow
-
-        if (Get-Command -Name pwsh) {
-            # automatically answers yes to all prompt, powershell V7 is installed
-            Write-Output A | pwsh -c Update-Module
+    # Check for PSWindowsUpdate module and offer to install if missing
+    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable -ErrorAction SilentlyContinue)) {
+        $installPrompt = "The 'PSWindowsUpdate' module is required to manage Windows Updates. Install it now? [Y/n]"
+        $shouldInstall = $false
+        if ($YesToAll.IsPresent) {
+            $shouldInstall = $true
         }
         else {
-            Update-Module -AcceptLicense
+            $installChoice = Read-Host -Prompt $installPrompt
+            if (($installChoice.ToLower() -eq 'y') -or ($installChoice -eq '')) {
+                $shouldInstall = $true
+            }
         }
-    }
 
-    # user add option to automatically answers yes or half yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        RunUpdateModule
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
-    }
-
-    Write-Host "Update all PowerShell module ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $UpdateModuleOption = Read-Host
-
-    if (($UpdateModuleOption.ToLower() -eq "y") -or ($UpdateModuleOption -eq "")) { 
-        RunUpdateModule
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping PowerShell update module..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function WindowsUpdateScript() {
-    <#
-    .SYNOPSIS
-    Windows Update Script
-    
-    .DESCRIPTION
-    This function checks for Windows Update.
-    
-    .NOTES
-    This function is not meant to run independently.
-    #>
-
-    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable) -and !(Get-Command -Name Get-WindowsUpdate)) { return }
-
-    # main code function
-    function RunWindowsUpdate() {
-        <#
-        .SYNOPSIS
-        Main code function
-
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
-        
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        do {
-            Clear-Host
-            Write-Host "Checking Windows Update..." -ForegroundColor Yellow
-            Get-WindowsUpdate -Verbose
-
-            EmptyLine
-            Write-Host "Type the KB Article ID! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
-            Write-Host "Type 'all' if you want to do all Windows Updates!" -ForegroundColor Green
-            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
-            Write-Host "Example : KB5026958 KB2267602" -ForegroundColor Red
-            EmptyLine
-
-            $WindowsUpdateChoose = Read-Host -Prompt "KB Article ID "
-
-            # user typed in 'all' then do all windows updates
-            if ($WindowsUpdateChoose.ToLower() -eq "all") {
-                Install-WindowsUpdate -Verbose -AcceptAll -IgnoreReboot
+        if ($shouldInstall) {
+            Write-Host "Installing 'PSWindowsUpdate' module..." -ForegroundColor Yellow
+            try {
+                Install-Module -Name PSWindowsUpdate -Force -AcceptLicense -Confirm:$false
             }
-
-            if ((!$WindowsUpdateChoose) -or ($WindowsUpdateChoose.ToLower() -eq 'exit')) {
-                EmptyLine
-                Write-Host "Exiting Windows Update..." -ForegroundColor Yellow
-                break
-            }
-            else {
-                $ArrayID = $WindowsUpdateChoose.Split(" ")
-
-                Clear-Host
-                foreach ($KBArticleID in $ArrayID) {
-                    Write-Host "Downloading Windows Update..." -ForegroundColor Yellow
-                    Get-WindowsUpdate -Verbose -Install -IgnoreReboot -AcceptAll -KBArticleID $KBArticleID
-                }
-            }
-
-            Start-Sleep 8
-            Clear-Host
-        } while ($true)
-    }
-
-    # user add option to automatically answers yes or half yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        EmptyLine
-        Write-Host "Checking Windows Update..." -ForegroundColor Yellow
-        Get-WindowsUpdate -Verbose
-
-        EmptyLine
-        Write-Host "Installing Windows Update..." -ForegroundColor Yellow
-        Install-WindowsUpdate -Verbose -AcceptAll -IgnoreReboot
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
-    }
-
-    Write-Host "Check for Windows Update ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $WindowsUpdateOption = Read-Host
-
-    if (($WindowsUpdateOption.ToLower() -eq "y") -or ($WindowsUpdateOption -eq "")) {
-        RunWindowsUpdate
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping Windows Update..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function MSStoreUpdateScript() {
-    <#
-    .SYNOPSIS
-    Keeps Microsoft Store Apps Updated with a PowerShell Script
-    
-    .DESCRIPTION
-    This function checks for outdated Microsoft Store applications and upgrades it if the user chose to.
-    
-    .NOTES
-    This function is not meant to run independently.
-    #>
-
-    if (!(Get-Command -Name Update-InboxApp)) { return }
-
-    function RunMSStoreUpgrade() {
-        <#
-        .SYNOPSIS
-        Main code function
-
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
-
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        EmptyLine
-        Write-Host "Updating Microsoft Store applications..." -ForegroundColor Yellow
-        powershell.exe -Command "Get-AppxPackage | Update-InboxApp" # must use powershell v5.1 or earlier
-        
-    }
-
-    # user add option automatically answers yes or half yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        RunMSStoreUpgrade
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
-    }
-
-    Write-Host "Run Microsoft Store upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline
-    
-    $MSStoreUpgradeOption = Read-Host
-
-    if (($MSStoreUpgradeOption.ToLower() -eq "y") -or ($MSStoreUpgradeOption -eq "")) {
-        RunMSStoreUpgrade
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping Microsoft Store application update..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function WingetUpdateScript() {
-    <#
-    .SYNOPSIS
-    Winget Upgrade Script
-    
-    .DESCRIPTION
-    This function checks for outdated winget applications and upgrades it if the user chose to.
-    Not only that, it also checks the whole application installed on the system if winget can find the application on winget repository.
-
-    .NOTES
-    This function is not meant to run independently.
-    This function is always run if the user chose to run outer function.
-    #>
-
-    if (!(Get-Command -Name winget) -and !(Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe")) { return }
-
-    function RunWingetUpgrade() {
-        <#
-        .SYNOPSIS
-        Main code function
-
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
-
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        do {
-            EmptyLine
-            Write-Host "Checking for upgradable winget applications..." -ForegroundColor Yellow
-            winget upgrade --include-unknown
-    
-            EmptyLine
-            Write-Host "Type the Id! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
-            Write-Host "Type 'all' if you want to upgrade all winget applications!" -ForegroundColor Green
-            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
-            Write-Host "Example : Zoom.Zoom Git.Git BlenderFoundation.Blender" -ForegroundColor Red
-            EmptyLine
-    
-            $WingetUpgradeChoose = Read-Host -Prompt "App Id "
-
-            # if user typed in all, then upgrade all winget applications
-            if ($WingetUpgradeChoose.ToLower() -eq "all") {
-                winget upgrade --include-unknown --all
-            }
-
-            if ((!$WingetUpgradeChoose) -or ($WingetUpgradeChoose.ToLower() -eq 'exit')) {
-                EmptyLine
-                Write-Host "Exiting winget upgrade..." -ForegroundColor Yellow
-                break
-            }
-            else {
-                # turn id into array
-                $ArrayID = $WingetUpgradeChoose.Split(" ")
-    
-                Clear-Host
-                Write-Host "Application(s) that will be upgraded :"
-                # each of app name in array of id
-                foreach ($AppName in $ArrayID) {
-                    # list all installed app, pipe it by its id and only print words after 'Found' and before '[', also replace [ with nothing
-                    $MatchString = ((winget show $AppName | Select-String -Pattern "Found (.*\s[\[])").Matches.Groups[1].Value).Replace("[", "")
-                    Write-Host "- " $MatchString -ForegroundColor Magenta
-                }
-
-                EmptyLine
-                foreach ($AppID in $ArrayID) {
-                    winget upgrade --include-unknown $AppID
-                }
-            }
-    
-            Start-Sleep 8
-            Clear-Host
-        } while ($true)
-    }
-
-    # user add option automatically answers yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($AnswersUpgradeArray -Contains $Option)) {
-        Write-Host "Upgrading all installed applications if available..." -ForegroundColor Yellow
-        winget upgrade --include-unknown --all
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
-    }
-
-    Write-Host "Run winget upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $WingetUpgradeOption = Read-Host
-
-    if (($WingetUpgradeOption.Tolower() -eq "y") -or ($WingetUpgradeOption -eq "")) {
-        RunWingetUpgrade
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping application update using winget..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function ChocolateyUpdateScript() {
-    <#
-    .SYNOPSIS
-    Chocolatey Upgrade Script
-    
-    .DESCRIPTION
-    This function checks for outdated Chocolatey applications only and
-    updates it if the user chose to.
-    
-    .NOTES
-    This function is not meant to run independently.
-    #>
-
-    if (!(Get-Command -Name choco) -and !(Test-Path "$env:ChocolateyInstall\choco.exe")) { return }
-
-    function RunChocoUgrade() {
-        <#
-        .SYNOPSIS
-        Main code function
-
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
-
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        do {
-            choco outdated
-    
-            EmptyLine
-            Write-Host "Type the package name! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
-            Write-Host "Type 'all' if you want to upgrade all packages!" -ForegroundColor Green
-            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
-            Write-Host "Example : python hwinfo chocolatey" -ForegroundColor Red
-            EmptyLine
-
-            $ChocoUpgradeChoose = Read-Host -Prompt "App Name "
-    
-            if ((!$ChocoUpgradeChoose) -or ($ChocoUpgradeChoose.ToLower() -eq 'exit')) {
-                EmptyLine
-                Write-Host "Exiting choco upgrade..." -ForegroundColor Yellow
-                break
-            }
-            else {
-                Clear-Host
-                Write-Host "Your Choice : " -NoNewline
-                Write-Host "$ChocoUpgradeChoose" -ForegroundColor Magenta
-                EmptyLine
-
-                # if you answers all, then just upgrade all
-                if ($ChocoUpgradeChoose.ToLower() -eq "all") {
-                    choco upgrade --yes all
-                }
-
-                $Array = $ChocoUpgradeChoose.Split(" ")
-                
-                foreach ($App in $Array) {
-                    choco upgrade --yes $App
-                }
-            }
-
-            Start-Sleep 8
-            Clear-Host
-        } while ($true)
-    }
-
-    # user add option automatically answers yes or half yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        choco outdated
-
-        Write-Host "Updating all chocolatey application(s)..." -ForegroundColor Yellow
-        choco upgrade --yes all
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
-    }
-
-    Write-Host "Run choco upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $ChocoUpgradeOption = Read-Host
-
-    if (($ChocoUpgradeOption.ToLower() -eq "y") -or ($ChocoUpgradeOption -eq "")) {
-        RunChocoUgrade
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping application update using Chocolatey..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function ScanSystemCorruptionFiles() {
-    <#
-    .SYNOPSIS
-    System Corruption Scan
-    
-    .DESCRIPTION
-    This function scans for system corruption files and tries to fix it.
-    
-    .NOTES
-    This function is not meant to run independently.
-    #>
-
-    function RunScan() {
-        <#
-        .SYNOPSIS
-        Main code function
-        
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
-
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        Write-Host "`n(1/4) Run 'chkdsk' (check disk)" -ForegroundColor Yellow
-        chkdsk /scan
-
-        Write-Host "`n(2/4) Run 'sfc /SCANNOW' (System File Checker) - 1st scan" -ForegroundColor Yellow
-        sfc /SCANNOW
-
-        Write-Host "`n(3/4) Run DISM (Deployment Image Servicing and Management tool)" -ForegroundColor Yellow
-        DISM /Online /Cleanup-Image /Restorehealth
-
-        Write-Host "`n(4/4) Run 'sfc /SCANNOW' (System File Checker) - 2nd scan" -ForegroundColor Yellow
-        sfc /SCANNOW
-    }
-
-    # user add option automatically answers yes or half yes
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes")) {
-        RunScan
-        return
-    } # user use -Option upgrade or -Option cleanup
-    elseif ($AnswersUpgradeArray -Contains $Option -or ($AnswersCleanupArray -Contains $Option)) {
-        return
-    }
-
-    Write-Host "Check for system corruption files ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $ScanCorruptionFilesOption = Read-Host
-
-    if (($ScanCorruptionFilesOption.ToLower() -eq "y") -or ($ScanCorruptionFilesOption -eq "")) {
-        RunScan
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping scan for system corruption files..." -ForegroundColor Yellow
-        return
-    }
-}
-
-function SystemCleanup {
-    <#
-    .SYNOPSIS
-    System Cleanup
-    
-    .DESCRIPTION
-    This function delete all temporary files and old Windows Update.
-    Also delete all unnesessary files and browser cache.
-    It is using the Disk Clean-up tool.
-    
-    .NOTES
-    This function is not meant to run independently.
-    #>
-
-
-    function RunDiskCleanUp() {
-        <#
-        .SYNOPSIS
-        Run Disk Clean-up Utility
-
-        .DESCRIPTION
-        Run Disk Clean-up.
-        And exit this function if it doesn't find Disk Clean-up tool.
-        
-        .NOTES
-        This function is not meant to run independently.
-        #>
-
-        if ((Get-Command -Name cleanmgr) -and (Test-Path "$env:windir\system32\cleanmgr.exe")) {
-            EmptyLine
-            Write-Host "Running Disk Cleanup..." -ForegroundColor Yellow
-            cleanmgr.exe /d $env:HOMEDRIVE /VERYLOWDISK
-        }
-        else {
-            EmptyLine
-            Write-Host "'cleanmgr' DOES NOT exist as a command." -ForegroundColor Red
-            Write-Host "Skipping this process.."
-            return
-        }
-    }
-
-    function DeleteTempFiles() {
-        <#
-        .SYNOPSIS
-        Delete Temporary Files
-
-        .DESCRIPTION
-        Delete all temporary files and folders in Windows Temp directory.
-        And exits if it doesn't find that directory.
-        
-        .NOTES
-        This function is not meant to run independently.
-        #>
-    
-        if ((Test-Path "$env:windir\Temp") -and (Test-Path "$env:TEMP")) {
-            if (!(Get-ChildItem -Path "$env:windir\Temp" | Write-Output) -and !(Get-ChildItem -Path "$env:TEMP" | Write-Output)) {
-                EmptyLine
-                Write-Host "No need to, temporary folders are already empty. 😁👍" -ForegroundColor Yellow
+            catch {
+                Write-Warning "Failed to install 'PSWindowsUpdate' module. $_"
                 return
             }
-
-            EmptyLine
-            Write-Host "Deleting Temporary Files..." -ForegroundColor Yellow
-            Get-ChildItem -Path "$env:windir\Temp" *.* -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-            Get-ChildItem -Path $env:TEMP *.* -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
         }
         else {
-            EmptyLine
-            Write-Host "$env:windir\Temp and temporary folder in environment variable DOES NOT exist." -ForegroundColor Red
-            Write-Host "Skipping this process..."
+            Write-Host "Skipping Windows Update checks because 'PSWindowsUpdate' module is not installed." -ForegroundColor Yellow
             return
         }
     }
 
-    function EmptyRecycleBin() {
-        <#
-        .SYNOPSIS
-        Empty Recycle Bin
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
-        .DESCRIPTION
-        Delete all files and folders in the recycle bin.
-        If it doesn't find the recycle bin, or if anything goes wrong,
-        just exit this function
-        
-        .NOTES
-        This function is not meant to run independently.
-        #>
+    try {
+        if ($isInteractive) {
+            # Interactive Mode
+            do {
+                Clear-Host
+                Write-Host "Checking for Windows Updates..." -ForegroundColor Yellow
+                $updates = Get-WindowsUpdate -ErrorAction Stop
+                $updates | Format-Table
 
-        if (Get-Command -Name Clear-RecycleBin) {
-            EmptyLine
-            Write-Host "Deleting contents inside recycle bin..." -ForegroundColor Yellow
-            Clear-RecycleBin -Force
-        }
-        elseif (Test-Path $env:RecycleBin -ErrorAction Stop) {
-            EmptyLine
-            Write-Host "Path found for recycle bin. Deleting contents inside..." -ForegroundColor Yellow
-            Remove-Item -Path $env:RecycleBin -Recurse -Force
+                if (!$updates) {
+                    Write-Host "No Windows Updates found." -ForegroundColor Green
+                    Start-Sleep -Seconds 3
+                    break
+                }
+
+                EmptyLine
+                Write-Host "Enter the KB Article ID to install. Separate multiple IDs with a space." -ForegroundColor Green
+                Write-Host "Type 'all' to install all updates, or 'exit' to skip." -ForegroundColor Green
+                $updateChoice = Read-Host -Prompt "KB Article ID"
+
+                if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
+                    Write-Host "Exiting Windows Update." -ForegroundColor Yellow
+                    break
+                }
+
+                if ($updateChoice.ToLower() -eq 'all') {
+                    Write-Host "Installing all available Windows Updates..." -ForegroundColor Yellow
+                    Install-WindowsUpdate -AcceptAll -IgnoreReboot -ErrorAction Stop
+                }
+                else {
+                    $ArrayID = $updateChoice.Split(" ")
+                    Write-Host "Installing selected Windows Updates..." -ForegroundColor Yellow
+                    Install-WindowsUpdate -KBArticleID $ArrayID -AcceptAll -IgnoreReboot -ErrorAction Stop
+                }
+                Write-Host "Update process finished. Re-checking for more updates..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 5
+            } while ($true)
         }
         else {
-            EmptyLine
-            Write-Host "Neither works, 'Clear-RecycleBin' command DOES NOT exist and CANNOT find path to recycle bin." -ForegroundColor Red
+            # Automatic mode
+            Write-Host "Checking for and installing all Windows Updates automatically..." -ForegroundColor Yellow
+            Install-WindowsUpdate -AcceptAll -IgnoreReboot -ErrorAction Stop
+            Write-Host "Automatic Windows Update complete." -ForegroundColor Green
+        }
+    }
+    catch {
+        Write-Warning "An error occurred during the Windows Update process."
+        Write-Warning $_.Exception.Message
+    }
+}
+
+function Invoke-MSStoreUpdate {
+    <#
+    .SYNOPSIS
+    Updates Microsoft Store applications using winget.
+    #>
+
+    if (!(Get-Command -Name winget -ErrorAction SilentlyContinue)) {
+        Write-Warning "winget command not found. Skipping Microsoft Store app updates."
+        return
+    }
+
+    $shouldUpdate = $false
+    if ($YesToAll.IsPresent -or $Upgrade.IsPresent) {
+        $shouldUpdate = $true
+    }
+    else {
+        $updateChoice = Read-Host -Prompt "Update all Microsoft Store applications? [Y/n]"
+        if (($updateChoice.ToLower() -eq 'y') -or ($updateChoice -eq '')) {
+            $shouldUpdate = $true
+        }
+    }
+
+    if ($shouldUpdate) {
+        Write-Host "Updating all Microsoft Store applications..." -ForegroundColor Yellow
+        try {
+            winget upgrade --all --source msstore --accept-package-agreements --accept-source-agreements
+        }
+        catch {
+            Write-Warning "An error occurred while updating Microsoft Store applications."
+            Write-Warning $_.Exception.Message
+        }
+    }
+    else {
+        Write-Host "Skipping Microsoft Store application updates." -ForegroundColor Yellow
+    }
+}
+
+function Invoke-WingetUpdate {
+    <#
+    .SYNOPSIS
+    Installs or updates winget, and then updates all winget packages.
+    #>
+
+    # Check for winget and offer to install if missing
+    if (!(Get-Command -Name winget -ErrorAction SilentlyContinue)) {
+        $installPrompt = "The 'winget' command is not available. Install it now? [Y/n]"
+        $shouldInstall = $false
+        if ($YesToAll.IsPresent) {
+            $shouldInstall = $true
+        }
+        else {
+            $installChoice = Read-Host -Prompt $installPrompt
+            if (($installChoice.ToLower() -eq 'y') -or ($installChoice -eq '')) {
+                $shouldInstall = $true
+            }
+        }
+
+        if ($shouldInstall) {
+            Write-Host "Installing 'winget'..." -ForegroundColor Yellow
+            try {
+                # Get the latest release from the official GitHub repository
+                $release = Invoke-RestMethod -Uri "https://api.github.com/repos/microsoft/winget-cli/releases/latest"
+                $asset = $release.assets | Where-Object { $_.name -like '*.msixbundle' } | Select-Object -First 1
+                $downloadUrl = $asset.browser_download_url
+                $downloadPath = Join-Path $env:TEMP $asset.name
+
+                Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath
+                Add-AppxPackage -Path $downloadPath
+            }
+            catch {
+                Write-Warning "Failed to install 'winget'. $_"
+                return
+            }
+        }
+        else {
+            Write-Host "Skipping winget package updates because 'winget' is not installed." -ForegroundColor Yellow
             return
         }
     }
 
-    # user add option automatically answers yes or half yes
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersCleanupArray -Contains $Option)) {
-        RunDiskCleanUp
-        DeleteTempFiles
-        EmptyRecycleBin
-        return
-    } # user add option upgrade skip this function
-    elseif ($AnswersUpgradeArray -Contains $Option) {
-        return
-    }
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
-    Write-Host "Delete unused files and folders ? [Y/n] " -ForegroundColor Blue -NoNewline
-    $RunSystemCleanupOption = Read-Host
+    try {
+        if ($isInteractive) {
+            # Interactive Mode
+            do {
+                Clear-Host
+                Write-Host "Checking for upgradable winget applications..." -ForegroundColor Yellow
+                winget upgrade --include-unknown
 
-    if (($RunSystemCleanupOption.ToLower() -eq "y") -or ($RunSystemCleanupOption -eq "")) {
-        RunDiskCleanUp
-        DeleteTempFiles
-        EmptyRecycleBin
+                EmptyLine
+                Write-Host "Enter the App ID to upgrade. Separate multiple IDs with a space." -ForegroundColor Green
+                Write-Host "Type 'all' to upgrade all applications, or 'exit' to skip." -ForegroundColor Green
+                $updateChoice = Read-Host -Prompt "App ID"
+
+                if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
+                    Write-Host "Exiting winget upgrade." -ForegroundColor Yellow
+                    break
+                }
+
+                if ($updateChoice.ToLower() -eq 'all') {
+                    Write-Host "Upgrading all applications..." -ForegroundColor Yellow
+                    winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements
+                }
+                else {
+                    $ArrayID = $updateChoice.Split(" ")
+                    Write-Host "Upgrading selected applications..." -ForegroundColor Yellow
+                    foreach ($appId in $ArrayID) {
+                        winget upgrade --id $appId --include-unknown --accept-package-agreements --accept-source-agreements
+                    }
+                }
+                Write-Host "Winget upgrade process finished. Re-checking for more updates..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 5
+            } while ($true)
+        }
+        else {
+            # Automatic mode
+            Write-Host "Checking for and upgrading all winget packages automatically..." -ForegroundColor Yellow
+            winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements
+            Write-Host "Automatic winget upgrade complete." -ForegroundColor Green
+        }
     }
-    else {
-        EmptyLine
-        Write-Host "Skipping System Cleanup..." -ForegroundColor Yellow
-        return
+    catch {
+        Write-Warning "An error occurred during the winget upgrade process."
+        Write-Warning $_.Exception.Message
     }
 }
 
-
-<# -------------------------------------------------------- #>
-<#          Install Prerequisite Package or Module          #>
-<# -------------------------------------------------------- #>
-function WindowsUpdateModuleInstall() {
+function Invoke-ChocolateyUpdate {
     <#
     .SYNOPSIS
-    PSWindowsUpdate PowerShell Module Install
-    
-    .DESCRIPTION
-    Install Windows Update PowerShell module to be able to update windows from the terminal.
-    It will install the script if the user chose to do so.
-    
-    .NOTES
-    This function is not meant to run independently.
-    This function only going to run if PSWindowsUpdate module is not installed.
+    Installs or updates Chocolatey, and then updates all Chocolatey packages.
     #>
 
-    Write-Host "PSWindowsUpdate Module is not installed in this system." -ForegroundColor Red
-    Write-Host "PSWindowsUpdate is a PowerShell module that can install Windows Update through terminal." -ForegroundColor Green
-    Write-Host "Do you want to install 'PSWindowsUpdate' module ? [Y/n] " -ForegroundColor Cyan -NoNewline
-    $PSWUInstallOption = Read-Host
+    # Check for Chocolatey and offer to install if missing
+    if (!(Get-Command -Name choco -ErrorAction SilentlyContinue)) {
+        $installPrompt = "The 'choco' command is not available. Install it now? [Y/n]"
+        $shouldInstall = $false
+        if ($YesToAll.IsPresent) {
+            $shouldInstall = $true
+        }
+        else {
+            $installChoice = Read-Host -Prompt $installPrompt
+            if (($installChoice.ToLower() -eq 'y') -or ($installChoice -eq '')) {
+                $shouldInstall = $true
+            }
+        }
 
-    if (($PSWUInstallOption.ToLower() -eq "y") -or $PSWUInstallOption -eq "") {
-        Install-Module -Name PSWindowsUpdate
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping PSWindowsUpdate module install..." -ForegroundColor Yellow
-        return
+        if ($shouldInstall) {
+            Write-Host "Installing 'Chocolatey'..." -ForegroundColor Yellow
+            try {
+                Set-ExecutionPolicy Bypass -Scope Process -Force
+                $installScript = Join-Path $env:TEMP "install-choco.ps1"
+                Invoke-WebRequest -Uri 'https://chocolatey.org/install.ps1' -OutFile $installScript
+                & $installScript
+            }
+            catch {
+                Write-Warning "Failed to install 'Chocolatey'. $_"
+                return
+            }
+        }
+        else {
+            Write-Host "Skipping Chocolatey package updates because 'choco' is not installed." -ForegroundColor Yellow
+            return
+        }
     }
 
-    # run windows update after installing the module
-    WindowsUpdateScript
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
+
+    try {
+        if ($isInteractive) {
+            # Interactive Mode
+            do {
+                Clear-Host
+                Write-Host "Checking for outdated Chocolatey packages..." -ForegroundColor Yellow
+                choco outdated
+
+                EmptyLine
+                Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
+                Write-Host "Type 'all' to upgrade all packages, or 'exit' to skip." -ForegroundColor Green
+                $updateChoice = Read-Host -Prompt "Package Name"
+
+                if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
+                    Write-Host "Exiting Chocolatey upgrade." -ForegroundColor Yellow
+                    break
+                }
+
+                if ($updateChoice.ToLower() -eq 'all') {
+                    Write-Host "Upgrading all packages..." -ForegroundColor Yellow
+                    choco upgrade all -y
+                }
+                else {
+                    $ArrayID = $updateChoice.Split(" ")
+                    Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
+                    foreach ($pkg in $ArrayID) {
+                        choco upgrade $pkg -y
+                    }
+                }
+                Write-Host "Chocolatey upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 5
+            } while ($true)
+        }
+        else {
+            # Automatic mode
+            Write-Host "Checking for and upgrading all Chocolatey packages automatically..." -ForegroundColor Yellow
+            choco upgrade all -y
+            Write-Host "Automatic Chocolatey upgrade complete." -ForegroundColor Green
+        }
+    }
+    catch {
+        Write-Warning "An error occurred during the Chocolatey upgrade process."
+        Write-Warning $_.Exception.Message
+    }
 }
 
-function WingetInstall() {
+function Invoke-SystemScan {
     <#
     .SYNOPSIS
-    Install Winget
-    
-    .DESCRIPTION
-    Install Winget to be able to update all applications from the terminal.
-    It will install the script if the user chose to do so.
-    It installs the winget-install PowerShell module and running the winget-install.ps1 script.
-
-    .NOTES
-    This function is not meant to run independently.
-    This function only going to run if winget is not installed.
+    Scans for and attempts to fix system corruption files.
     #>
-    
-    Write-Host "winget is not installed in this system." -ForegroundColor Red
-    Write-Host "winget is a Windows Package Manager that enables installing applications through terminal." -ForegroundColor Cyan
-    Write-Host "Do you want to install 'winget' package manager ? [Y/n] " -ForegroundColor Cyan -NoNewline
-    $WingetInstallOption = Read-Host
 
-    if (($WingetInstallOption.ToLower() -eq "y") -or ($WingetInstallOption -eq "")) {
-        Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
-        Install-Script -Name winget-install -Force
-        winget-install.ps1
+    $shouldScan = $false
+    if ($YesToAll.IsPresent -or $Scan.IsPresent) {
+        $shouldScan = $true
+    } else {
+        $scanOption = Read-Host -Prompt "Check for system corruption files? [Y/n]"
+        if (($scanOption.ToLower() -eq "y") -or ($scanOption -eq "")) {
+            $shouldScan = true
+        }
     }
-    else {
+
+    if ($shouldScan) {
+        Write-Host "`n(1/4) Running 'chkdsk /scan' (check disk)..." -ForegroundColor Yellow
+        try {
+            chkdsk /scan
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "chkdsk /scan completed with errors. Review the output above."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred during chkdsk /scan. $_.Exception.Message"
+        }
+
+        Write-Host "`n(2/4) Running 'sfc /SCANNOW' (System File Checker) - 1st scan..." -ForegroundColor Yellow
+        try {
+            sfc /SCANNOW
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "sfc /SCANNOW completed with errors. Review the output above."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred during sfc /SCANNOW. $_.Exception.Message"
+        }
+
+        Write-Host "`n(3/4) Running DISM (Deployment Image Servicing and Management tool)..." -ForegroundColor Yellow
+        try {
+            DISM /Online /Cleanup-Image /Restorehealth
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "DISM command completed with errors. Review the output above."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred during DISM /Online /Cleanup-Image /Restorehealth. $_.Exception.Message"
+        }
+
+        Write-Host "`n(4/4) Running 'sfc /SCANNOW' (System File Checker) - 2nd scan..." -ForegroundColor Yellow
+        try {
+            sfc /SCANNOW
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "sfc /SCANNOW completed with errors. Review the output above."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred during sfc /SCANNOW. $_.Exception.Message"
+        }
+        Write-Host "`nSystem corruption scan complete." -ForegroundColor Green
+    } else {
         EmptyLine
-        Write-Host "Skip installing winget package manager..." -ForegroundColor Yellow
-        return
+        Write-Host "Skipping system corruption file scan." -ForegroundColor Yellow
     }
-
-    # Run update function to update winget applications after installing winget
-    WingetUpdateScript
 }
 
-function ChocolateyInstall() {
+function Invoke-SystemCleanup {
     <#
     .SYNOPSIS
-    Chocolatey Install
-    
-    .DESCRIPTION
-    Install Chocolatey to be able to update and install applications from the terminal.
-    It is doing it by downloading an install script from the official website and running it.
-    It will install the script if the user chose to do so.
-
-    .NOTES
-    This function is not meant to run independently.
-    This function only going to run if chocolatey is not installed.
-    #>
-    
-    Write-Host "Chocolatey is not installed in this system." -ForegroundColor Red
-    Write-Host "Chocolatey is a universal package manager for windows that enables installing applications through terminal." -ForegroundColor Cyan
-    Write-Host "Do you want to install 'Chocolatey' package manager ? [Y/n] " -ForegroundColor Cyan -NoNewline
-    $ChocolateyInstallOption = Read-Host
-
-    if (($ChocolateyInstallOption.ToLower() -eq "y") -or ($ChocolateyInstallOption -eq "")) {
-        Set-ExecutionPolicy Bypass -Scope Process -Force
-        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) -ErrorAction Stop
-    }
-    else {
-        EmptyLine
-        Write-Host "Skip installing Chocolatey package manager..." -ForegroundColor Yellow
-        return
-    }
-
-    # Run update function to update chocolatey applications after installing chocolatey
-    ChocolateyUpdateScript
-}
-
-function MSStoreUpdateScriptInstall() {
-    <#
-    .SYNOPSIS
-    Install MSStore Script
-
-    .DESCRIPTION
-    Install MSStore PowerShell module to be able to update Microsoft Store applications from the terminal.
-    It will install the script if the user chose to do so.
-    
-    .NOTES
-    This function is not meant to run independently.
-    This function only going to run if MSStore module is not installed.
+    Deletes temporary files, old Windows Update files, and empties the Recycle Bin.
     #>
 
-    Write-Host "MSStore Module is not installed in this system." -ForegroundColor Red
-    Write-Host "Update-InboxApp is a PowerShell script that can update Microsoft Store applications through terminal." -ForegroundColor Green
-    Write-Host "Do you want to install 'Update-InboxApp' module ? [Y/n] " -ForegroundColor Cyan -NoNewline
-    $MSStoreInstallOption = Read-Host
-
-    if (($MSStoreInstallOption.ToLower() -eq "y") -or $MSStoreInstallOption -eq "") {
-        Install-Script Update-InboxApp
+    $shouldCleanup = $false
+    if ($YesToAll.IsPresent -or $Cleanup.IsPresent) {
+        $shouldCleanup = $true
+    } else {
+        $cleanupOption = Read-Host -Prompt "Delete unused files and folders (including temporary files and Recycle Bin)? [Y/n]"
+        if (($cleanupOption.ToLower() -eq "y") -or ($cleanupOption -eq "")) {
+            $shouldCleanup = $true
+        }
     }
-    else {
+
+    if ($shouldCleanup) {
+        # Run Disk Cleanup
         EmptyLine
-        Write-Host "Skipping MSStore module install..." -ForegroundColor Yellow
-        return
-    }
+        Write-Host "Running Disk Cleanup..." -ForegroundColor Yellow
+        try {
+            if ((Get-Command -Name cleanmgr -ErrorAction SilentlyContinue) -and (Test-Path "$env:windir\system32\cleanmgr.exe")) {
+                cleanmgr.exe /d $env:HOMEDRIVE /VERYLOWDISK
+            }
+            else {
+                Write-Warning "'cleanmgr' command not found. Skipping Disk Cleanup."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred during Disk Cleanup. $_.Exception.Message"
+        }
 
-    # run MSStore update after installing the module
-    MSStoreUpdateScript
+        # Delete Temporary Files
+        EmptyLine
+        Write-Host "Deleting Temporary Files..." -ForegroundColor Yellow
+        try {
+            if ((Test-Path "$env:windir\Temp") -and (Test-Path "$env:TEMP")) {
+                Get-ChildItem -Path "$env:windir\Temp" -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+                Get-ChildItem -Path "$env:windir\Temp" -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+                Get-ChildItem -Path $env:TEMP -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+                Get-ChildItem -Path $env:TEMP -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+            }
+            else {
+                Write-Warning "Temporary directories not found. Skipping temporary file deletion."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred during temporary file deletion. $_.Exception.Message"
+        }
+
+        # Empty Recycle Bin
+        EmptyLine
+        Write-Host "Emptying Recycle Bin..." -ForegroundColor Yellow
+        try {
+            if (Get-Command -Name Clear-RecycleBin -ErrorAction SilentlyContinue) {
+                Clear-RecycleBin -Force -ErrorAction Stop
+            }
+            else {
+                Write-Warning "'Clear-RecycleBin' command not found. Skipping Recycle Bin emptying."
+            }
+        }
+        catch {
+            Write-Warning "An error occurred while emptying the Recycle Bin. $_.Exception.Message"
+        }
+        Write-Host "`nSystem cleanup complete." -ForegroundColor Green
+    } else {
+        EmptyLine
+        Write-Host "Skipping system cleanup." -ForegroundColor Yellow
+    }
 }
 
 <# -------------------------------------------------------- #>
 <#                      DevTools                            #>
 <# -------------------------------------------------------- #>
-function PipPackageUpgrade() {
+function Invoke-PipUpgrade {
     <#
     .SYNOPSIS
-    Upgrade Pip Packages
-    
-    .DESCRIPTION
-    List outdated pip packages and user can choose which package to upgrade or
-    to upgrade all outdated pip packages
-
-    .NOTES
-    This function is not meant to run independently
-    This function only going to run if python is installed.
+    Upgrades outdated pip packages.
     #>
 
-    function RunPipUpgrade() {
-        <#
-        .SYNOPSIS
-        Main code function
+    if (!(Get-Command -Name pip -ErrorAction SilentlyContinue)) {
+        Write-Host "The 'pip' command is not available. Skipping pip package upgrades." -ForegroundColor Blue
+        return
+    }
 
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        do {       
-            EmptyLine
-            Write-Host "List outdated pip packages..." -ForegroundColor Yellow
-    
-            pip list --outdated
-    
-            EmptyLine
-            Write-Host "Type the package name! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
-            Write-Host "Type 'all' if you want to upgrade all packages!" -ForegroundColor Green
-            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
-            Write-Host "Example : tensorflow numpy gdown" -ForegroundColor Red
-            EmptyLine
-
-            $pipUpgradeChoose = Read-Host -Prompt "Package name "
-    
-            if ($pipUpgradeChoose.ToLower() -eq "all") {
+    try {
+        if ($isInteractive) {
+            # Interactive Mode
+            do {
                 Clear-Host
-
-                python.exe -m pip install --upgrade pip
-
-                $packages = pip list --outdated | Select-Object -Skip 2 | ForEach-Object {
-                    ($_ -split "\s+")[0].Trim()
+                Write-Host "Checking for outdated pip packages..." -ForegroundColor Yellow
+                $outdated = pip list --outdated
+                if ($outdated) {
+                    $outdated
+                } else {
+                    Write-Host "No outdated pip packages found." -ForegroundColor Green
+                    Start-Sleep -Seconds 3
+                    break
                 }
-    
-                $Array = $packages -Split " "
-    
-                foreach ($package in $Array) {
-                    pip install --upgrade $package
-                }
-            }
-            elseif (!$pipUpgradeChoose -or $pipUpgradeChoose.ToLower() -eq "exit") {
+                
                 EmptyLine
-                Write-Host "Exiting pip upgrade..." -ForegroundColor Yellow
-                break
-            }
-            else {
-                $Array = $pipUpgradeChoose.Split(" ")
-    
-                foreach ($package in $Array) {
-                    pip install --upgrade $package
+                Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
+                Write-Host "Type 'all' to upgrade all packages, or 'exit' to skip." -ForegroundColor Green
+                $updateChoice = Read-Host -Prompt "Package Name"
+
+                if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
+                    Write-Host "Exiting pip upgrade." -ForegroundColor Yellow
+                    break
                 }
-            }
 
-            Start-Sleep 8
-            Clear-Host
-        } while ($true)
-    }
-
-    # user add option automatically answers yes or half yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        EmptyLine
-        Write-Host "Updating all pip package(s)..." -ForegroundColor Yellow
-        python.exe -m pip install --upgrade pip
-        # pip list --format freeze | ForEach-Object { pip install --upgrade $_.split('==')[0] }
-        pip list --outdated | Select-Object -Skip 2 | ForEach-Object {
-            pip install --upgrade ($_ -split "\s+")[0].Trim()
+                if ($updateChoice.ToLower() -eq 'all') {
+                    Write-Host "Upgrading all packages..." -ForegroundColor Yellow
+                    pip list --outdated --format=json | ConvertFrom-Json | ForEach-Object { pip install --upgrade $_.name }
+                }
+                else {
+                    $packageNames = $updateChoice.Split(" ")
+                    Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
+                    foreach ($pkg in $packageNames) {
+                        pip install --upgrade $pkg
+                    }
+                }
+                Write-Host "Pip upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 5
+            } while ($true)
         }
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
+        else {
+            # Automatic mode
+            Write-Host "Checking for and upgrading all pip packages automatically..." -ForegroundColor Yellow
+            pip list --outdated --format=json | ConvertFrom-Json | ForEach-Object { pip install --upgrade $_.name }
+            Write-Host "Automatic pip upgrade complete." -ForegroundColor Green
+        }
     }
-
-    EmptyLine
-    Write-Host "Run pip upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline    
-    $PipUpgradeOption = Read-Host
-
-    if (($PipUpgradeOption.ToLower() -eq "y") -or ($PipUpgradeOption -eq "")) {
-        RunPipUpgrade
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping pip upgrade..." -ForegroundColor Yellow
-        return
+    catch {
+        Write-Warning "An error occurred during the pip upgrade process."
+        Write-Warning $_.Exception.Message
     }
 }
 
-function NpmPackageUpgrade() {
+function Invoke-NpmUpgrade {
     <#
     .SYNOPSIS
-    Upgrade NPM Packages
-    
-    .DESCRIPTION
-    List outdated npm packages and user can choose which package to upgrade or
-    to upgrade all outdated npm packages to the latest version.
-
-    .NOTES
-    This function is not meant to run independently
-    This function only going to run if node is installed.
+    Upgrades outdated npm packages.
     #>
 
-    function RunNpmUpgrade() {
-        <#
-        .SYNOPSIS
-        Main code function
+    if (!(Get-Command -Name npm -ErrorAction SilentlyContinue)) {
+        Write-Host "The 'npm' command is not available. Skipping npm package upgrades." -ForegroundColor Blue
+        return
+    }
 
-        .DESCRIPTION
-        This function consist of what actual commands that get run.
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
-        .NOTES
-        This function is not meant to run independently.
-        This function is always run if the user chose to run outer function.
-        #>
-
-        do {       
-            EmptyLine
-            Write-Host "List outdated npm packages globally..." -ForegroundColor Yellow
-            npm -g outdated
-
-            EmptyLine
-            Write-Host "List outdated npm packages locally..." -ForegroundColor Yellow
-            npm outdated
-
-            EmptyLine
-            Write-Host "Type the package name! Type 'exit' or leave it empty to skip this step!" -ForegroundColor Green
-            Write-Host "Type 'all' if you want to upgrade all packages!" -ForegroundColor Green
-            Write-Host "You can type more than one, just make sure to put a space after each one!" -ForegroundColor Green
-            Write-Host "Example : ytdl-core eslint nodemon" -ForegroundColor Red
-            EmptyLine
-
-            $npmUpgradeChoose = Read-Host -Prompt "Package name "
-
-            if ($npmUpgradeChoose.ToLower() -eq "all") {
+    try {
+        if ($isInteractive) {
+            # Interactive Mode
+            do {
                 Clear-Host
-
-                npm install -g npm@latest
-
-                $packages = npm outdated | Select-Object -Skip 2 | ForEach-Object {($_ -split "\s+")[0].Trim()}
-
-                $Array = $packages -Split " "
-
-                foreach ($package in $Array) {
-                    npm install $package@latest
-                }
-            }
-            elseif (!$npmUpgradeChoose -or $npmUpgradeChoose.ToLower() -eq "exit") {
+                Write-Host "Checking for outdated global npm packages..." -ForegroundColor Yellow
+                npm -g outdated
+                Write-Host "Checking for outdated local npm packages..." -ForegroundColor Yellow
+                npm outdated
+                
                 EmptyLine
-                Write-Host "Exiting npm upgrade..." -ForegroundColor Yellow
-                break
-            }
-            else {
-                $Array = $npmUpgradeChoose.Split(" ")
+                Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
+                Write-Host "Type 'all-global' to upgrade all global packages, 'all-local' for local, or 'all' for both." -ForegroundColor Green
+                Write-Host "Type 'exit' to skip." -ForegroundColor Green
+                $updateChoice = Read-Host -Prompt "Package Name"
 
-                foreach ($package in $Array) {
-                    npm install $package@latest
+                if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
+                    Write-Host "Exiting npm upgrade." -ForegroundColor Yellow
+                    break
                 }
-            }
 
-            Start-Sleep 8
-            Clear-Host
-        } while ($true)
+                if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-global') {
+                    Write-Host "Upgrading all global packages..." -ForegroundColor Yellow
+                    npm -g outdated --json | ConvertFrom-Json | ForEach-Object { npm -g install "$($_.name)@latest" }
+                }
+
+                if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-local') {
+                    Write-Host "Upgrading all local packages..." -ForegroundColor Yellow
+                     npm outdated --json | ConvertFrom-Json | ForEach-Object { npm install "$($_.name)@latest" }
+                }
+                
+                if ($updateChoice.ToLower() -ne 'all' -and $updateChoice.ToLower() -ne 'all-local' -and $updateChoice.ToLower() -ne 'all-global') {
+                    $packageNames = $updateChoice.Split(" ")
+                    Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
+                    foreach ($pkg in $packageNames) {
+                        # A bit tricky to know if it's global or local, so we can try local first, then global.
+                        Write-Host "Attempting to upgrade '$pkg' locally..."
+                        npm install "$pkg@latest"
+                        Write-Host "Attempting to upgrade '$pkg' globally..."
+                        npm -g install "$pkg@latest"
+                    }
+                }
+                Write-Host "NPM upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 5
+            } while ($true)
+        }
+        else {
+            # Automatic mode
+            Write-Host "Checking for and upgrading all npm packages automatically..." -ForegroundColor Yellow
+            Write-Host "Upgrading global packages..."
+            npm -g outdated --json | ConvertFrom-Json | ForEach-Object { npm -g install "$($_.name)@latest" }
+            Write-Host "Upgrading local packages..."
+            npm outdated --json | ConvertFrom-Json | ForEach-Object { npm install "$($_.name)@latest" }
+            Write-Host "Automatic npm upgrade complete." -ForegroundColor Green
+        }
     }
-
-    # user add option automatically answers yes or half yes or upgrade only
-    if (($AnswersYesArray -Contains $Option) -or ($Option -eq "half-yes") -or ($AnswersUpgradeArray -Contains $Option)) {
-        EmptyLine
-        Write-Host "Updating all npm package(s)..." -ForegroundColor Yellow
-        npm install -g npm@latest
-        npm outdated | ForEach-Object { $_.split(' ')[0] } | ForEach-Object { npm install $_@latest }
-        return
-    } # user use -Option cleanup
-    elseif ($AnswersCleanupArray -Contains $Option) {
-        return
-    }
-
-    EmptyLine
-    Write-Host "Run npm upgrade ? [Y/n] " -ForegroundColor Blue -NoNewline    
-    $NpmUpgradeOption = Read-Host
-
-    if (($NpmUpgradeOption.ToLower() -eq "y") -or ($NpmUpgradeOption -eq "")) {
-        RunNpmUpgrade
-    }
-    else {
-        EmptyLine
-        Write-Host "Skipping npm upgrade..." -ForegroundColor Yellow
-        return
+    catch {
+        Write-Warning "An error occurred during the npm upgrade process."
+        Write-Warning $_.Exception.Message
     }
 }
 
@@ -1157,64 +792,51 @@ function Main() {
         return
     }
 
+    # Determine run mode. If no specific action switch is used, run interactively.
+    $InteractiveMode = (-not ($Upgrade -or $Cleanup -or $Scan))
+
     Title
     EmptyLine
-    UpdatePowershellModule
 
-    <# -------------------------------------------------------- #>
-    <#                  Checking Prerequisite                   #>
-    <# -------------------------------------------------------- #>
-    EmptyLine
-    # install PSWindowsUpdate module if isn't already
-    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable -ErrorAction SilentlyContinue)) {
-        WindowsUpdateModuleInstall
-    }
-    else {
-        WindowsUpdateScript
-    }
+    if ($Upgrade.IsPresent -or $InteractiveMode) {
+        UpdatePowershellModule
+
+        <# -------------------------------------------------------- #>
+        <#                  Checking Prerequisite                   #>
+        <# -------------------------------------------------------- #>
+        EmptyLine
+        # install PSWindowsUpdate module if isn't already
+        Invoke-WindowsUpdate
     
-    EmptyLine
-    # install Update-InboxApp module if isn't already
-    if (!(Get-Command -Name "Update-InboxApp" -ErrorAction SilentlyContinue)) {
-        MSStoreUpdateScriptInstall
-    }
-    else {
-        MSStoreUpdateScript
+        EmptyLine
+        Invoke-MSStoreUpdate
+
+        EmptyLine
+        Invoke-WingetUpdate
+
+        EmptyLine
+        Invoke-ChocolateyUpdate
+
+        # if python is installed, run update pip
+        if ((Get-Command -Name python -ErrorAction SilentlyContinue) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
+            Invoke-PipUpgrade
+        }
+
+        # if node is installed, run update npm
+        if ((Get-Command -Name npm -ErrorAction SilentlyContinue) -and (Test-Path "$env:ProgramFiles\nodejs")) {
+            Invoke-NpmUpgrade
+        }
     }
 
-    EmptyLine
-    # install winget if it isn't already
-    if (!(Get-Command -Name winget -ErrorAction SilentlyContinue) -and !(Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe")) {
-        WingetInstall
-    }
-    else {
-        WingetUpdateScript
+    if ($Scan.IsPresent -or $InteractiveMode) {
+        EmptyLine
+        Invoke-SystemScan
     }
 
-    EmptyLine
-    # install chocolatey if isn't already
-    if (!(Get-Command -Name choco -ErrorAction SilentlyContinue) -and !(Test-Path "$env:ChocolateyInstall\choco.exe")) {
-        ChocolateyInstall
+    if ($Cleanup.IsPresent -or $InteractiveMode) {
+        EmptyLine
+        Invoke-SystemCleanup
     }
-    else {
-        ChocolateyUpdateScript
-    }
-
-    # if python is installed, run update pip
-    if ((Get-Command -Name python -ErrorAction SilentlyContinue) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
-        PipPackageUpgrade
-    }
-
-    # if node is installed, run update npm
-    if ((Get-Command -Name npm -ErrorAction SilentlyContinue) -and (Test-Path "$env:ProgramFiles\nodejs")) {
-        NpmPackageUpgrade
-    }
-
-    EmptyLine
-    ScanSystemCorruptionFiles
-
-    EmptyLine
-    SystemCleanup
 
     EmptyLine
     EndingScript
