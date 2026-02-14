@@ -1,7 +1,8 @@
 #Requires AutoHotkey v2.0
 
 ; Open 'AMD Software: Adrenalin Edition' software
-Run "C:\Program Files\AMD\CNext\CNext\RadeonSoftware.exe"
+Run A_ProgramFiles "\AMD\CNext\CNext\RadeonSoftware.exe"
+
 
 ; Activate 'AMD Software: Adrenalin Edition' window
 Sleep 2000
