@@ -50,7 +50,7 @@ function EmptyLine() {
 <# -------------------------------------------------------- #>
 <#                Admin Relaunch & Checking                 #>
 <# -------------------------------------------------------- #>
-function NotAdminRelaunch() {
+function NotAdminRelaunch() { #!BROKEN
     <#
     .SYNOPSIS
     Admin or not ?
@@ -70,15 +70,46 @@ function NotAdminRelaunch() {
     EmptyLine
     Write-Host "Attempting to restart the script with admin access..." -ForegroundColor Yellow
 
+    $windowsTerminalInstalled = Get-Command -Name wt.exe -ErrorAction SilentlyContinue
+    $pwshInstalled = Get-Command -Name pwsh.exe -ErrorAction SilentlyContinue
+    $powershellInstalled = Get-Command -Name powershell.exe -ErrorAction SilentlyContinue
+
+    $powershellVersion = powershell.exe -Command "$PSVersionTable.PSVersion.ToString()"
+
     EmptyLine
-    if (Get-Command -Name pwsh.exe -ErrorAction SilentlyContinue) {
-        Write-Host "Launching with pwsh.exe ($(pwsh.exe -v))..." -ForegroundColor Yellow
-        Start-Process -FilePath "pwsh.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" -Verb RunAs
-    } elseif (Get-Command -Name powershell.exe -ErrorAction SilentlyContinue) {
-        Write-Host "Launching with powershell.exe..." -ForegroundColor Yellow
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" -Verb RunAs
-    } else {
-        Write-Error "Neither 'powershell.exe' nor 'pwsh.exe' was found. Please restart this script manually with admin access."
+    if ($windowsTerminalInstalled) {
+        Write-Host "Launching with Windows Terminal (wt.exe)..." -ForegroundColor Yellow
+        if ($pwshInstalled) {
+            Write-Host "Using $(pwsh.exe -v) as the shell for Windows Terminal." -ForegroundColor Yellow
+            Start-Process `
+                -FilePath "wt.exe" `
+                -ArgumentList "pwsh -ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
+                -Verb RunAs
+        } elseif ($powershellInstalled) {
+            Write-Host "Using PowerShell $powershellVersion as the shell for Windows Terminal." -ForegroundColor Yellow
+            Start-Process `
+                -FilePath "wt.exe" `
+                -ArgumentList "powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
+                -Verb RunAs
+        } else {
+            Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
+        }
+    } elseif ($pwshInstalled -or $powershellInstalled) {
+        if ($pwshInstalled) {
+            Start-Process `
+                -FilePath "pwsh.exe" `
+                -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
+                -Verb RunAs
+            Write-Host "Launching with $(pwsh.exe -v) (pwsh.exe)..." -ForegroundColor Yellow
+        } elseif ($powershellInstalled) {
+            Write-Host "Launching with PowerShell $powershellVersion (powershell.exe)..." -ForegroundColor Yellow
+            Start-Process `
+                -FilePath "powershell.exe" `
+                -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
+                -Verb RunAs
+        } else {
+            Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
+        }
     }
 }
 
@@ -891,10 +922,10 @@ function Invoke-NpmUpgrade {
                     if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-local') {
                         EmptyLine
                         Write-Host "Upgrading all local packages..." -ForegroundColor Yellow
-                         npm outdated --json | ConvertFrom-Json | ForEach-Object { npm install "$($_.name)@latest" }
+                        npm outdated --json | ConvertFrom-Json | ForEach-Object { npm install "$($_.name)@latest" }
                     }
                     
-                    if ($updateChoice.ToLower() -ne 'all' -and $updateChoice.ToLower() -ne 'all-local' -and $updateChoice.ToLower() -ne 'all-global') {
+                    if (($updateChoice.ToLower() -ne 'all') -and ($updateChoice.ToLower() -ne 'all-local') -and ($updateChoice.ToLower() -ne 'all-global')) {
                         $packageNames = $updateChoice.Split(" ")
                         EmptyLine
                         Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
