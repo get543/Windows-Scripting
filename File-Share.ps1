@@ -5,7 +5,8 @@ param (
     [string]$FilePath
 )
 
-if (!(Get-Command -Name cloudflared -ErrorAction SilentlyContinue) -or !(Get-Command -Name simple-http-server -ErrorAction SilentlyContinue)) {
+if (!(Get-Command -Name cloudflared -ErrorAction SilentlyContinue) -or 
+    !(Get-Command -Name simple-http-server -ErrorAction SilentlyContinue)) {
     Write-Host "`ncloudflared or simple-http-server is not installed." -ForegroundColor Red
     Write-Host "Please install both of them first before running this script." -ForegroundColor Red
     return
@@ -23,7 +24,7 @@ Start-Job -Name "MyTunnel" -ScriptBlock {
 }
 Start-Sleep -Seconds 5 # wait for the job to start
 
-Write-Host "`n🚀 Server and Tunnel are running!`n" -ForegroundColor Cyan
+Write-Host "`nServer and Tunnel are running!`n" -ForegroundColor Magenta
 
 #* To see the output of the server:
 Receive-Job -Name MyServer -Keep
@@ -36,4 +37,4 @@ Read-Host
 #* Stop the jobs
 Stop-Job -Name "MyServer", "MyTunnel"
 Remove-Job -Name "MyServer", "MyTunnel"
-Write-Host "🛑 Jobs stopped and cleaned up." -ForegroundColor Red
+Write-Host "`nJobs stopped and cleaned up.`n" -ForegroundColor Magenta
