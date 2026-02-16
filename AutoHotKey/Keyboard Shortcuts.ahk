@@ -20,21 +20,48 @@ A_TrayMenu.Add("Shortcut List", (*) =>
         . "- Insert`t`t: Switch Output Device Script`n"
         . "- Scroll Lock`t: Start OBS Replay Buffer"
     )
-) ; Add your custom item to the bottom of the tray menu
+)
 
+;! Add your custom item to the bottom of the tray menu
 A_TrayMenu.Add("Set Output Device from Script", (*) => 
     RunWait(
         'powershell.exe -ExecutionPolicy Bypass -File "'
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1" -SetDevice'
     )
-) ; Add your custom item to the bottom of the tray menu
+)
 
 A_TrayMenu.Add("Auto Launch Apps", (*) => 
     RunWait(
         '*RunAs powershell.exe -ExecutionPolicy Bypass -File "' 
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"'
     )
-) ; Add your custom item to the bottom of the tray menu
+)
+
+A_TrayMenu.Add("Toggle DNS", (*) => 
+    RunWait(
+        '*RunAs powershell.exe -ExecutionPolicy Bypass -File "' 
+        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ToggleDNS.ps1"'
+    )
+)
+
+HttpServer_MenuHandler(*) {
+    IB := InputBox("Please enter a file path.", "File Path")
+    
+    ScriptPath := A_MyDocuments "\PowerShell\Scripts\Windows-Scripting\File-Share.ps1"
+
+    if (IB.Result = "Cancel")
+        return
+    
+    
+    ; Run PowerShell
+    ; 1. We wrap ScriptPath in quotes in case your user path has spaces.
+    ; 2. We add IB.Value at the end (wrapped in quotes) to pass it as an argument.
+    RunWait(
+        'powershell.exe -Command "& `"' A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\File-Share.ps1`" -FilePath `"' IB.Value '`""'
+    )
+}
+
+A_TrayMenu.Add("HTTP Server", HttpServer_MenuHandler)
 
 A_TrayMenu.Add("Enable Discord RPC", (*) => 
     TrayTip("Enabled in E:\UDIN\Code\Discord-RPC", "The Discord RPC has been enabled.", 1 16 32) ; TrayTip Text, Title, Options
@@ -42,12 +69,13 @@ A_TrayMenu.Add("Enable Discord RPC", (*) =>
     RunWait(
         'powershell.exe -Command "cd E:\UDIN\Code\DISCORD-RPC; npm run test"', , 'Hide'
     )
-) ; Add your custom item to the bottom of the tray menu
+)
 
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tray menu
 
-; file needed :
+; ==============================================================================
+
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
 
 !`:: ; press alt + `
