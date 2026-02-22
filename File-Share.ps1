@@ -14,8 +14,12 @@ if (!(Get-Command -Name cloudflared -ErrorAction SilentlyContinue) -or
 
 #* Start the server
 Start-Job -Name "MyServer" -ScriptBlock {
-    Set-Location $using:FilePath
-    simple-http-server.exe -u -i -t 4 -c $using:FilePath
+    $path = $using:FilePath
+    if (Test-Path $path -PathType Leaf) {
+        $path = Split-Path $path
+    }
+    Set-Location $path
+    simple-http-server.exe -u -i -t 4 -c $path
 }
 Start-Sleep -Seconds 5 # wait for the job to start
 

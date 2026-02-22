@@ -47,18 +47,15 @@ A_TrayMenu.Add("Toggle DNS", (*) =>
 HttpServer_MenuHandler(*) {
     IB := InputBox("Please enter a file path.", "File Path")
     
-    ScriptPath := A_MyDocuments "\PowerShell\Scripts\Windows-Scripting\File-Share.ps1"
-
-    if (IB.Result = "Cancel")
+    if (IB.Result = "Cancel" || IB.Value = "")
         return
     
-    
-    ; Run PowerShell
-    ; 1. We wrap ScriptPath in quotes in case your user path has spaces.
-    ; 2. We add IB.Value at the end (wrapped in quotes) to pass it as an argument.
-    RunWait(
-        'powershell.exe -Command "& `"' A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\File-Share.ps1`" -FilePath `"' IB.Value '`""'
-    )
+    ScriptPath := A_MyDocuments "\PowerShell\Scripts\Windows-Scripting\File-Share.ps1"
+    FilePath := Trim(IB.Value, '"')
+
+    ; Run PowerShell using -File for better space handling.
+    ; We wrap paths in double quotes to ensure they are treated as a single argument.
+    RunWait('*RunAs powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' ScriptPath '" -FilePath "' FilePath '"')
 }
 
 A_TrayMenu.Add("HTTP Server", HttpServer_MenuHandler)
