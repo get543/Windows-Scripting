@@ -634,62 +634,26 @@ function Invoke-SystemScan {
     } else {
         $scanOption = Read-Host -Prompt "Check for system corruption files? [Y/n]"
         if (($scanOption.ToLower() -eq "y") -or ($scanOption -eq "")) {
-            $shouldScan = true
+            $shouldScan = $true
         }
     }
 
     if ($shouldScan) {
         EmptyLine
         Write-Host "(1/4) Running 'chkdsk /scan' (check disk)..." -ForegroundColor Yellow
-        try {
-            chkdsk /scan
-            if ($LASTEXITCODE -ne 0) {
-                EmptyLine
-                Write-Warning "chkdsk /scan completed with errors. Review the output above."
-            }
-        }
-        catch {
-            Write-Warning "An error occurred during chkdsk /scan. $_.Exception.Message"
-        }
+        chkdsk /scan
 
         EmptyLine
         Write-Host "(2/4) Running 'sfc /SCANNOW' (System File Checker) - 1st scan..." -ForegroundColor Yellow
-        try {
-            sfc /SCANNOW
-            if ($LASTEXITCODE -ne 0) {
-                EmptyLine
-                Write-Warning "sfc /SCANNOW completed with errors. Review the output above."
-            }
-        }
-        catch {
-            Write-Warning "An error occurred during sfc /SCANNOW. $_.Exception.Message"
-        }
+        sfc /SCANNOW
 
         EmptyLine
         Write-Host "(3/4) Running DISM (Deployment Image Servicing and Management tool)..." -ForegroundColor Yellow
-        try {
-            DISM /Online /Cleanup-Image /Restorehealth
-            if ($LASTEXITCODE -ne 0) {
-                EmptyLine
-                Write-Warning "DISM command completed with errors. Review the output above."
-            }
-        }
-        catch {
-            Write-Warning "An error occurred during DISM /Online /Cleanup-Image /Restorehealth. $_.Exception.Message"
-        }
+        DISM /Online /Cleanup-Image /Restorehealth
 
         EmptyLine
         Write-Host "(4/4) Running 'sfc /SCANNOW' (System File Checker) - 2nd scan..." -ForegroundColor Yellow
-        try {
-            sfc /SCANNOW
-            if ($LASTEXITCODE -ne 0) {
-                EmptyLine
-                Write-Warning "sfc /SCANNOW completed with errors. Review the output above."
-            }
-        }
-        catch {
-            Write-Warning "An error occurred during sfc /SCANNOW. $_.Exception.Message"
-        }
+        sfc /SCANNOW
 
         EmptyLine
         Write-Host "System corruption scan complete." -ForegroundColor Green
