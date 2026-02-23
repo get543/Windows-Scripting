@@ -74,7 +74,11 @@ param (
     [string]$activation
 )
 
-if (!$isAdmin) { return Write-Host "`nMUST RUN AS ADMIN!" -ForegroundColor Red }
+$Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$Principal = New-Object Security.Principal.WindowsPrincipal $Identity
+$IsAdmin = $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (!$IsAdmin) { return Write-Host "`nMUST RUN AS ADMIN!" -ForegroundColor Red }
 
 Write-Host "`nChange path to ${env:USERPROFILE}\Downloads" -ForegroundColor Yellow
 Set-Location "${env:USERPROFILE}\Downloads"
