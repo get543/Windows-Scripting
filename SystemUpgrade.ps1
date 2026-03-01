@@ -314,7 +314,7 @@ function Invoke-WindowsUpdate {
 
             EmptyLine
             Write-Host "Checking for and installing all Windows Updates automatically..." -ForegroundColor Yellow
-            Install-WindowsUpdate -AcceptAll -IgnoreReboot -ErrorAction Stop
+            Install-WindowsUpdate -Verbose -AcceptAll -IgnoreReboot
 
             EmptyLine
             Write-Host "Automatic Windows Update complete." -ForegroundColor Green
