@@ -32,40 +32,49 @@ param (
     [switch]$SetDevice
 )
 
+$HeadphonesDeviceName = "*Headphones*"
+$SpeakersDeviceName = "*Output Front Panel*"
+$SoundcardDeviceName = "*Output Mixer*"
+
 if ($SetDevice) {
     Write-Host "`nAvailable Playback Audio Devices :"
     Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" } | Select-Object Index, Default, DefaultCommunication, Name | Format-Table -AutoSize
+
+    Write-Host "`nCurrent Value: "
+    Write-Host "HeadphonesDeviceName = $HeadphonesDeviceName" -ForegroundColor Green
+    Write-Host "SpeakersDeviceName = $SpeakersDeviceName" -ForegroundColor Green
+    Write-Host "SoundcardDeviceName = $SoundcardDeviceName" -ForegroundColor Green
     
-    Write-Host "`nCurrent Environment Variable Values:" -ForegroundColor Green
-    Write-Host "HEADPHONES_DEVICE_NAME = $env:HEADPHONES_DEVICE_NAME"
-    Write-Host "SPEAKERS_DEVICE_NAME = $env:SPEAKERS_DEVICE_NAME"
-    Write-Host "SOUNDCARD_DEVICE_NAME = $env:SOUNDCARD_DEVICE_NAME"
-    
 
-    Write-Host "`nTo set custom device names, run this command or type this in the prompt :" -ForegroundColor Red
-    Write-Host "`nTemporalily for current session :" -ForegroundColor Green
-    Write-Host '$env:HEADPHONES_DEVICE_NAME = "your speaker name"'
-    Write-Host '$env:SPEAKERS_DEVICE_NAME = "your headphones name"'
-    Write-Host '$env:SOUNDCARD_DEVICE_NAME = "your soundcard name"'
+    Write-Host "`nRegex Patern (Type the whole line to the prompt): "
+    Write-Host '^\$HeadphonesDeviceName\s*=.*' -ForegroundColor Red
+    Write-Host '^\$SpeakersDeviceName\s*=.*' -ForegroundColor Red
+    Write-Host '^\$SoundcardDeviceName\s*=.*' -ForegroundColor Red
+    Write-Host 'Enter Regex Pattern to find what variable to change : ' -NoNewline
+    $regexPatern = Read-Host
 
-    Write-Host "`nPermanently for all sessions (Machine = for all user, User = current user only) :" -ForegroundColor Green
-    Write-Host '[System.Environment]::SetEnvironmentVariable("HEADPHONES_DEVICE_NAME", "Headphones", "Machine")'
-    Write-Host '[System.Environment]::SetEnvironmentVariable("SPEAKERS_DEVICE_NAME", "Output Monitor", "Machine")'
-    Write-Host '[System.Environment]::SetEnvironmentVariable("SOUNDCARD_DEVICE_NAME", "Output Mixer", "Machine")'
+    Write-Host "`nPossible new variable value (Type the whole line to the prompt): "
+    Write-Host '$HeadphonesDeviceName = "*Headphones*"' -ForegroundColor Red
+    Write-Host '$SpeakersDeviceName = "*Output Front Panel*"' -ForegroundColor Red
+    Write-Host '$SoundcardDeviceName = "*Output Mixer*"' -ForegroundColor Red
+    Write-Host '$MonitorDeviceName = "*Output Monitor*"' -ForegroundColor Red
+    Write-Host "`nSet variable value : " -NoNewline
+    $newValue = Read-Host
 
-    Write-Host "`nSet new device : " -ForegroundColor Yellow -NoNewline
-    $envcommand = Read-Host
 
-    Invoke-Expression $envcommand
+    $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+    Set-Location -Path $scriptsDir
+    $scriptPath = "$(Get-Location)\ChangeOutputDevice.ps1"
+
+    $content = Get-Content -Path $scriptPath
+
+    # The regex '^\$TargetVar\s*=.*' finds the line starting with $TargetVar = [anything]
+    $modifiedContent = $content -replace $regexPatern, $newValue
+
+    Set-Content -Path $scriptPath -Value $modifiedContent
 
     return
-
 }
-
-# Use environment variables with fallback to default values
-$HeadphonesDeviceName = if ($env:HEADPHONES_DEVICE_NAME) { "*$env:HEADPHONES_DEVICE_NAME*" } else { "*Headphones*" }
-$SpeakersDeviceName = if ($env:SPEAKERS_DEVICE_NAME) { "*$env:SPEAKERS_DEVICE_NAME*" } else { "*Output Front Panel*" } # act as speakers
-$SoundcardDeviceName = if ($env:SOUNDCARD_DEVICE_NAME) { "*$env:SOUNDCARD_DEVICE_NAME*" } else { "*Output Mixer*" } # act as headphones
 
 function WindowsNotificationBalloon($text) {
     # windows 10 notification balloon
