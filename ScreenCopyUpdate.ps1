@@ -16,7 +16,7 @@ $filename = "scrcpy-win64-v${version}.zip"
 $githubrepo = "https://github.com/Genymobile/scrcpy/releases/latest/download/${filename}"
 
 if (Test-Path -Path "${env:HOMEDRIVE}\scrcpy" -ErrorAction Stop) {
-    Write-Host "Stoping adb.exe process..."; Get-Process adb.exe -ErrorAction Continue | Stop-Process # stop 'adb.exe' process because sometimes it causes error
+    Write-Host "Stoping adb.exe process..."; Get-Process adb.exe -ErrorAction Stop | Stop-Process # stop 'adb.exe' process because sometimes it causes error
     Write-Host "Get out from scrcpy directory by changing directory to C:\ drive..."; Set-Location $env:HOMEDRIVE # set location to $HOME to avoid "directory is being use" error
     Write-Host "Removing old scrcpy directory..."; Remove-Item "${env:HOMEDRIVE}\scrcpy" -Force -Recurse -ErrorAction Stop # remove the old scrcpy folder
 }
