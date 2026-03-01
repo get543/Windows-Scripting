@@ -175,7 +175,7 @@ function EndingScript() {
 <# -------------------------------------------------------- #>
 <#                    Update Function                       #>
 <# -------------------------------------------------------- #>
-function UpdatePowershellModule() {
+function Invoke-PSModuleUpdate {
     <#
     .SYNOPSIS
     Update PowerShell Module
@@ -194,7 +194,8 @@ function UpdatePowershellModule() {
     if ($YesToAll.IsPresent -or $Upgrade.IsPresent) {
         $shouldUpdate = $true
     } else {
-        $UpdateModuleOption = Read-Host -Prompt "Update all PowerShell modules? [Y/n]"
+        Write-Host "Update all PowerShell modules? [Y/n] " -ForegroundColor Blue -NoNewline
+        $UpdateModuleOption = Read-Host
         if (($UpdateModuleOption.ToLower() -eq "y") -or ($UpdateModuleOption -eq "")) {
             $shouldUpdate = $true
         }
@@ -263,7 +264,8 @@ function Invoke-WindowsUpdate {
             #! Interactive Mode
 
             # Ask user if they want to check for Windows Updates before proceeding with installation
-            $windowsUpdateOption = Read-Host -Prompt "Check for Windows Updates ? [Y/n] "
+            Write-Host "Check for Windows Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
+            $windowsUpdateOption = Read-Host
             if (($windowsUpdateOption.ToLower() -eq "y") -or ($windowsUpdateOption -eq "")) {
                 do {
                     Clear-Host
@@ -281,7 +283,8 @@ function Invoke-WindowsUpdate {
                     EmptyLine
                     Write-Host "Enter the KB Article ID to install. Separate multiple IDs with a space." -ForegroundColor Green
                     Write-Host "Type 'all' to install all updates, or 'exit' to skip." -ForegroundColor Green
-                    $updateChoice = Read-Host -Prompt "KB Article ID"
+                    Write-Host "Example : KB5026958 KB5026958 KB5025233" -ForegroundColor Green
+                    $updateChoice = Read-Host -Prompt "KB Article ID "
     
                     if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
                         EmptyLine
@@ -374,7 +377,8 @@ function Invoke-MSStoreUpdate {
         $shouldUpdate = $true
     }
     else {
-        $updateChoice = Read-Host -Prompt "Update all Microsoft Store applications? [Y/n] "
+        Write-Host "Update all Microsoft Store applications? [Y/n] " -ForegroundColor Blue -NoNewline
+        $updateChoice = Read-Host
         if (($updateChoice.ToLower() -eq 'y') -or ($updateChoice -eq '')) {
             $shouldUpdate = $true
         }
@@ -453,7 +457,8 @@ function Invoke-WingetUpdate {
             #! Interactive Mode
 
             # Ask user if they want to check for winget updates before proceeding with package upgrades
-            $updateWingetOption = Read-Host -Prompt "Check for Winget Updates ? [Y/n] "
+            Write-Host "Check for Winget Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
+            $updateWingetOption = Read-Host
             if (($updateWingetOption.ToLower() -eq "y") -or ($updateWingetOption -eq "")) {
                 do {
                     Clear-Host
@@ -463,7 +468,8 @@ function Invoke-WingetUpdate {
                     EmptyLine
                     Write-Host "Enter the App ID to upgrade. Separate multiple IDs with a space." -ForegroundColor Green
                     Write-Host "Type 'all' to upgrade all applications, or 'exit' to skip." -ForegroundColor Green
-                    $updateChoice = Read-Host -Prompt "App ID"
+                    Write-Host "Example : Microsoft.VisualStudioCode Microsoft.PowerShell Obsidian.Obsidian" -ForegroundColor Green
+                    $updateChoice = Read-Host -Prompt "App ID "
     
                     if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
                         EmptyLine
@@ -559,7 +565,8 @@ function Invoke-ChocolateyUpdate {
             #! Interactive Mode
 
             # Ask user if they want to check for Chocolatey updates before proceeding with package upgrades
-            $updateChocoOption = Read-Host -Prompt "Check for Chocolatey Updates ? [Y/n] "
+            Write-Host "Check for Chocolatey Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
+            $updateChocoOption = Read-Host
             if (($updateChocoOption.ToLower() -eq "y") -or ($updateChocoOption -eq "")) {
                 do {
                     Clear-Host
@@ -569,6 +576,7 @@ function Invoke-ChocolateyUpdate {
                     EmptyLine
                     Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
                     Write-Host "Type 'all' to upgrade all packages, or 'exit' to skip." -ForegroundColor Green
+                    Write-Host "Example : python hwinfo chocolatey" -ForegroundColor Green
                     $updateChoice = Read-Host -Prompt "Package Name"
     
                     if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
@@ -632,7 +640,8 @@ function Invoke-SystemScan {
     if ($YesToAll.IsPresent -or $Scan.IsPresent) {
         $shouldScan = $true
     } else {
-        $scanOption = Read-Host -Prompt "Check for system corruption files? [Y/n]"
+        Write-Host "Check for system corruption files? [Y/n] " -ForegroundColor Blue -NoNewline
+        $scanOption = Read-Host
         if (($scanOption.ToLower() -eq "y") -or ($scanOption -eq "")) {
             $shouldScan = $true
         }
@@ -677,7 +686,8 @@ function Invoke-SystemCleanup {
     if ($YesToAll.IsPresent -or $Cleanup.IsPresent) {
         $shouldCleanup = $true
     } else {
-        $cleanupOption = Read-Host -Prompt "Delete unused files and folders ? [Y/n]"
+        Write-Host "Delete unused files and folders ? [Y/n] " -ForegroundColor Blue -NoNewline
+        $cleanupOption = Read-Host
         if (($cleanupOption.ToLower() -eq "y") -or ($cleanupOption -eq "")) {
             $shouldCleanup = $true
         }
@@ -767,7 +777,8 @@ function Invoke-PipUpgrade {
             #! Interactive Mode
 
             # Ask user if they want to check for Chocolatey updates before proceeding with package upgrades
-            $updatePipOption = Read-Host -Prompt "Check for pip Updates ? [Y/n] "
+            Write-Host "Check for pip Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
+            $updatePipOption = Read-Host
             if (($updatePipOption.ToLower() -eq "y") -or ($updatePipOption -eq "")) {
                 do {
                     Clear-Host
@@ -785,7 +796,8 @@ function Invoke-PipUpgrade {
                     EmptyLine
                     Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
                     Write-Host "Type 'all' to upgrade all packages, or 'exit' to skip." -ForegroundColor Green
-                    $updateChoice = Read-Host -Prompt "Package Name"
+                    Write-Host "Example : requests numpy pandas" -ForegroundColor Green
+                    $updateChoice = Read-Host -Prompt "Package Name "
     
                     EmptyLine
                     if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
@@ -854,7 +866,8 @@ function Invoke-NpmUpgrade {
             #! Interactive Mode
 
             # Ask user if they want to check for Chocolatey updates before proceeding with package upgrades
-            $updateNpmOption = Read-Host -Prompt "Check for npm Updates ? [Y/n] "
+            Write-Host "Check for npm Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
+            $updateNpmOption = Read-Host
             if (($updateNpmOption.ToLower() -eq "y") -or ($updateNpmOption -eq "")) {
                 do {
                     Clear-Host
@@ -869,6 +882,7 @@ function Invoke-NpmUpgrade {
                     Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
                     Write-Host "Type 'all-global' to upgrade all global packages, 'all-local' for local, or 'all' for both." -ForegroundColor Green
                     Write-Host "Type 'exit' to skip." -ForegroundColor Green
+                    Write-Host "Example : express react typescript" -ForegroundColor Green
                     $updateChoice = Read-Host -Prompt "Package Name"
     
                     if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
@@ -976,7 +990,7 @@ function Main() {
     # If user specified -Upgrade or is running in interactive mode, perform system upgrade tasks
     if ($Upgrade.IsPresent -or $InteractiveMode) {
         EmptyLine
-        UpdatePowershellModule
+        Invoke-PSModuleUpdate
 
         EmptyLine
         Invoke-WindowsUpdate
