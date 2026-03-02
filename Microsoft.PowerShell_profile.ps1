@@ -258,6 +258,8 @@ function SystemUpgrade() {
             return & "E:\UDIN\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
         } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI") {
             return & "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI\SystemUpgrade-GUI.ps1"
+        } else {
+            return Write-Host "Path for GUI scripts not found." -ForegroundColor Red
         }
     }
 
@@ -332,7 +334,7 @@ function discord() {
 #######################################################################################################################
 # Import PowerShell Theme from oh-my-posh
 # More Themes : https://ohmypo.sh/docs/themes
-oh-my-posh init pwsh --config $env:POSH_THEMES_PATH/takuya.omp.json| Invoke-Expression
+oh-my-posh init pwsh --config $env:POSH_THEMES_PATH/takuya.omp.json | Invoke-Expression
 
 if (!(Get-Module -ListAvailable -Name Terminal-Icons -ErrorAction SilentlyContinue)) {
     Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
