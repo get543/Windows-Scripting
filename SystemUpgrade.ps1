@@ -270,7 +270,7 @@ function Invoke-WindowsUpdate {
                 do {
                     Clear-Host
                     Write-Host "Checking for Windows Updates..." -ForegroundColor Yellow
-                    $updates = Get-WindowsUpdate -ErrorAction Stop
+                    $updates = Get-WindowsUpdate
                     $updates | Format-Table
     
                     if (!$updates) {
@@ -295,13 +295,13 @@ function Invoke-WindowsUpdate {
                     if ($updateChoice.ToLower() -eq 'all') {
                         EmptyLine
                         Write-Host "Installing all available Windows Updates..." -ForegroundColor Yellow
-                        Install-WindowsUpdate -AcceptAll -IgnoreReboot -ErrorAction Stop
+                        Install-WindowsUpdate -AcceptAll -IgnoreReboot
                     }
                     else {
                         $ArrayID = $updateChoice.Split(" ")
                         EmptyLine
                         Write-Host "Installing selected Windows Updates..." -ForegroundColor Yellow
-                        Install-WindowsUpdate -KBArticleID $ArrayID -AcceptAll -IgnoreReboot -ErrorAction Stop
+                        Install-WindowsUpdate -KBArticleID $ArrayID -AcceptAll -IgnoreReboot
                     }
                     EmptyLine
                     Write-Host "Update process finished. Re-checking for more updates..." -ForegroundColor Yellow
@@ -782,6 +782,10 @@ function Invoke-PipUpgrade {
             if (($updatePipOption.ToLower() -eq "y") -or ($updatePipOption -eq "")) {
                 do {
                     Clear-Host
+                    Write-Host "Updating pip itself..." -ForegroundColor Yellow
+                    python.exe -m pip install --upgrade pip
+
+                    EmptyLine
                     Write-Host "Checking for outdated pip packages..." -ForegroundColor Yellow
                     $outdated = pip list --outdated
                     if ($outdated) {
@@ -831,6 +835,10 @@ function Invoke-PipUpgrade {
             #! Automatic mode
 
             EmptyLine
+            Write-Host "Updating pip itself..." -ForegroundColor Yellow
+            python.exe -m pip install --upgrade pip
+
+            EmptyLine
             Write-Host "Checking for and upgrading all pip packages automatically..." -ForegroundColor Yellow
             pip list --outdated --format=json | ConvertFrom-Json | ForEach-Object { pip install --upgrade $_.name }
 
@@ -871,6 +879,10 @@ function Invoke-NpmUpgrade {
             if (($updateNpmOption.ToLower() -eq "y") -or ($updateNpmOption -eq "")) {
                 do {
                     Clear-Host
+                    Write-Host "Updating npm itself..." -ForegroundColor Yellow
+                    npm install -g npm@latest
+
+                    EmptyLine
                     Write-Host "Checking for outdated global npm packages..." -ForegroundColor Yellow
                     npm -g outdated
     
@@ -931,6 +943,10 @@ function Invoke-NpmUpgrade {
         }
         else {
             #! Automatic mode
+
+            EmptyLine
+            Write-Host "Updating npm itself..." -ForegroundColor Yellow
+            npm install -g npm@latest
 
             EmptyLine
             Write-Host "Checking for and upgrading all npm packages automatically..." -ForegroundColor Yellow
