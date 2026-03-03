@@ -183,6 +183,13 @@ function temperature() {
         python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py" @args
     }
 }
+function speedtest() {
+    if (Test-Path -Path "E:\UDIN\Code\code-desktop\Python\Python-Automation-Scripts\test_connection.py") {
+        python E:\UDIN\Code\code-desktop\Python\Python-Automation-Scripts\test_connection.py @args
+    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Automation-Scripts\test_connection.py") {
+        python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Automation-Scripts\test_connection.py" @args
+    }
+}
 
 ######################## From My Linux Machine
 function codefolder() {
