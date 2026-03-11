@@ -135,8 +135,9 @@ function HelpMenu() {
     Write-Host "  -Help         Display this help message."
     EmptyLine
     Write-Host "EXAMPLES:" -ForegroundColor Green
-    Write-Host "  .\SystemUpgrade.ps1 -Upgrade -Cleanup"
-    Write-Host "  .\SystemUpgrade.ps1 -Upgrade -YesToAll"
+    Write-Host "  .\SystemUpgrade.ps1 -Cleanup"
+    Write-Host "  .\SystemUpgrade.ps1 -YesToAll"
+    Write-Host "  .\SystemUpgrade.ps1 -Upgrade"
     Write-Host "  .\SystemUpgrade.ps1 -Scan"
     Write-Host "  Get-Help .\SystemUpgrade.ps1 -Full"
     EmptyLine
@@ -256,6 +257,25 @@ function Invoke-WindowsUpdate {
         }
     }
 
+    # Import the module to ensure commands are available
+    try {
+        Import-Module -Name PSWindowsUpdate -Force -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to import 'PSWindowsUpdate' module."
+        Write-Warning $_.Exception.Message
+        return
+    }
+
+    # Check if Install-WindowsUpdate command exists
+    if (!(Get-Command -Name "Install-WindowsUpdate" -ErrorAction SilentlyContinue)) {
+        EmptyLine
+        Write-Host "The 'Install-WindowsUpdate' command is not available in this version of PSWindowsUpdate." -ForegroundColor Red
+        Write-Host "Windows Update management may not be supported on this system." -ForegroundColor Red
+        Write-Host "Try updating the PSWindowsUpdate module or using Windows Update settings directly." -ForegroundColor Yellow
+        return
+    }
+
     # Decide whether to run interactively or automatically
     $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
@@ -295,13 +315,25 @@ function Invoke-WindowsUpdate {
                     if ($updateChoice.ToLower() -eq 'all') {
                         EmptyLine
                         Write-Host "Installing all available Windows Updates..." -ForegroundColor Yellow
-                        Install-WindowsUpdate -AcceptAll -IgnoreReboot
+                        try {
+                            Install-WindowsUpdate -AcceptAll -IgnoreReboot
+                        }
+                        catch {
+                            Write-Warning "Install-WindowsUpdate command failed."
+                            Write-Warning $_.Exception.Message
+                        }
                     }
                     else {
                         $ArrayID = $updateChoice.Split(" ")
                         EmptyLine
                         Write-Host "Installing selected Windows Updates..." -ForegroundColor Yellow
-                        Install-WindowsUpdate -KBArticleID $ArrayID -AcceptAll -IgnoreReboot
+                        try {
+                            Install-WindowsUpdate -KBArticleID $ArrayID -AcceptAll -IgnoreReboot
+                        }
+                        catch {
+                            Write-Warning "Install-WindowsUpdate command failed for specific KBs."
+                            Write-Warning $_.Exception.Message
+                        }
                     }
                     EmptyLine
                     Write-Host "Update process finished. Re-checking for more updates..." -ForegroundColor Yellow
@@ -317,10 +349,16 @@ function Invoke-WindowsUpdate {
 
             EmptyLine
             Write-Host "Checking for and installing all Windows Updates automatically..." -ForegroundColor Yellow
-            Install-WindowsUpdate -Verbose -AcceptAll -IgnoreReboot
+            try {
+                Install-WindowsUpdate -Verbose -AcceptAll -IgnoreReboot
+            }
+            catch {
+                Write-Warning "Install-WindowsUpdate command failed."
+                Write-Warning $_.Exception.Message
+            }
 
             EmptyLine
-            Write-Host "Automatic Windows Update complete." -ForegroundColor Green
+            Write-Host "Automatic Windows Update process completed." -ForegroundColor Green
         }
     }
     catch {
@@ -868,7 +906,6 @@ function Invoke-NpmUpgrade {
     # Decide whether to run interactively or automatically
     $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
-    EmptyLine
     try {
         if ($isInteractive) {
             #! Interactive Mode
@@ -893,6 +930,7 @@ function Invoke-NpmUpgrade {
                     EmptyLine
                     Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
                     Write-Host "Type 'all-global' to upgrade all global packages, 'all-local' for local, or 'all' for both." -ForegroundColor Green
+                    Write-Host "Type 'all-latest' to upgrade all local packages to the latest version." -ForegroundColor Green
                     Write-Host "Type 'exit' to skip." -ForegroundColor Green
                     Write-Host "Example : express react typescript" -ForegroundColor Green
                     $updateChoice = Read-Host -Prompt "Package Name"
@@ -906,28 +944,42 @@ function Invoke-NpmUpgrade {
                     if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-global') {
                         EmptyLine
                         Write-Host "Upgrading all global packages..." -ForegroundColor Yellow
-                        npm -g outdated --json | ConvertFrom-Json | ForEach-Object { npm -g install "$($_.name)@latest" }
+                        npm -g update --all
                     }
     
                     if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-local') {
                         EmptyLine
                         Write-Host "Upgrading all local packages..." -ForegroundColor Yellow
-                        npm outdated --json | ConvertFrom-Json | ForEach-Object { npm install "$($_.name)@latest" }
+                        npm update --all
+                        
                     }
                     
-                    if (($updateChoice.ToLower() -ne 'all') -and ($updateChoice.ToLower() -ne 'all-local') -and ($updateChoice.ToLower() -ne 'all-global')) {
+                    if ($updateChoice.ToLower() -eq 'all-latest') {
+                        EmptyLine
+                        Write-Host "Upgrading all local packages to the latest version..." -ForegroundColor Yellow
+                        npm outdated | Select-Object -Skip 1 | ForEach-Object { $package = ($_ -split '\s+')[0]; npm install $package@latest }
+                    }
+
+                    if (($updateChoice.ToLower() -ne 'all') -and 
+                        ($updateChoice.ToLower() -ne 'all-local') -and 
+                        ($updateChoice.ToLower() -ne 'all-global') -and
+                        ($updateChoice.ToLower() -ne 'all-latest')
+                        ) {
+
                         $packageNames = $updateChoice.Split(" ")
+
                         EmptyLine
                         Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
+
                         foreach ($pkg in $packageNames) {
                             # A bit tricky to know if it's global or local, so we can try local first, then global.
                             EmptyLine
                             Write-Host "Attempting to upgrade '$pkg' locally..."
-                            npm install "$pkg@latest"
+                            npm update $pkg
     
                             EmptyLine
                             Write-Host "Attempting to upgrade '$pkg' globally..."
-                            npm -g install "$pkg@latest"
+                            npm -g update $pkg
                         }
                     }
     
@@ -951,11 +1003,11 @@ function Invoke-NpmUpgrade {
             EmptyLine
             Write-Host "Checking for and upgrading all npm packages automatically..." -ForegroundColor Yellow
             Write-Host "Upgrading global packages..."
-            npm -g outdated --json | ConvertFrom-Json | ForEach-Object { npm -g install "$($_.name)@latest" }
+            npm -g update --all
 
             EmptyLine
             Write-Host "Upgrading local packages..."
-            npm outdated --json | ConvertFrom-Json | ForEach-Object { npm install "$($_.name)@latest" }
+            npm update --all
 
             EmptyLine
             Write-Host "Automatic npm upgrade complete." -ForegroundColor Green
