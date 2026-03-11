@@ -11,7 +11,7 @@ A_TrayMenu.Add("Shortcut List", (*) =>
     MsgBox("Available Keyboard Shortcuts: `n`n"
         . "- Alt + `` `t: Toggle to hold down any key (right now is left click)`n"
         . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
-        . "- Ctrl + Alt + .`t: Spam Text 100x`n"
+        . "- Ctrl + Alt + .`t: Spam left click indefinitely`n"
         . "- Ctrl + Alt + O`t: Microphone Loopback Toggle`n"
         . "- Ctrl + Alt + M`t: Start Scrcpy + Microphone Loopback`n"
         . "- Page Down`t: Auto Clicker`n"
@@ -100,8 +100,8 @@ A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tr
 
 ^!.:: ; press ctrl + alt + .
 {
-    loop 100 {
-        Send "Gw juga bisa spam {Enter}"
+    loop {
+        Send "{Click}"
         Sleep 100
     }
 }
