@@ -813,8 +813,8 @@ function Invoke-PipUpgrade {
     try {
         if ($isInteractive) {
             #! Interactive Mode
-
-            # Ask user if they want to check for Chocolatey updates before proceeding with package upgrades
+            
+            # Ask user if they want to check for pip updates before proceeding with package upgrades
             Write-Host "Check for pip Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
             $updatePipOption = Read-Host
             if (($updatePipOption.ToLower() -eq "y") -or ($updatePipOption -eq "")) {
@@ -910,22 +910,29 @@ function Invoke-NpmUpgrade {
         if ($isInteractive) {
             #! Interactive Mode
 
+            EmptyLine
+
             # Ask user if they want to check for Chocolatey updates before proceeding with package upgrades
             Write-Host "Check for npm Updates ? [Y/n] " -ForegroundColor Blue -NoNewline
             $updateNpmOption = Read-Host
             if (($updateNpmOption.ToLower() -eq "y") -or ($updateNpmOption -eq "")) {
                 do {
-                    Clear-Host
+                    Clear-Host                    
                     Write-Host "Updating npm itself..." -ForegroundColor Yellow
                     npm install -g npm@latest
 
-                    EmptyLine
-                    Write-Host "Checking for outdated global npm packages..." -ForegroundColor Yellow
-                    npm -g outdated
-    
-                    EmptyLine
-                    Write-Host "Checking for outdated local npm packages..." -ForegroundColor Yellow
-                    npm outdated
+                    if ((Get-ChildItem -Filter "package.json" -ErrorAction SilentlyContinue) -or 
+                        (Get-ChildItem -Filter "package-lock.json" -ErrorAction SilentlyContinue) -or
+                        (Get-ChildItem -Filter "node_modules" -ErrorAction SilentlyContinue)) {
+        
+                        EmptyLine
+                        Write-Host "Checking for outdated local npm packages..." -ForegroundColor Yellow
+                        npm outdated
+                    } else {
+                        EmptyLine
+                        Write-Host "Checking for outdated global npm packages..." -ForegroundColor Yellow
+                        npm -g outdated
+                    }
                     
                     EmptyLine
                     Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
@@ -963,8 +970,7 @@ function Invoke-NpmUpgrade {
                     if (($updateChoice.ToLower() -ne 'all') -and 
                         ($updateChoice.ToLower() -ne 'all-local') -and 
                         ($updateChoice.ToLower() -ne 'all-global') -and
-                        ($updateChoice.ToLower() -ne 'all-latest')
-                        ) {
+                        ($updateChoice.ToLower() -ne 'all-latest')) {
 
                         $packageNames = $updateChoice.Split(" ")
 
@@ -973,13 +979,18 @@ function Invoke-NpmUpgrade {
 
                         foreach ($pkg in $packageNames) {
                             # A bit tricky to know if it's global or local, so we can try local first, then global.
-                            EmptyLine
-                            Write-Host "Attempting to upgrade '$pkg' locally..."
-                            npm update $pkg
+                            if ((Get-ChildItem -Filter "package.json" -ErrorAction SilentlyContinue) -or 
+                                (Get-ChildItem -Filter "package-lock.json" -ErrorAction SilentlyContinue) -or
+                                (Get-ChildItem -Filter "node_modules" -ErrorAction SilentlyContinue)) {
     
-                            EmptyLine
-                            Write-Host "Attempting to upgrade '$pkg' globally..."
-                            npm -g update $pkg
+                                EmptyLine
+                                Write-Host "Attempting to upgrade '$pkg' locally..."
+                                npm update $pkg
+                            } else {
+                                EmptyLine
+                                Write-Host "Attempting to upgrade '$pkg' globally..."
+                                npm -g update $pkg
+                            }
                         }
                     }
     
@@ -1000,14 +1011,19 @@ function Invoke-NpmUpgrade {
             Write-Host "Updating npm itself..." -ForegroundColor Yellow
             npm install -g npm@latest
 
+            if ((Get-ChildItem -Filter "package.json" -ErrorAction SilentlyContinue) -or 
+                (Get-ChildItem -Filter "package-lock.json" -ErrorAction SilentlyContinue) -or
+                (Get-ChildItem -Filter "node_modules" -ErrorAction SilentlyContinue)) {
+
+                EmptyLine
+                Write-Host "Upgrading local packages..."
+                npm update --all
+            }
+
             EmptyLine
             Write-Host "Checking for and upgrading all npm packages automatically..." -ForegroundColor Yellow
             Write-Host "Upgrading global packages..."
             npm -g update --all
-
-            EmptyLine
-            Write-Host "Upgrading local packages..."
-            npm update --all
 
             EmptyLine
             Write-Host "Automatic npm upgrade complete." -ForegroundColor Green
