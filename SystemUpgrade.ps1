@@ -224,8 +224,11 @@ function Invoke-WindowsUpdate {
     Checks for, installs, and manages Windows Updates using the PSWindowsUpdate module.
     #>
 
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
+
     # Check for PSWindowsUpdate module and offer to install if missing
-    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable -ErrorAction SilentlyContinue)) {
+    if (!(Get-Module -Name "PSWindowsUpdate" -ListAvailable -ErrorAction SilentlyContinue) -and $isInteractive) {
         $installPrompt = "The 'PSWindowsUpdate' module is required to manage Windows Updates. Install it now? [Y/n]"
         $shouldInstall = $false
         if ($YesToAll.IsPresent) {
@@ -275,9 +278,6 @@ function Invoke-WindowsUpdate {
         Write-Host "Try updating the PSWindowsUpdate module or using Windows Update settings directly." -ForegroundColor Yellow
         return
     }
-
-    # Decide whether to run interactively or automatically
-    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
 
     try {
         if ($isInteractive) {
@@ -445,8 +445,11 @@ function Invoke-WingetUpdate {
     Installs or updates winget, and then updates all winget packages.
     #>
 
-    # Check for winget and offer to install if missing
-    if (!(Get-Command -Name winget -ErrorAction SilentlyContinue)) {
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
+
+    # Check for winget and offer to install if missing (interactive mode)
+    if (!(Get-Command -Name winget -ErrorAction SilentlyContinue) -and $isInteractive) {
         $installPrompt = "The 'winget' command is not available. Install it now ? [Y/n] "
         $shouldInstall = $false
         if ($YesToAll.IsPresent) {
@@ -485,10 +488,6 @@ function Invoke-WingetUpdate {
             return
         }
     }
-
-    # Decide whether to run interactively or automatically
-    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
-    
     
     try {
         if ($isInteractive) {
@@ -561,8 +560,11 @@ function Invoke-ChocolateyUpdate {
     Installs or updates Chocolatey, and then updates all Chocolatey packages.
     #>
 
-    # Check for Chocolatey and offer to install if missing
-    if (!(Get-Command -Name choco -ErrorAction SilentlyContinue)) {
+    # Decide whether to run interactively or automatically
+    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
+
+    # Check for Chocolatey and offer to install if missing (interactive)
+    if (!(Get-Command -Name choco -ErrorAction SilentlyContinue) -and $isInteractive) {
         $installPrompt = "The 'choco' command is not available. Install it now ? [Y/n] "
         $shouldInstall = $false
         if ($YesToAll.IsPresent) {
@@ -595,9 +597,6 @@ function Invoke-ChocolateyUpdate {
         }
     }
 
-    # Decide whether to run interactively or automatically
-    $isInteractive = (-not ($YesToAll.IsPresent -or $Upgrade.IsPresent))
-    
     try {
         if ($isInteractive) {
             #! Interactive Mode
@@ -917,9 +916,16 @@ function Invoke-NpmUpgrade {
             $updateNpmOption = Read-Host
             if (($updateNpmOption.ToLower() -eq "y") -or ($updateNpmOption -eq "")) {
                 do {
-                    Clear-Host                    
-                    Write-Host "Updating npm itself..." -ForegroundColor Yellow
-                    npm install -g npm@latest
+                    Clear-Host
+                    npm -g outdated | Select-Object -Skip 1 | ForEach-Object {
+                        $package = ($_ -split '\s+')[0]
+                        if ($package -eq "npm") {
+                            Write-Host "Updating npm itself..." -ForegroundColor Yellow
+                            npm install -g npm@latest
+                        } else {
+                            Write-Host "No NPM upgrade needed..." -ForegroundColor Yellow
+                        }
+                    }
 
                     if ((Get-ChildItem -Filter "package.json" -ErrorAction SilentlyContinue) -or 
                         (Get-ChildItem -Filter "package-lock.json" -ErrorAction SilentlyContinue) -or
@@ -1008,8 +1014,16 @@ function Invoke-NpmUpgrade {
             #! Automatic mode
 
             EmptyLine
-            Write-Host "Updating npm itself..." -ForegroundColor Yellow
-            npm install -g npm@latest
+
+            npm -g outdated | Select-Object -Skip 1 | ForEach-Object {
+                $package = ($_ -split '\s+')[0]
+                if ($package -eq "npm") {
+                    Write-Host "Updating npm itself..." -ForegroundColor Yellow
+                    npm install -g npm@latest
+                } else {
+                    Write-Host "No NPM upgrade needed..." -ForegroundColor Yellow
+                }
+            }
 
             if ((Get-ChildItem -Filter "package.json" -ErrorAction SilentlyContinue) -or 
                 (Get-ChildItem -Filter "package-lock.json" -ErrorAction SilentlyContinue) -or
@@ -1089,12 +1103,12 @@ function Main() {
         Invoke-ChocolateyUpdate
 
         # if python is installed, run update pip
-        if ((Get-Command -Name python -ErrorAction SilentlyContinue) -and (Test-Path "$env:LOCALAPPDATA\Programs\Python")) {
+        if (Get-Command -Name python -ErrorAction SilentlyContinue) {
             Invoke-PipUpgrade
         }
 
         # if node is installed, run update npm
-        if ((Get-Command -Name npm -ErrorAction SilentlyContinue) -and (Test-Path "$env:ProgramFiles\nodejs")) {
+        if (Get-Command -Name npm -ErrorAction SilentlyContinue) {
             Invoke-NpmUpgrade
         }
     }
