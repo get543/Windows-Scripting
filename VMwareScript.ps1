@@ -46,7 +46,7 @@ if ($AutoLaunch -eq "fedora") {
 } elseif ($AutoLaunch -eq "kali") {
     & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "${env:USERPROFILE}\Downloads\VMWare\KaliLinux\Kali Linux.vmx"
 } elseif ($AutoLaunch -eq "windows") {
-    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "E:\FileHistory\VM Image File\Windows 11\Windows 11.vmx"
+    & "${env:ProgramFiles(x86)}\VMware\VMware Workstation\vmrun.exe" -T ws start "D:\Downloaded Games\Windows 11\Windows 11.vmx"
 }
 
 
