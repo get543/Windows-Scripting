@@ -1,9 +1,9 @@
-# Get the Cloudflare WARP service
-$WARPService = Get-Service -Name "Cloudflare WARP" -ErrorAction SilentlyContinue
+# Get the Cloudflare One Client service
+$WARPService = Get-Service -Name "Cloudflare One Client" -ErrorAction SilentlyContinue
 
 if ($WARPService -and $WARPService.Status -eq 'Running') {
     # --- STOP SEQUENCE ---
-    Write-Host "Cloudflare WARP is running. Stopping it..."
+    Write-Host "Cloudflare One Client is running. Stopping it..."
 
     # Disconnect using warp-cli
     Write-Host "Disconnecting Cloudflare..."
@@ -11,8 +11,8 @@ if ($WARPService -and $WARPService.Status -eq 'Running') {
     Start-Sleep -Seconds 2
 
     # Stop the service
-    Write-Host "Stopping Cloudflare Service."
-    Stop-Service -Name "Cloudflare WARP" -Force
+    Write-Host "Stopping Cloudflare One Client Service."
+    Stop-Service -Name "Cloudflare One Client" -Force
 
     # Stop the GUI application
     $warpProcess = Get-Process -Name "Cloudflare WARP" -ErrorAction SilentlyContinue
@@ -28,8 +28,8 @@ if ($WARPService -and $WARPService.Status -eq 'Running') {
     Write-Host "Cloudflare WARP is stopped. Starting it..."
 
     # Start the service
-    Write-Host "Starting Cloudflare Service."
-    Start-Service -Name "Cloudflare WARP"
+    Write-Host "Starting Cloudflare One Client Service."
+    Start-Service -Name "Cloudflare One Client"
     Start-Sleep -Seconds 3
 
     # Connect using warp-cli

@@ -9,12 +9,12 @@ A_TrayMenu.Add("Edit Script", (*) => Edit())
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Shortcut List", (*) => 
     MsgBox("Available Keyboard Shortcuts: `n`n"
-        . "- Alt + `` `t: Toggle to hold down any key (right now is left click)`n"
-        . "- Ctrl + Alt + X`t: Always On Top Current Window`n"
+        . "- Alt + `` `t`t: Hold down any key (right now is left click)`n"
+        . "- Ctrl + Alt + X`t: Always On Top for currently active window`n"
         . "- Ctrl + Alt + .`t: Spam left click indefinitely`n"
         . "- Ctrl + Alt + O`t: Microphone Loopback Toggle`n"
         . "- Ctrl + Alt + M`t: Start Scrcpy + Microphone Loopback`n"
-        . "- Page Down`t: Auto Clicker`n"
+        . "- Page Down`t: Auto Clicker for Roblox`n"
         . "- Page Up`t: Reload Script (Stop Auto Clicker)`n"
         . "- Alt + F1`t`t: Toggle Twitch Theatre Mode & Vertical Tabs`n"
         . "- Insert`t`t: Switch Output Device Script`n"

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Clean Fullscreen Camera – No UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* prevent accidental text selection */
+        }
+
+        body {
+            background: black;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;  /* keeps aspect ratio, no cropping */
+            background: black;
+        }
+
+        /* Hidden controls – only visible on hover/mouse move, then fade out */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none; /* so clicks pass through when hidden */
+        }
+
+        /* When we add the 'visible' class, controls become interactive */
+        .controls.visible {
+            opacity: 0.6;
+            pointer-events: auto;
+        }
+
+        .controls.visible:hover {
+            opacity: 1;
+        }
+
+        button {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: system-ui, sans-serif;
+            transition: 0.1s;
+        }
+
+        button:hover {
+            background: rgba(40,40,40,0.9);
+            border-color: white;
+        }
+
+        /* Small hint text that fades out */
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            font-family: monospace;
+            padding: 5px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .controls.visible ~ .hint,
+        body:hover .hint {
+            opacity: 0.5;
+        }
+
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85);
+            color: #ff8888;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            z-index: 2000;
+            font-size: 1.2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid red;
+            font-family: system-ui;
+        }
+    </style>
+</head>
+<body>
+
+<video id="cameraFeed" autoplay playsinline muted></video>
+
+<div class="controls" id="controls">
+    <button id="fullscreenBtn">⛶ Fullscreen</button>
+</div>
+<div class="hint" id="hint">Move mouse or press F for fullscreen</div>
+
+<script>
+    (function() {
+        const video = document.getElementById('cameraFeed');
+        const controlsDiv = document.getElementById('controls');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        let controlsTimeout;
+
+        // Request high-quality 1080p60 if possible
+        const constraints = {
+            video: {
+                width: { ideal: 1920, max: 1920 },
+                height: { ideal: 1080, max: 1080 },
+                frameRate: { ideal: 60, max: 60 }
+            }
+        };
+
+        // Start camera
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                video.srcObject = stream;
+                const track = stream.getVideoTracks()[0];
+                console.log('Camera:', track.label);
+                console.log('Resolution:', track.getSettings().width, 'x', track.getSettings().height);
+                console.log('Framerate:', track.getSettings().frameRate);
+            })
+            .catch(err => {
+                console.error(err);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerText = '⚠️ Camera access failed.\nMake sure your USB capture card is connected and not in use.';
+                document.body.appendChild(errorDiv);
+            });
+
+        // Show controls temporarily on mouse movement or key press
+        function showControlsTemporarily() {
+            controlsDiv.classList.add('visible');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                controlsDiv.classList.remove('visible');
+            }, 2000);
+        }
+
+        // Mouse move anywhere on page shows controls
+        window.addEventListener('mousemove', showControlsTemporarily);
+        window.addEventListener('touchstart', showControlsTemporarily);
+        window.addEventListener('keydown', showControlsTemporarily);
+
+        // Fullscreen via button
+        fullscreenBtn.addEventListener('click', () => {
+            toggleFullscreen();
+        });
+
+        // Fullscreen via keyboard 'f' key (clean, no button needed)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+
+        // Double-click video to toggle fullscreen as well
+        video.addEventListener('dblclick', () => {
+            toggleFullscreen();
+        });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.warn('Fullscreen error:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Optional: initially hide controls after 1 second
+        setTimeout(() => {
+            controlsDiv.classList.remove('visible');
+        }, 1000);
+    })();
+</script>
+</body>
+</html>
