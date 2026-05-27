@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pure Camera</title>
+    <style>
+      body {
+        margin: 0;
+        background: black;
+      }
+      video {
+        width: 100%;
+        height: 100vh;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="cam" autoplay playsinline muted></video>
+    <script>
+      navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 60 },
+          },
+        })
+        .then((s) => (cam.srcObject = s));
+      document.addEventListener("dblclick", () =>
+        document.fullscreenElement
+          ? document.exitFullscreen()
+          : document.documentElement.requestFullscreen(),
+      );
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "f" || e.key === "F") {
+          e.preventDefault();
+          document.fullscreenElement
+            ? document.exitFullscreen()
+            : document.documentElement.requestFullscreen();
+        }
+      });
+    </script>
+  </body>
+</html>

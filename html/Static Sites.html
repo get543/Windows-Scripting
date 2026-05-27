@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=, initial-scale=1.0" />
+    <title>Hello World</title>
+    <style>
+      *,
+      html {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: monospace;
+        font-size: 10vw;
+        text-transform: uppercase;
+        background-color: black;
+        color: aliceblue;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      h1 {
+        animation: slide-up 3s infinite;
+      }
+
+      @keyframes slide-up {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-2rem);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello World</h1>
+  </body>
+</html>
