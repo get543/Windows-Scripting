@@ -36,7 +36,39 @@ $HeadphonesDeviceName = "*Headphones*"
 $SpeakersDeviceName = "*Output Monitor*"
 $SoundcardDeviceName = "*Output Mixer*"
 
+function WindowsNotificationBalloon($text) {
+    # windows 10 notification balloon
+    Add-Type -AssemblyName System.Windows.Forms
+    $global:BalloonNotification = New-Object System.Windows.Forms.NotifyIcon
+
+    $path = (Get-Process -id $pid).Path
+    $BalloonNotification.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($path)
+    $BalloonNotification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+    $BalloonNotification.BalloonTipText = "${text}"
+    $BalloonNotification.BalloonTipTitle = "Change Output Device"
+    $BalloonNotification.Visible = $true
+    $BalloonNotification.ShowBalloonTip(5000)
+}
+
+function checkAudioDeviceCmdlets() {
+    # if AudioDeviceCmdlets module is not installed, prompt to install it
+    if (!(Get-Module -ListAvailable -Name AudioDeviceCmdlets -ErrorAction SilentlyContinue)) {
+        Write-Host "`nAudioDeviceCmdlets module is not installed." -ForegroundColor Red
+        Write-Host "Install AudioDeviceCmdlets module ? [Y/n] " -NoNewline -ForegroundColor Yellow
+        $response = Read-Host
+        if ($response -eq "Y" -or $response -eq "y" -or $response -eq "") {
+            Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser
+        } else {
+            Write-Host "Exiting script."
+        }
+        return
+    }
+}
+
+
 if ($SetDevice) {
+    checkAudioDeviceCmdlets
+
     Write-Host "`nAvailable Playback Audio Devices :"
     Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" } | Select-Object Index, Default, DefaultCommunication, Name | Format-Table -AutoSize
 
@@ -76,37 +108,11 @@ if ($SetDevice) {
     return
 }
 
-function WindowsNotificationBalloon($text) {
-    # windows 10 notification balloon
-    Add-Type -AssemblyName System.Windows.Forms
-    $global:BalloonNotification = New-Object System.Windows.Forms.NotifyIcon
-
-    $path = (Get-Process -id $pid).Path
-    $BalloonNotification.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($path)
-    $BalloonNotification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
-    $BalloonNotification.BalloonTipText = "${text}"
-    $BalloonNotification.BalloonTipTitle = "Change Output Device"
-    $BalloonNotification.Visible = $true
-    $BalloonNotification.ShowBalloonTip(5000)
-}
-
-# if AudioDeviceCmdlets module is not installed, prompt to install it
-if (!(Get-Module -ListAvailable -Name AudioDeviceCmdlets -ErrorAction SilentlyContinue)) {
-    Write-Host "`nAudioDeviceCmdlets module is not installed." -ForegroundColor Red
-    Write-Host "Install AudioDeviceCmdlets module ? [Y/n] " -NoNewline -ForegroundColor Yellow
-    $response = Read-Host
-    if ($response -eq "Y" -or $response -eq "y" -or $response -eq "") {
-        Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser
-    } else {
-        Write-Host "Exiting script."
-    }
-    return
-}
-
-
 #!########################################################################################################
 #!                                        Check and Change Output Device                                 #
 #!########################################################################################################
+
+checkAudioDeviceCmdlets
 
 # if headphones is the default output then change it to speakers
 if (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName }) {
