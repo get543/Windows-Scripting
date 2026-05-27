@@ -5,7 +5,7 @@
 & "${env:APPDATA}\Telegram Desktop\Telegram.exe" -startintray
 
 # Launch Firefox
-& "${env:ProgramFiles}\Mozilla Firefox\firefox.exe"
+& "${env:ProgramFiles}\Mozilla Firefox\firefox.exe" -new-tab about:newtab
 
 # Launch Obsidian
 cmd /c start "" "%LOCALAPPDATA%\Programs\obsidian\Obsidian.exe"
