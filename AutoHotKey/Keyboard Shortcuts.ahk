@@ -22,7 +22,7 @@ A_TrayMenu.Add("Shortcut List", (*) =>
     )
 )
 
-;! Add your custom item to the bottom of the tray menu
+;! Add custom item to the bottom of the tray menu
 A_TrayMenu.Add("Set Output Device from Script", (*) => 
     RunWait(
         'powershell.exe -ExecutionPolicy Bypass -File "'
@@ -44,6 +44,8 @@ A_TrayMenu.Add("Toggle DNS", (*) =>
     )
 )
 
+;! ==============================================================================
+
 HttpServer_MenuHandler(*) {
     IB := InputBox("Please enter a file path.", "File Path")
     
@@ -60,18 +62,24 @@ HttpServer_MenuHandler(*) {
 
 A_TrayMenu.Add("HTTP Server", HttpServer_MenuHandler)
 
-A_TrayMenu.Add("Enable Discord RPC", (*) => 
-    TrayTip("Enabled in E:\UDIN\Code\Discord-RPC", "The Discord RPC has been enabled.", 1 16 32) ; TrayTip Text, Title, Options
 
-    RunWait(
-        'powershell.exe -Command "cd E:\UDIN\Code\DISCORD-RPC; npm run test"', , 'Hide'
-    )
-)
+;! ==============================================================================
+
+; Place this function somewhere down with your other functions:
+EnableDiscordRPC() {
+    TrayTip("The Discord RPC has been enabled.", "Enabled in E:\UDIN\Code\Discord-RPC", 16)
+    RunWait('powershell.exe -Command "cd E:\UDIN\Code\DISCORD-RPC; npm run test"', , 'Hide')
+}
+
+; Update the tray menu line to point to a new function:
+A_TrayMenu.Add("Enable Discord RPC", (*) => EnableDiscordRPC())
+
+;! ==============================================================================
 
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tray menu
 
-; ==============================================================================
+;! ==============================================================================
 
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
 
@@ -98,13 +106,55 @@ A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tr
     WinSetAlwaysOnTop -1, "A"
 }
 
-^!.:: ; press ctrl + alt + .
+;! ==============================================================================
+
+; --- SPAM LEFT CLICK (CTRL + ALT + .) ---
+global SpamClicker := false
+
+^!.:: ; ctrl + alt + .
 {
-    loop {
-        Send "{Click}"
-        Sleep 100
+    global SpamClicker
+    SpamClicker := !SpamClicker ; Toggle between true and false
+
+    if (SpamClicker) {
+        SetTimer(SpamClickAction, 100) ; Start clicking every 100ms
+    } else {
+        SetTimer(SpamClickAction, 0) ; Stop clicking
     }
 }
+
+SpamClickAction() {
+    Send "{Click}"
+}
+
+;! ==============================================================================
+
+; --- ROBLOX AUTO CLICKER (PAGE DOWN) ---
+global RobloxClicker := false
+
+PgDn:: ; press page down
+{
+    global RobloxClicker
+    RobloxClicker := !RobloxClicker ; Toggle between true and false
+
+    if (RobloxClicker) {
+        if WinExist("Roblox") {
+            WinActivate
+            SetTimer(RobloxClickAction, 300) ; Start clicking every 300ms
+        } else {
+            RobloxClicker := false ; Reset toggle if Roblox isn't open
+        }
+    } else {
+        SetTimer(RobloxClickAction, 0) ; Stop clicking
+    }
+}
+
+RobloxClickAction() {
+    Click
+}
+
+;! ==============================================================================
+
 
 ^!o:: ; press ctrl + alt + o
 { 
@@ -122,20 +172,6 @@ A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tr
     }
 
     MicrophoneLoopbackFunction() ; call the function from included file
-}
-
-PgDn:: ; press page down
-{
-    if WinExist("Roblox")
-        WinActivate ; Use the window found by WinExist.
-    else
-        return
-
-    loop {
-        ; Click 443, 296
-        Click
-        Sleep 300
-    }
 }
 
 PgUp:: ; press page up

@@ -190,6 +190,9 @@ function speedtest() {
         python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Automation-Scripts\test_connection.py" @args
     }
 }
+function screen() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\html\Camera Feed.html"
+}
 
 ######################## From My Linux Machine
 function codefolder() {
@@ -335,6 +338,19 @@ function discord() {
     Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb RunAs
 }
 
+######################## AUTOHOTKEY
+function ahkr { # Reload
+    & "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe" /R $args
+}
+function ahkcheck { # Validate Syntax
+    & "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe" /iLib nul $args
+}
+function ahk1 { # AutoHotkey v1
+    & "${env:ProgramFiles}\AutoHotkey\AutoHotkey.exe" $args
+}
+function ahk2 { # AutoHotkey v2
+    & "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe" $args
+}
 
 #######################################################################################################################
 #                                  Requirement for Oh-My-Posh, Chocolatey, Winget                                     #
