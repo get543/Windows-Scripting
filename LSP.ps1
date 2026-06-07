@@ -1,67 +1,67 @@
-﻿<#
-
-.EXAMPLE
-& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
-& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
-
-& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
-
-& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation windows
-& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation office
-& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation all
-
-.EXAMPLE
-irm bit.ly/scriptLSP | iex
-
-irm https://bit.ly/scriptLSP | iex
-
-irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
-
-
-.EXAMPLE
-.\LSP.ps1
-
-.\LSP.ps1 -autoinstall
-
-.\LSP.ps1 -activation windows
-.\LSP.ps1 -activation office
-.\LSP.ps1 -activation all
-
-.COMPONENT
-python
-gdown
-winrar or 7zip
-
-.DESCRIPTION
-Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
-GDown is needed to download files from GDrive and can be installed with pip install gdown
-which you will need python to be installed on your system. The script will aumatically do all of this automatically
-7Zip or winrar is also needed to extract files (if not installed, you will have to do that manually.)
-
-
-.PARAMETER autoinstall
-It will autoinstall or upgrade all apps that can be downloaded using winget
-
-.PARAMETER activation
-It will activate windows and office
-
-.PARAMETER activation <string>
-Accepted <string> value : 
-- windows
-- office
-- all
-
-.NOTES
-0. Open PowerShell as Admin
-1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-2. Run this: irm bit.ly/scriptLSP | iex
-
-.NOTES
-1. You need to run PowerShell as Admin
-2. You need gdown installed (pip install gdown), which needs python installed (the script will autoinstall python if not found)
-3. You need WinRar or 7Zip installed to extract .rar files automatically
-4. You need winget installed (the script will autoinstall it if not found)
-#>
+#
+#
+#.EXAMPLE
+#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
+#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
+#
+#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
+#
+#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation windows
+#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation office
+#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation all
+#
+#.EXAMPLE
+#irm bit.ly/scriptLSP | iex
+#
+#irm https://bit.ly/scriptLSP | iex
+#
+#irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
+#
+#
+#.EXAMPLE
+#.\LSP.ps1
+#
+#.\LSP.ps1 -autoinstall
+#
+#.\LSP.ps1 -activation windows
+#.\LSP.ps1 -activation office
+#.\LSP.ps1 -activation all
+#
+#.COMPONENT
+#python
+#gdown
+#winrar or 7zip
+#
+#.DESCRIPTION
+#Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
+#GDown is needed to download files from GDrive and can be installed with pip install gdown
+#which you will need python to be installed on your system. The script will aumatically do all of this automatically
+#7Zip or winrar is also needed to extract files (if not installed, you will have to do that manually.)
+#
+#
+#.PARAMETER autoinstall
+#It will autoinstall or upgrade all apps that can be downloaded using winget
+#
+#.PARAMETER activation
+#It will activate windows and office
+#
+#.PARAMETER activation <string>
+#Accepted <string> value : 
+#- windows
+#- office
+#- all
+#
+#.NOTES
+#0. Open PowerShell as Admin
+#1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+#2. Run this: irm bit.ly/scriptLSP | iex
+#
+#.NOTES
+#1. You need to run PowerShell as Admin
+#2. You need gdown installed (pip install gdown), which needs python installed (the script will autoinstall python if not found)
+#3. You need WinRar or 7Zip installed to extract .rar files automatically
+#4. You need winget installed (the script will autoinstall it if not found)
+#
 
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | [AUTOINSTALL] [NORMAL SCRIPT]
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
@@ -74,14 +74,14 @@ param (
 )
 
 function NotAdminRelaunch() {
-    <#
-    .SYNOPSIS
-    Relaunch new window as admin.
-    
-    .DESCRIPTION
-    Check if the script executed with admin privilages or not.
-    If not, then script you immedietly exit and show error message.
-    #>
+    #
+#    .SYNOPSIS
+#    Relaunch new window as admin.
+#    
+#    .DESCRIPTION
+#    Check if the script executed with admin privilages or not.
+#    If not, then script you immedietly exit and show error message.
+    #
 
     Write-Host "`nPlease run this script as an admin access." -ForegroundColor Red
     Write-Host "Because almost all commands require admin access." -ForegroundColor Red
@@ -160,11 +160,11 @@ if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContin
 
 #! ========================== FUNCTIONS ################################
 function WingetInstall() {
-    <#
-    .SYNOPSIS
-    Installs winget using powershell module.
-    This code is official from microsoft website.
-    #>
+    #
+#    .SYNOPSIS
+#    Installs winget using powershell module.
+#    This code is official from microsoft website.
+    #
 
     $progressPreference = "SilentlyContinue"
     Write-Host "Installing WinGet PowerShell module from PSGallery..." -ForegroundColor Yellow
@@ -180,16 +180,16 @@ function WingetInstall() {
 }
 
 function UnZip($SourceFile, $DestinationFile, $Passwd) {
-    <#
-    .PARAMETER SourceFile
-    Source file
-
-    .PARAMETER DestinationFile
-    Destination file
-
-    .PARAMETER Passwd
-    Password to extract the file (if any)
-    #>
+    #
+#    .PARAMETER SourceFile
+#    Source file
+#
+#    .PARAMETER DestinationFile
+#    Destination file
+#
+#    .PARAMETER Passwd
+#    Password to extract the file (if any)
+    #
     if ($winrarInstalled) {
         Write-Host "`nExtracting $SourceFile to $DestinationFile using WinRAR...`n" -ForegroundColor Yellow
         if ($Passwd) {
@@ -211,13 +211,13 @@ function UnZip($SourceFile, $DestinationFile, $Passwd) {
 }
 
 function CopyFolder($SourceFile, $DestinationFile) {
-    <#
-    .PARAMETER SourceFile
-    The source file to copy
-
-    .PARAMETER DestinationFile
-    The destination file to copy to
-    #>
+    #
+#    .PARAMETER SourceFile
+#    The source file to copy
+#
+#    .PARAMETER DestinationFile
+#    The destination file to copy to
+    #
     if (!(Test-Path $SourceFile)) {
         return Write-Host "`nSource file $SourceFile not found!" -ForegroundColor Red
     }
@@ -230,28 +230,28 @@ function CopyFolder($SourceFile, $DestinationFile) {
 }
 
 function RefreshPath() {
-    <#
-    .SYNOPSIS
-    Refreshes the PATH environment variable in the current session.
-    #>
+    #
+#    .SYNOPSIS
+#    Refreshes the PATH environment variable in the current session.
+    #
     Write-Host "`nRefreshing PATH environment variable..." -ForegroundColor Yellow
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
 }
 
 function WingetInstallCommand($name, $source, $id, $patern) {
-    <#
-    .PARAMETER name
-    The name or the Id of the app you want to install
-    
-    .PARAMETER source
-    winget or msstore
-
-    .PARAMETER id
-    The base id to search for latest version. Example: PHP.PHP
-
-    .PARAMETER patern
-    The pattern to match the latest version. Example: PHP\.PHP\.\d+\.\d+ (for PHP.PHP.x.x)
-    #>
+    #
+#    .PARAMETER name
+#    The name or the Id of the app you want to install
+#    
+#    .PARAMETER source
+#    winget or msstore
+#
+#    .PARAMETER id
+#    The base id to search for latest version. Example: PHP.PHP
+#
+#    .PARAMETER patern
+#    The pattern to match the latest version. Example: PHP\.PHP\.\d+\.\d+ (for PHP.PHP.x.x)
+    #
 
     if ($id -and $patern) {
         $name = (winget search "$id" --source winget |
@@ -265,16 +265,16 @@ function WingetInstallCommand($name, $source, $id, $patern) {
 }
 
 function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
-    <#
-    .DESCRIPTION
-    create shortcut to the start menu (user)
-
-    .PARAMETER SourceFile
-    The target file usually in .exe (Exampe: something.exe)
-
-    .PARAMETER ShortcutName
-    The name of the shorcut created with .lnk extension (Example: something.lnk)
-    #>
+    #
+#    .DESCRIPTION
+#    create shortcut to the start menu (user)
+#
+#    .PARAMETER SourceFile
+#    The target file usually in .exe (Exampe: something.exe)
+#
+#    .PARAMETER ShortcutName
+#    The name of the shorcut created with .lnk extension (Example: something.lnk)
+    #
 
     if (!(Test-Path $SourceFile)) {
         return Write-Host "`nSource file $SourceFile not found, cannot create shortcut!" -ForegroundColor Red
@@ -496,43 +496,43 @@ if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
 }
 
 # https://ozh.github.io/ascii-tables/
-<# !NOT NEEDED
-Write-Host "
-+----+------------------------------+-----------------+---------+--------+
-| No |           Software           |     Source      | Version | Status |
-+----+------------------------------+-----------------+---------+--------+
-|  1 | ACL 9                        | GDrive          |         | OK     |
-|  2 | Adobe Illustrator            | GDrive          |         | ?      |
-|  3 | Adobe Photoshop              | GDrive          |         | ?      |
-|  4 | Adobe Premier                | GDrive          |         | ?      |
-|  5 | Android Studio               | winget          |         | OK     |
-|  6 | AutoCad                      |                 |         |        |
-|  7 | Balsamiq                     | winget          |         | OK     |
-|  8 | CapCut                       | winget          |         | OK     |
-|  9 | Circuit Wizard               |                 |         |        |
-| 10 | CorelDraw                    | GDrive          |         | ?      |
-| 11 | CX Programming               |                 |         |        |
-| 12 | Draw.io                      | https://draw.io |         | OK     |
-| 13 | Figma                        | winget          |         | OK     |
-| 14 | Fluid UI                     | winget          |         | OK     |
-| 15 | Java                         | winget          |       8 | OK     |
-| 16 | JDK                          | winget          |      20 | OK     |
-| 17 | Krishand Inventory 3.0       |                 |         |        |
-| 18 | Minitab                      | GDrive          |         | OK     |
-| 19 | Microsot Excel               | MAS (github)    |         | OK     |
-| 20 | Microsoft Word               | MAS (github)    |         | OK     |
-| 21 | Microsoft Visio              |                 |         |        |
-| 22 | Microsoft Visual Studio Code | winget          |         | OK     |
-| 23 | PHP                          | winget          |     8.4 | OK     |
-| 24 | POM QM                       |                 |         |        |
-| 25 | SPSS                         |                 |         |        |
-| 26 | Star UML                     | winget          |         | OK     |
-| 27 | XAMPP                        | winget          |     8.2 | OK     |
-| 28 | Zahir                        | GDrive          |         | ?      |
-| 29 | Data Simulasi 2012           | GDrive          |         | OK     |
-+----+------------------------------+-----------------+---------+--------+
-"
-#>
+#<# !NOT NEEDED
+#Write-Host "
+#+----+------------------------------+-----------------+---------+--------+
+#| No |           Software           |     Source      | Version | Status |
+#+----+------------------------------+-----------------+---------+--------+
+#|  1 | ACL 9                        | GDrive          |         | OK     |
+#|  2 | Adobe Illustrator            | GDrive          |         | ?      |
+#|  3 | Adobe Photoshop              | GDrive          |         | ?      |
+#|  4 | Adobe Premier                | GDrive          |         | ?      |
+#|  5 | Android Studio               | winget          |         | OK     |
+#|  6 | AutoCad                      |                 |         |        |
+#|  7 | Balsamiq                     | winget          |         | OK     |
+#|  8 | CapCut                       | winget          |         | OK     |
+#|  9 | Circuit Wizard               |                 |         |        |
+#| 10 | CorelDraw                    | GDrive          |         | ?      |
+#| 11 | CX Programming               |                 |         |        |
+#| 12 | Draw.io                      | https://draw.io |         | OK     |
+#| 13 | Figma                        | winget          |         | OK     |
+#| 14 | Fluid UI                     | winget          |         | OK     |
+#| 15 | Java                         | winget          |       8 | OK     |
+#| 16 | JDK                          | winget          |      20 | OK     |
+#| 17 | Krishand Inventory 3.0       |                 |         |        |
+#| 18 | Minitab                      | GDrive          |         | OK     |
+#| 19 | Microsot Excel               | MAS (github)    |         | OK     |
+#| 20 | Microsoft Word               | MAS (github)    |         | OK     |
+#| 21 | Microsoft Visio              |                 |         |        |
+#| 22 | Microsoft Visual Studio Code | winget          |         | OK     |
+#| 23 | PHP                          | winget          |     8.4 | OK     |
+#| 24 | POM QM                       |                 |         |        |
+#| 25 | SPSS                         |                 |         |        |
+#| 26 | Star UML                     | winget          |         | OK     |
+#| 27 | XAMPP                        | winget          |     8.2 | OK     |
+#| 28 | Zahir                        | GDrive          |         | ?      |
+#| 29 | Data Simulasi 2012           | GDrive          |         | OK     |
+#+----+------------------------------+-----------------+---------+--------+
+#"
+#
 
 ##################################### !CUSTOM TABLE OBJECT #####################################
 $table = @(
