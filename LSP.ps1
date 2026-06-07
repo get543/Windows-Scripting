@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 .EXAMPLE
 & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
@@ -163,7 +163,7 @@ function WingetInstall() {
     <#
     .SYNOPSIS
     Installs winget using powershell module.
-    This code is official from microsoft's website.
+    This code is official from microsoft website.
     #>
 
     $progressPreference = "SilentlyContinue"
