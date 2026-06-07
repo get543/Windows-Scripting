@@ -63,9 +63,9 @@ Accepted <string> value :
 4. You need winget installed (the script will autoinstall it if not found)
 #>
 
-#TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | ✅ AUTOINSTALL ❌ NORMAL SCRIPT
+#TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | [AUTOINSTALL] [NORMAL SCRIPT]
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
-#TODO WHAT IF PC'S INTERNET IS SLOW ⁉ CURRENTLY THERE'S NO SOLUTION
+#TODO WHAT IF PC'S INTERNET IS SLOW? CURRENTLY THERE'S NO SOLUTION
 
 param (
     [switch]$autoinstall,
@@ -342,7 +342,7 @@ if ($jwp) {
             WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
         }
         else {
-            Write-Host "`nCurrent PHP version: $phpVersion" -ForegroundColor Yellow
+            Write-Host "`nCurrent PHP version: $phpVersion no need to reinstall XAMPP" -ForegroundColor Yellow
         }
     }
     else {
@@ -351,6 +351,7 @@ if ($jwp) {
     }
 
     # Installing or upgrading vscode
+    Write-Host "`nInstalling VSCode" -ForegroundColor Yellow
     winget install vscode
 
     return
