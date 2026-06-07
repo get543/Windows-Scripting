@@ -36,7 +36,7 @@ winrar or 7zip
 Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
 GDown is needed to download files from GDrive and can be installed with pip install gdown
 which you will need python to be installed on your system. The script will aumatically do all of this automatically
-7Zip or winrar is also needed to extract files (if not installed, you'll have to do that manually.)
+7Zip or winrar is also needed to extract files (if not installed, you will have to do that manually.)
 
 
 .PARAMETER autoinstall
@@ -359,12 +359,12 @@ if ($jwp) {
     }
 
 
-    if (winget list vscode -eq "No installed package found matching input criteria.") {
-        Write-Host "`nInstalling VSCode" -ForegroundColor Yellow
-        winget install vscode
+    if (winget list vscode -ne "No installed package found matching input criteria.") {
+        Write-Host "`nVSCode is already installed" -ForegroundColor Yellow
     }
     else {
-        Write-Host "`nVSCode is already installed" -ForegroundColor Yellow
+        Write-Host "`nInstalling VSCode" -ForegroundColor Yellow
+        winget install vscode
     }
 
 
