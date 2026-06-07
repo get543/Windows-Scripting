@@ -1,4 +1,4 @@
-#
+﻿#
 #
 #.EXAMPLE
 #& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
@@ -385,6 +385,20 @@ if ($jwp) {
         winget install vscode
     }
 
+    if (!(Get-Command composer -ErrorAction SilentlyContinue)) {
+        Write-Host "`nInstalling Composer" -ForegroundColor Yellow
+        Invoke-WebRequest -Uri "https://getcomposer.org/Composer-Setup.exe" -OutFile "Composer-Setup.exe"
+        Start-Process -FilePath "Composer-Setup.exe" -Wait
+    }
+
+    if (!(Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Host "`nInstalling Node.js" -ForegroundColor Yellow
+        WingetInstallCommand "OpenJS.NodeJS" "winget"
+    }
+
+    if (!(Get-Command npm -ErrorAction SilentlyContinue)) {
+        Write-Host "`nNot detecting any npm command, maybe it's not installed properly..." -ForegroundColor Red
+    }
 
     # CRITICAL: Refresh PATH immediately after install
     RefreshPath
