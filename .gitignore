@@ -11,3 +11,7 @@ ToggleMonitor.*
 DisableMonitor.*
 EnableMonitor.*
 state.txt
+
+Build-Script.ps1
+Install-Software.ps1
+LSP-AllInOne.ps1

@@ -1,4 +1,32 @@
-<#
+﻿<#
+
+.EXAMPLE
+& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
+& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
+
+& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
+
+& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation windows
+& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation office
+& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation all
+
+.EXAMPLE
+irm bit.ly/scriptLSP | iex
+
+irm https://bit.ly/scriptLSP | iex
+
+irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
+
+
+.EXAMPLE
+.\LSP.ps1
+
+.\LSP.ps1 -autoinstall
+
+.\LSP.ps1 -activation windows
+.\LSP.ps1 -activation office
+.\LSP.ps1 -activation all
+
 .COMPONENT
 python
 gdown
@@ -23,36 +51,6 @@ Accepted <string> value :
 - office
 - all
 
-.EXAMPLE
-.\LSP.ps1
-
-.\LSP.ps1 -autoinstall
-
-.\LSP.ps1 -activation windows
-
-.\LSP.ps1 -activation office
-
-.\LSP.ps1 -activation all
-
-.EXAMPLE
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP)))
-
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -autoinstall
-
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation windows
-
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation office
-
-& ([ScriptBlock]::Create((irm https://bit.ly/scriptLSP))) -activation all
-
-.EXAMPLE
-irm bit.ly/scriptLSP | iex
-
-irm https://bit.ly/scriptLSP | iex
-
-irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
-
-
 .NOTES
 0. Open PowerShell as Admin
 1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -71,14 +69,84 @@ irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/L
 
 param (
     [switch]$autoinstall,
+    [switch]$jwp,
+    [switch]$office,
     [string]$activation
 )
+
+function NotAdminRelaunch() {
+    <#
+    .SYNOPSIS
+    Relaunch new window as admin.
+    
+    .DESCRIPTION
+    Check if the script executed with admin privilages or not.
+    If not, then script you immedietly exit and show error message.
+    #>
+
+    Write-Host "`nPlease run this script as an admin access." -ForegroundColor Red
+    Write-Host "Because almost all commands require admin access." -ForegroundColor Red
+
+    Write-Host "`nAttempting to restart the script with admin access..." -ForegroundColor Yellow
+
+    $windowsTerminalInstalled = Get-Command -Name wt.exe -ErrorAction SilentlyContinue
+    $pwshInstalled = Get-Command -Name pwsh.exe -ErrorAction SilentlyContinue
+    $powershellInstalled = Get-Command -Name powershell.exe -ErrorAction SilentlyContinue
+
+    $powershellVersion = (powershell -NoProfile -Command "$PSVersionTable.PSVersion.ToString()")
+    
+    # Build argument string from actual parameters
+    $argsArray = @()
+    if ($autoinstall) { $argsArray += "-autoinstall" }
+    if ($jwp) { $argsArray += "-jwp" }
+    if ($office) { $argsArray += "-office" }
+    if ($activation) { $argsArray += "-activation `"$activation`"" }
+    $argsString = $argsArray -join ' '
+    
+    Write-Host ""
+    if ($windowsTerminalInstalled) {
+        Write-Host "Launching with Windows Terminal (wt.exe)..." -ForegroundColor Yellow
+        if ($pwshInstalled) {
+            Write-Host "Using $(pwsh.exe -v) as the shell for Windows Terminal." -ForegroundColor Yellow
+            Start-Process `
+                -FilePath "wt.exe" `
+                -ArgumentList "pwsh -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`" $argsString" `
+                -Verb RunAs
+        } elseif ($powershellInstalled) {
+            Write-Host "Using PowerShell $powershellVersion as the shell for Windows Terminal." -ForegroundColor Yellow
+            Start-Process `
+                -FilePath "wt.exe" `
+                -ArgumentList "powershell -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`" $argsString" `
+                -Verb RunAs
+        } else {
+            Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
+        }
+    } elseif ($pwshInstalled -or $powershellInstalled) {
+        if ($pwshInstalled) {
+            Start-Process `
+                -FilePath "pwsh.exe" `
+                -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`" $argsString" `
+                -Verb RunAs
+            Write-Host "Launching with $(pwsh.exe -v) (pwsh.exe)..." -ForegroundColor Yellow
+        } elseif ($powershellInstalled) {
+            Write-Host "Launching with PowerShell $powershellVersion (powershell.exe)..." -ForegroundColor Yellow
+            Start-Process `
+                -FilePath "powershell.exe" `
+                -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`" $argsString" `
+                -Verb RunAs
+        } else {
+            Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
+        }
+    }
+}
+
 
 $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $Principal = New-Object Security.Principal.WindowsPrincipal $Identity
 $IsAdmin = $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-if (!$IsAdmin) { return Write-Host "`nMUST RUN AS ADMIN!" -ForegroundColor Red }
+if (!$IsAdmin) { return NotAdminRelaunch }
+
 
 Write-Host "`nChange path to ${env:USERPROFILE}\Downloads" -ForegroundColor Yellow
 Set-Location "${env:USERPROFILE}\Downloads"
@@ -238,14 +306,14 @@ if ($activation -eq "all") {
     & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /Ohook
     
     Write-Host "Activating Windows permanently (hopefully)..." -ForegroundColor Yellow
-    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /KMS38
+    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /HWID #/KMS38
     return
 }
 
 #####################! windows #####################
 if ($activation -eq "windows") {
     Write-Host "Activating Windows permanently (hopefully)..." -ForegroundColor Yellow
-    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /KMS38
+    & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /HWID #/KMS38
     return
 }
 #####################! office #####################
@@ -254,6 +322,86 @@ if ($activation -eq "office") {
     & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /Ohook
     return
 }
+
+
+#! ===================================================================
+#!                          -jwp
+#! ===================================================================
+if ($jwp) {
+    $phpExe = "C:\xampp\php\php.exe"
+
+    if (Test-Path $phpExe) {
+        $phpVersion = [version](& $phpExe -r "echo PHP_VERSION;")
+
+        if ($phpVersion -lt [version]"8.2.0") {
+            Write-Host "`nPHP version below 8.2, upgrade XAMPP required!" -ForegroundColor Red
+            Write-Host "`nUninstalling old version of XAMPP"-ForegroundColor Yellow
+            # Uninstall old XAMPP
+            winget uninstall xampp
+
+            # Install latest XAMPP
+            Write-Host "`nInstalling the latest version of XAMPP" -ForegroundColor Yellow
+            WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+        }
+        else {
+            Write-Host "`nCurrent PHP version: $phpVersion" -ForegroundColor Yellow
+        }
+    }
+    else {
+        Write-Host "`nXAMPP/PHP not found, installing the latest version" -ForegroundColor Yellow
+        WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+    }
+
+    # Installing or upgrading vscode
+    winget install vscode
+
+    return
+}
+
+
+#! ===================================================================
+#!                          -office
+#! ===================================================================
+if ($office) {
+    function installOfficeOfflineImage() { #! DONT USE THIS
+        $image = "C:\path\disk.img"
+
+        Mount-DiskImage -ImagePath $image
+
+        Start-Sleep 2
+
+        $disk = Get-DiskImage -ImagePath $image | Get-Disk
+
+        $partition = Get-Partition -DiskNumber $disk.Number | Where-Object DriveLetter -eq $null | Select-Object -First 1
+
+        if ($partition) {
+            Set-Partition -DiskNumber $disk.Number `
+                        -PartitionNumber $partition.PartitionNumber `
+                        -NewDriveLetter "X"
+            Write-Host "Mounted to X:"
+        } else {
+            Write-Host "Mounted but no readable partition found"
+        }
+    }
+
+    $office = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*,
+                                HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* |
+                Where-Object { $_.DisplayName -match "Microsoft Office|Microsoft 365" }
+
+    if ($office) {
+        Write-Host "Office installed via registry"
+    } else {
+        $wingetCheck = winget list --name "Microsoft.Office" | Out-String
+        if ($wingetCheck -match "Microsoft.Office") {
+            Write-Host "Office installed via winget"
+        } else {
+            Write-Host "Office not installed"
+        }
+    }
+
+    return
+}
+
 
 
 #! ===================================================================
@@ -281,16 +429,45 @@ if ($autoinstall) {
     foreach ($app in $appArray) {
         if (winget list $app -eq "No installed package found matching input criteria.") {
             if ($app -eq "jre") {
-                WingetInstallCommand "Oracle.JavaRuntimeEnvironment" "winget"
-                WingetInstallCommand "Oracle.JDK.25" "winget" "Oracle.JDK" "Oracle\.JDK\.\d+"
+                if (!(Get-Command java -ErrorAction SilentlyContinue)) {
+                    WingetInstallCommand "Oracle.JavaRuntimeEnvironment" "winget"
+                    WingetInstallCommand "Oracle.JDK.25" "winget" "Oracle.JDK" "Oracle\.JDK\.\d+"
+                }
 
             } elseif ($app -eq "php") {
-                WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+"
-                WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
-                
+                if (!(Get-Command php -ErrorAction SilentlyContinue)) {
+                    WingetInstallCommand "PHP.PHP.8.5" "winget" "PHP.PHP" "PHP\.PHP\.\d+\.\d+"
+                }
+
+                if (!(Test-Path "C:\xampp\xampp-control.exe")) {
+                    WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+                }
+
             } elseif ($app -eq "capcut") {
                 WingetInstallCommand "XP9KN75RRB9NHS" "msstore"
                 
+            } else {
+                WingetInstallCommand $app ""
+            }
+        } else {
+            Write-Host "`nIt seems like a version of $app is already installed, skiping this step..." -ForegroundColor Red
+        }
+    }
+
+    #################### USING GDOWN (Crack Apps) ####################
+    $crackApps = @("Adobe Photoshop", "Adobe Illustrator", "Adobe Premier", "")
+    
+    foreach ($crackApp in $crackApps) {
+        if (winget list $crackApp -eq "No installed package found matching input criteria.") {
+            if ($crackApp -eq "Adobe Photoshop") {
+                # go straight to switch case 3
+
+            } elseif ($crackApp -eq "Adobe Illustrator") {
+               # go straight to switch case 2
+
+            } elseif ($crackApp -eq "Adobe Premier") {
+                # go straight to switch case 4
+            
             } else {
                 WingetInstallCommand $app ""
             }
@@ -758,3 +935,4 @@ switch ($choose) {
 RefreshPath
 
 Write-Host "`nDone." -ForegroundColor Yellow
+
