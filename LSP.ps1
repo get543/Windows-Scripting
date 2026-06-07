@@ -1,4 +1,4 @@
-<#
+﻿<#
 
 .EXAMPLE
 & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
@@ -350,9 +350,26 @@ if ($jwp) {
         WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
     }
 
-    # Installing or upgrading vscode
-    Write-Host "`nInstalling VSCode" -ForegroundColor Yellow
-    winget install vscode
+    $phpPath = "C:\xampp\php"
+    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+
+    if ($machinePath -notlike "*$phpPath*") {
+        Write-Host "`nAdding PHP to Machine PATH environment variable..." -ForegroundColor Yellow
+        [Environment]::SetEnvironmentVariable("Path", $machinePath + ";$phpPath", "Machine")
+    }
+
+
+    if (winget list vscode -eq "No installed package found matching input criteria.") {
+        Write-Host "`nInstalling VSCode" -ForegroundColor Yellow
+        winget install vscode
+    }
+    else {
+        Write-Host "`nVSCode is already installed" -ForegroundColor Yellow
+    }
+
+
+    # CRITICAL: Refresh PATH immediately after install
+    RefreshPath
 
     return
 }
