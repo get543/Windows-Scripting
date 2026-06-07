@@ -100,6 +100,24 @@ function NotAdminRelaunch() {
     if ($jwp) { $argsArray += "-jwp" }
     if ($activation) { $argsArray += "-activation `"$activation`"" }
     $argsString = $argsArray -join ' '
+
+    # When run via irm+ScriptBlock, $PSCommandPath is empty — use -Command to re-download
+    if ([string]::IsNullOrEmpty($PSCommandPath)) {
+        $relaunchCmd = "& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1))) $argsString"
+        Write-Host "Script was run from a downloaded ScriptBlock, will re-download to run as admin..." -ForegroundColor Yellow
+
+        $shell = if ($pwshInstalled) { "pwsh.exe" } elseif ($powershellInstalled) { "powershell.exe" } else { $null }
+        if ($shell) {
+            if ($windowsTerminalInstalled) {
+                Start-Process -FilePath "wt.exe" -ArgumentList "$shell -NoExit -ExecutionPolicy Bypass -Command `"$relaunchCmd`"" -Verb RunAs
+            } else {
+                Start-Process -FilePath $shell -ArgumentList "-NoExit -ExecutionPolicy Bypass -Command `"$relaunchCmd`"" -Verb RunAs
+            }
+        } else {
+            Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
+        }
+        return
+    }
     
     Write-Host ""
     if ($windowsTerminalInstalled) {
