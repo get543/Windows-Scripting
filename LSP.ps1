@@ -70,7 +70,6 @@ Accepted <string> value :
 param (
     [switch]$autoinstall,
     [switch]$jwp,
-    [switch]$office,
     [string]$activation
 )
 
@@ -99,7 +98,6 @@ function NotAdminRelaunch() {
     $argsArray = @()
     if ($autoinstall) { $argsArray += "-autoinstall" }
     if ($jwp) { $argsArray += "-jwp" }
-    if ($office) { $argsArray += "-office" }
     if ($activation) { $argsArray += "-activation `"$activation`"" }
     $argsString = $argsArray -join ' '
     
@@ -357,51 +355,6 @@ if ($jwp) {
 
     return
 }
-
-
-#! ===================================================================
-#!                          -office
-#! ===================================================================
-if ($office) {
-    function installOfficeOfflineImage() { #! DONT USE THIS
-        $image = "C:\path\disk.img"
-
-        Mount-DiskImage -ImagePath $image
-
-        Start-Sleep 2
-
-        $disk = Get-DiskImage -ImagePath $image | Get-Disk
-
-        $partition = Get-Partition -DiskNumber $disk.Number | Where-Object DriveLetter -eq $null | Select-Object -First 1
-
-        if ($partition) {
-            Set-Partition -DiskNumber $disk.Number `
-                        -PartitionNumber $partition.PartitionNumber `
-                        -NewDriveLetter "X"
-            Write-Host "Mounted to X:"
-        } else {
-            Write-Host "Mounted but no readable partition found"
-        }
-    }
-
-    $office = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*,
-                                HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* |
-                Where-Object { $_.DisplayName -match "Microsoft Office|Microsoft 365" }
-
-    if ($office) {
-        Write-Host "Office installed via registry"
-    } else {
-        $wingetCheck = winget list --name "Microsoft.Office" | Out-String
-        if ($wingetCheck -match "Microsoft.Office") {
-            Write-Host "Office installed via winget"
-        } else {
-            Write-Host "Office not installed"
-        }
-    }
-
-    return
-}
-
 
 
 #! ===================================================================
