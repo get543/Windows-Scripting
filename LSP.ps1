@@ -344,36 +344,40 @@ if ($activation -eq "office") {
 #!                          -jwp
 #! ===================================================================
 if ($jwp) {
-    $phpExe = "C:\xampp\php\php.exe"
 
-    if (Test-Path $phpExe) {
-        $phpVersion = [version](& $phpExe -r "echo PHP_VERSION;")
-
-        if ($phpVersion -lt [version]"8.2.0") {
-            Write-Host "`nPHP version below 8.2, upgrade XAMPP required!" -ForegroundColor Red
-            Write-Host "`nUninstalling old version of XAMPP"-ForegroundColor Yellow
-            # Uninstall old XAMPP
-            winget uninstall xampp
-
-            # Install latest XAMPP
-            Write-Host "`nInstalling the latest version of XAMPP" -ForegroundColor Yellow
-            WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+    if (!(Get-Command php -ErrorAction SilentlyContinue)) {
+        $phpExe = "C:\xampp\php\php.exe"
+    
+        if (Test-Path $phpExe) {
+            $phpVersion = [version](& $phpExe -r "echo PHP_VERSION;")
+    
+            if ($phpVersion -lt [version]"8.2.0") {
+                Write-Host "`nPHP version below 8.2, upgrade XAMPP required!" -ForegroundColor Red
+                Write-Host "`nUninstalling old version of XAMPP"-ForegroundColor Yellow
+                # Uninstall old XAMPP
+                winget uninstall xampp
+    
+                # Install latest XAMPP
+                Write-Host "`nInstalling the latest version of XAMPP" -ForegroundColor Yellow
+                WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+            }
+            else {
+                Write-Host "`nCurrent PHP version: $phpVersion no need to reinstall XAMPP" -ForegroundColor Yellow
+            }
         }
         else {
-            Write-Host "`nCurrent PHP version: $phpVersion no need to reinstall XAMPP" -ForegroundColor Yellow
+            Write-Host "`nXAMPP/PHP not found, installing the latest version" -ForegroundColor Yellow
+            WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
         }
-    }
-    else {
-        Write-Host "`nXAMPP/PHP not found, installing the latest version" -ForegroundColor Yellow
-        WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
-    }
 
-    $phpPath = "C:\xampp\php"
-    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-
-    if ($machinePath -notlike "*$phpPath*") {
-        Write-Host "`nAdding PHP to Machine PATH environment variable..." -ForegroundColor Yellow
-        [Environment]::SetEnvironmentVariable("Path", $machinePath + ";$phpPath", "Machine")
+        # Adding PHP to Path Environment Variables
+        $phpPath = "C:\xampp\php"
+        $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    
+        if ($machinePath -notlike "*$phpPath*") {
+            Write-Host "`nAdding PHP to Machine PATH environment variable..." -ForegroundColor Yellow
+            [Environment]::SetEnvironmentVariable("Path", $machinePath + ";$phpPath", "Machine")
+        }
     }
 
 
@@ -938,4 +942,5 @@ switch ($choose) {
 RefreshPath
 
 Write-Host "`nDone." -ForegroundColor Yellow
+
 
