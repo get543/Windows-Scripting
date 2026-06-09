@@ -1,4 +1,4 @@
-# USAGE EXAMPLES:
+﻿# USAGE EXAMPLES:
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
@@ -336,13 +336,15 @@ if ($jwp) {
             # Uninstall old XAMPP
             # Start-Process -FilePath "winget" -ArgumentList "uninstall", "xampp" -Wait -NoNewWindow
 
-            # Start-Process `
-            # -FilePath "C:\xampp\uninstall.exe" `
-            # -WorkingDirectory "C:\xampp\" `
-            # -Wait
-
-            Write-Host "`nDeleting C:\XAMPP folder exept htdocs and mysql..." -ForegroundColor Yellow
-            Get-ChildItem -Path "C:\xampp" -Exclude "htdocs","mysql" | Remove-Item -Recurse -Force
+            if (Test-Path "C:\xampp\uninstall.exe") {
+                Start-Process `
+                    -FilePath "C:\xampp\uninstall.exe" `
+                    -WorkingDirectory "C:\xampp\" `
+                    -Wait
+            } else {
+                Write-Host "`nDeleting C:\XAMPP folder exept htdocs and mysql..." -ForegroundColor Yellow
+                Get-ChildItem -Path "C:\xampp" -Exclude "htdocs","mysql" | Remove-Item -Recurse -Force
+            }
 
             # Install latest XAMPP
             Write-Host "`nInstalling the latest version of XAMPP" -ForegroundColor Yellow
@@ -357,15 +359,19 @@ if ($jwp) {
         WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
     }
 
-    $phpPath = "C:\xampp\php"
-    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-
-    if ($machinePath -notlike "*$phpPath*") {
-        Write-Host "`nAdding PHP to Machine PATH environment variable..." -ForegroundColor Yellow
-        [Environment]::SetEnvironmentVariable("Path", $machinePath + ";$phpPath", "Machine")
+    if (!(Get-Command php -ErrorAction SilentlyContinue)) {
+        # Adding php (from xampp) to Path ENV
+        $phpPath = "C:\xampp\php"
+        $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    
+        if ($machinePath -notlike "*$phpPath*") {
+            Write-Host "`nAdding PHP to Machine PATH environment variable..." -ForegroundColor Yellow
+            [Environment]::SetEnvironmentVariable("Path", $machinePath + ";$phpPath", "Machine")
+        }
     }
 
 
+    # Check vscode
     if (winget list vscode -ne "No installed package found matching input criteria.") {
         Write-Host "`nVSCode is already installed" -ForegroundColor Yellow
     }
@@ -374,23 +380,26 @@ if ($jwp) {
         winget install vscode
     }
 
+    # Install Composer
     if (!(Get-Command composer -ErrorAction SilentlyContinue)) {
         Write-Host "`nInstalling Composer" -ForegroundColor Yellow
         Invoke-WebRequest -Uri "https://getcomposer.org/Composer-Setup.exe" -OutFile "Composer-Setup.exe"
         Start-Process -FilePath "Composer-Setup.exe" -Wait
     }
 
+    # Install NodeJS
     if (!(Get-Command node -ErrorAction SilentlyContinue)) {
         Write-Host "`nInstalling Node.js" -ForegroundColor Yellow
         WingetInstallCommand "OpenJS.NodeJS" "winget"
     }
 
-    if (!(Get-Command npm -ErrorAction SilentlyContinue)) {
-        Write-Host "`nNot detecting any npm command, maybe it's not installed properly..." -ForegroundColor Red
-    }
 
     # CRITICAL: Refresh PATH immediately after install
     RefreshPath
+    
+    if (!(Get-Command npm -ErrorAction SilentlyContinue)) {
+        Write-Host "`nNot detecting any npm command, maybe it's not installed properly..." -ForegroundColor Red
+    }
 
     return
 }
