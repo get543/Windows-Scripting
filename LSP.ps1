@@ -1,4 +1,4 @@
-﻿# USAGE EXAMPLES:
+# USAGE EXAMPLES:
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
