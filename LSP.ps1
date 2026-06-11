@@ -1,4 +1,4 @@
-﻿# USAGE EXAMPLES:
+# USAGE EXAMPLES:
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
@@ -359,12 +359,8 @@ if ($jwp) {
         WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
     }
 
-<<<<<<< HEAD
-        # Adding PHP to Path Environment Variables
-=======
     if (!(Get-Command php -ErrorAction SilentlyContinue)) {
         # Adding php (from xampp) to Path ENV
->>>>>>> a7cd0cb40c6ec596f0c227fa034fb33d2776c699
         $phpPath = "C:\xampp\php"
         $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
     
