@@ -324,6 +324,12 @@ if ($activation -eq "office") {
 #!                          -jwp
 #! ===================================================================
 if ($jwp) {
+    if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Host "`nWinget is not installed!" -ForegroundColor Red
+        WingetInstall
+    }
+
+    # Check php in XAMPP
     $phpExe = "C:\xampp\php\php.exe"
 
     if (Test-Path $phpExe) {
@@ -332,9 +338,6 @@ if ($jwp) {
         if ($phpVersion -lt [version]"8.2.0") {
             Write-Host "`nPHP version below 8.2, upgrade XAMPP required!" -ForegroundColor Red
             Write-Host "`nUninstalling old version of XAMPP"-ForegroundColor Yellow
-
-            # Uninstall old XAMPP
-            # Start-Process -FilePath "winget" -ArgumentList "uninstall", "xampp" -Wait -NoNewWindow
 
             if (Test-Path "C:\xampp\uninstall.exe") {
                 Start-Process `
@@ -456,7 +459,7 @@ if ($autoinstall) {
     }
 
     #################### USING GDOWN (Crack Apps) ####################
-    $crackApps = @("Adobe Photoshop", "Adobe Illustrator", "Adobe Premier", "")
+    $crackApps = @("Adobe Photoshop", "Adobe Illustrator", "Adobe Premier")
     
     foreach ($crackApp in $crackApps) {
         if (winget list $crackApp -eq "No installed package found matching input criteria.") {
