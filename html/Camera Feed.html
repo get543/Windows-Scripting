@@ -69,8 +69,8 @@
             border-color: white;
         }
 
-        /* Hide cursor in fullscreen mode */
-        :fullscreen {
+        /* Hide cursor in fullscreen when class is applied */
+        body.cursor-hidden {
             cursor: none;
         }
 
@@ -133,6 +133,8 @@
                 document.body.appendChild(errorDiv);
             });
 
+        let cursorTimeout;
+
         // Show controls temporarily on mouse movement or key press
         function showControlsTemporarily() {
             controlsDiv.classList.add('visible');
@@ -142,8 +144,22 @@
             }, 2000);
         }
 
-        // Mouse move anywhere on page shows controls
-        window.addEventListener('mousemove', showControlsTemporarily);
+        // Show cursor temporarily when in fullscreen
+        function showCursorTemporarily() {
+            if (document.fullscreenElement) {
+                document.body.classList.remove('cursor-hidden');
+                clearTimeout(cursorTimeout);
+                cursorTimeout = setTimeout(() => {
+                    document.body.classList.add('cursor-hidden');
+                }, 2000);
+            }
+        }
+
+        // Mouse move anywhere on page shows controls and cursor
+        window.addEventListener('mousemove', () => {
+            showControlsTemporarily();
+            showCursorTemporarily();
+        });
         window.addEventListener('touchstart', showControlsTemporarily);
         window.addEventListener('keydown', showControlsTemporarily);
 
