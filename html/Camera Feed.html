@@ -69,26 +69,9 @@
             border-color: white;
         }
 
-        /* Small hint text that fades out */
-        .hint {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.5);
-            color: rgba(255,255,255,0.6);
-            font-size: 12px;
-            font-family: monospace;
-            padding: 5px 10px;
-            border-radius: 8px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 1000;
-        }
-
-        .controls.visible ~ .hint,
-        body:hover .hint {
-            opacity: 0.5;
+        /* Hide cursor in fullscreen mode */
+        :fullscreen {
+            cursor: none;
         }
 
         .error-message {
