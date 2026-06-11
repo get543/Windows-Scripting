@@ -1,67 +1,47 @@
-﻿#
+﻿# USAGE EXAMPLES:
+# & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
+# & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
+# & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
+# & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation windows
+# & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation office
+# & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation all
 #
-#.EXAMPLE
-#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
-#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
+# irm bit.ly/scriptLSP | iex
+# irm https://bit.ly/scriptLSP | iex
+# irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
 #
-#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
+# .\LSP.ps1
+# .\LSP.ps1 -autoinstall
+# .\LSP.ps1 -activation windows
+# .\LSP.ps1 -activation office
+# .\LSP.ps1 -activation all
 #
-#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation windows
-#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation office
-#& ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation all
+# REQUIREMENTS:
+# - python
+# - gdown (pip install gdown)
+# - winrar or 7zip
 #
-#.EXAMPLE
-#irm bit.ly/scriptLSP | iex
+# DESCRIPTION:
+# Install LSP Software. If WinRar is installed, it will automatically extract .rar files downloaded from GDrive.
+# GDown is needed to download files from GDrive and can be installed with: pip install gdown
+# You will need python installed on your system. The script will automatically do this if needed.
+# 7Zip or winrar is also needed to extract files (if not installed, you will have to do that manually).
 #
-#irm https://bit.ly/scriptLSP | iex
+# PARAMETERS:
+# -autoinstall    : Autoinstall or upgrade all apps that can be downloaded using winget
+# -activation     : Activate windows and office (values: windows, office, all)
+# -jwp            : Run with jwp switch
 #
-#irm https://raw.githubusercontent.com/get543/Windows-Scripting/refs/heads/main/LSP.ps1 | iex
+# SETUP INSTRUCTIONS:
+# 0. Open PowerShell as Admin
+# 1. Allow PowerShell scripts to run only in current terminal: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+# 2. Run this: irm bit.ly/scriptLSP | iex
 #
-#
-#.EXAMPLE
-#.\LSP.ps1
-#
-#.\LSP.ps1 -autoinstall
-#
-#.\LSP.ps1 -activation windows
-#.\LSP.ps1 -activation office
-#.\LSP.ps1 -activation all
-#
-#.COMPONENT
-#python
-#gdown
-#winrar or 7zip
-#
-#.DESCRIPTION
-#Install LSP Software, if WinRar is installed, it will autmatically extract .rar file downloaded from GDrive
-#GDown is needed to download files from GDrive and can be installed with pip install gdown
-#which you will need python to be installed on your system. The script will aumatically do all of this automatically
-#7Zip or winrar is also needed to extract files (if not installed, you will have to do that manually.)
-#
-#
-#.PARAMETER autoinstall
-#It will autoinstall or upgrade all apps that can be downloaded using winget
-#
-#.PARAMETER activation
-#It will activate windows and office
-#
-#.PARAMETER activation <string>
-#Accepted <string> value : 
-#- windows
-#- office
-#- all
-#
-#.NOTES
-#0. Open PowerShell as Admin
-#1. Allow PowerShell scripts to run only in the current terminal session: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-#2. Run this: irm bit.ly/scriptLSP | iex
-#
-#.NOTES
-#1. You need to run PowerShell as Admin
-#2. You need gdown installed (pip install gdown), which needs python installed (the script will autoinstall python if not found)
-#3. You need WinRar or 7Zip installed to extract .rar files automatically
-#4. You need winget installed (the script will autoinstall it if not found)
-#
+# REQUIREMENTS FOR EXECUTION:
+# 1. You need to run PowerShell as Admin
+# 2. You need gdown installed (pip install gdown), which needs python installed (the script will autoinstall if needed)
+# 3. You need WinRar or 7Zip installed to extract .rar files automatically
+# 4. You need winget installed (the script will autoinstall if not found)
 
 #TODO CHECK IF WINGET APPS (JAVA, VSCODE, ETC) IS INSTALLED OR NOT | [AUTOINSTALL] [NORMAL SCRIPT]
 #TODO AUTOINSTALL CRACK SOFTWARE FROM GDRIVE OR WEB
@@ -74,14 +54,14 @@ param (
 )
 
 function NotAdminRelaunch() {
-    #
-#    .SYNOPSIS
-#    Relaunch new window as admin.
-#    
-#    .DESCRIPTION
-#    Check if the script executed with admin privilages or not.
-#    If not, then script you immedietly exit and show error message.
-    #
+    <#
+    .SYNOPSIS
+    Relaunch new window as admin.
+    
+    .DESCRIPTION
+    Check if the script executed with admin privilages or not.
+    If not, then script you immedietly exit and show error message.
+    #>
 
     Write-Host "`nPlease run this script as an admin access." -ForegroundColor Red
     Write-Host "Because almost all commands require admin access." -ForegroundColor Red
@@ -178,11 +158,11 @@ if (Test-Path "${env:ProgramFiles}\WinRAR\UnRAR.exe" -ErrorAction SilentlyContin
 
 #! ========================== FUNCTIONS ################################
 function WingetInstall() {
-    #
-#    .SYNOPSIS
-#    Installs winget using powershell module.
-#    This code is official from microsoft website.
-    #
+    <#
+    .SYNOPSIS
+    Installs winget using powershell module.
+    This code is official from microsoft website.
+    #>
 
     $progressPreference = "SilentlyContinue"
     Write-Host "Installing WinGet PowerShell module from PSGallery..." -ForegroundColor Yellow
@@ -198,16 +178,16 @@ function WingetInstall() {
 }
 
 function UnZip($SourceFile, $DestinationFile, $Passwd) {
-    #
-#    .PARAMETER SourceFile
-#    Source file
-#
-#    .PARAMETER DestinationFile
-#    Destination file
-#
-#    .PARAMETER Passwd
-#    Password to extract the file (if any)
-    #
+    <#
+    .PARAMETER SourceFile
+    Source file
+
+    .PARAMETER DestinationFile
+    Destination file
+
+    .PARAMETER Passwd
+    Password to extract the file (if any)
+    #>
     if ($winrarInstalled) {
         Write-Host "`nExtracting $SourceFile to $DestinationFile using WinRAR...`n" -ForegroundColor Yellow
         if ($Passwd) {
@@ -229,13 +209,13 @@ function UnZip($SourceFile, $DestinationFile, $Passwd) {
 }
 
 function CopyFolder($SourceFile, $DestinationFile) {
-    #
-#    .PARAMETER SourceFile
-#    The source file to copy
-#
-#    .PARAMETER DestinationFile
-#    The destination file to copy to
-    #
+    <#
+    .PARAMETER SourceFile
+    The source file to copy
+
+    .PARAMETER DestinationFile
+    The destination file to copy to
+    #>
     if (!(Test-Path $SourceFile)) {
         return Write-Host "`nSource file $SourceFile not found!" -ForegroundColor Red
     }
@@ -248,28 +228,28 @@ function CopyFolder($SourceFile, $DestinationFile) {
 }
 
 function RefreshPath() {
-    #
-#    .SYNOPSIS
-#    Refreshes the PATH environment variable in the current session.
-    #
+    <#
+    .SYNOPSIS
+    Refreshes the PATH environment variable in the current session.
+    #>
     Write-Host "`nRefreshing PATH environment variable..." -ForegroundColor Yellow
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
 }
 
 function WingetInstallCommand($name, $source, $id, $patern) {
-    #
-#    .PARAMETER name
-#    The name or the Id of the app you want to install
-#    
-#    .PARAMETER source
-#    winget or msstore
-#
-#    .PARAMETER id
-#    The base id to search for latest version. Example: PHP.PHP
-#
-#    .PARAMETER patern
-#    The pattern to match the latest version. Example: PHP\.PHP\.\d+\.\d+ (for PHP.PHP.x.x)
-    #
+    <#
+    .PARAMETER name
+    The name or the Id of the app you want to install
+    
+    .PARAMETER source
+    winget or msstore
+
+    .PARAMETER id
+    The base id to search for latest version. Example: PHP.PHP
+
+    .PARAMETER patern
+    The pattern to match the latest version. Example: PHP\.PHP\.\d+\.\d+ (for PHP.PHP.x.x)
+    #>
 
     if ($id -and $patern) {
         $name = (winget search "$id" --source winget |
@@ -283,16 +263,16 @@ function WingetInstallCommand($name, $source, $id, $patern) {
 }
 
 function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
-    #
-#    .DESCRIPTION
-#    create shortcut to the start menu (user)
-#
-#    .PARAMETER SourceFile
-#    The target file usually in .exe (Exampe: something.exe)
-#
-#    .PARAMETER ShortcutName
-#    The name of the shorcut created with .lnk extension (Example: something.lnk)
-    #
+    <#
+    .DESCRIPTION
+    create shortcut to the start menu (user)
+
+    .PARAMETER SourceFile
+    The target file usually in .exe (Exampe: something.exe)
+
+    .PARAMETER ShortcutName
+    The name of the shorcut created with .lnk extension (Example: something.lnk)
+    #>
 
     if (!(Test-Path $SourceFile)) {
         return Write-Host "`nSource file $SourceFile not found, cannot create shortcut!" -ForegroundColor Red
@@ -344,33 +324,47 @@ if ($activation -eq "office") {
 #!                          -jwp
 #! ===================================================================
 if ($jwp) {
+    $phpExe = "C:\xampp\php\php.exe"
 
-    if (!(Get-Command php -ErrorAction SilentlyContinue)) {
-        $phpExe = "C:\xampp\php\php.exe"
-    
-        if (Test-Path $phpExe) {
-            $phpVersion = [version](& $phpExe -r "echo PHP_VERSION;")
-    
-            if ($phpVersion -lt [version]"8.2.0") {
-                Write-Host "`nPHP version below 8.2, upgrade XAMPP required!" -ForegroundColor Red
-                Write-Host "`nUninstalling old version of XAMPP"-ForegroundColor Yellow
-                # Uninstall old XAMPP
-                winget uninstall xampp
-    
-                # Install latest XAMPP
-                Write-Host "`nInstalling the latest version of XAMPP" -ForegroundColor Yellow
-                WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+    if (Test-Path $phpExe) {
+        $phpVersion = [version](& $phpExe -r "echo PHP_VERSION;")
+
+        if ($phpVersion -lt [version]"8.2.0") {
+            Write-Host "`nPHP version below 8.2, upgrade XAMPP required!" -ForegroundColor Red
+            Write-Host "`nUninstalling old version of XAMPP"-ForegroundColor Yellow
+
+            # Uninstall old XAMPP
+            # Start-Process -FilePath "winget" -ArgumentList "uninstall", "xampp" -Wait -NoNewWindow
+
+            if (Test-Path "C:\xampp\uninstall.exe") {
+                Start-Process `
+                    -FilePath "C:\xampp\uninstall.exe" `
+                    -WorkingDirectory "C:\xampp\" `
+                    -Wait
+            } else {
+                Write-Host "`nDeleting C:\XAMPP folder exept htdocs and mysql..." -ForegroundColor Yellow
+                Get-ChildItem -Path "C:\xampp" -Exclude "htdocs","mysql" | Remove-Item -Recurse -Force
             }
-            else {
-                Write-Host "`nCurrent PHP version: $phpVersion no need to reinstall XAMPP" -ForegroundColor Yellow
-            }
-        }
-        else {
-            Write-Host "`nXAMPP/PHP not found, installing the latest version" -ForegroundColor Yellow
+
+            # Install latest XAMPP
+            Write-Host "`nInstalling the latest version of XAMPP" -ForegroundColor Yellow
             WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
         }
+        else {
+            Write-Host "`nCurrent PHP version: $phpVersion no need to reinstall XAMPP" -ForegroundColor Yellow
+        }
+    }
+    else {
+        Write-Host "`nXAMPP/PHP not found, installing the latest version" -ForegroundColor Yellow
+        WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+"
+    }
 
+<<<<<<< HEAD
         # Adding PHP to Path Environment Variables
+=======
+    if (!(Get-Command php -ErrorAction SilentlyContinue)) {
+        # Adding php (from xampp) to Path ENV
+>>>>>>> a7cd0cb40c6ec596f0c227fa034fb33d2776c699
         $phpPath = "C:\xampp\php"
         $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
     
@@ -381,6 +375,7 @@ if ($jwp) {
     }
 
 
+    # Check vscode
     if (winget list vscode -ne "No installed package found matching input criteria.") {
         Write-Host "`nVSCode is already installed" -ForegroundColor Yellow
     }
@@ -389,23 +384,26 @@ if ($jwp) {
         winget install vscode
     }
 
+    # Install Composer
     if (!(Get-Command composer -ErrorAction SilentlyContinue)) {
         Write-Host "`nInstalling Composer" -ForegroundColor Yellow
         Invoke-WebRequest -Uri "https://getcomposer.org/Composer-Setup.exe" -OutFile "Composer-Setup.exe"
         Start-Process -FilePath "Composer-Setup.exe" -Wait
     }
 
+    # Install NodeJS
     if (!(Get-Command node -ErrorAction SilentlyContinue)) {
         Write-Host "`nInstalling Node.js" -ForegroundColor Yellow
         WingetInstallCommand "OpenJS.NodeJS" "winget"
     }
 
-    if (!(Get-Command npm -ErrorAction SilentlyContinue)) {
-        Write-Host "`nNot detecting any npm command, maybe it's not installed properly..." -ForegroundColor Red
-    }
 
     # CRITICAL: Refresh PATH immediately after install
     RefreshPath
+    
+    if (!(Get-Command npm -ErrorAction SilentlyContinue)) {
+        Write-Host "`nNot detecting any npm command, maybe it's not installed properly..." -ForegroundColor Red
+    }
 
     return
 }
