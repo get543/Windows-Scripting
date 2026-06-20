@@ -352,6 +352,34 @@ function ahk2 { # AutoHotkey v2
     & "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe" $args
 }
 
+######################## FFMPEG
+function convertobsreplaybuffer {
+    param(
+        [Parameter(Position = 0, Mandatory = $true)]
+        [string]$source,
+        
+        [Parameter(Position = 1, Mandatory = $true)]
+        [string]$destination,
+        
+        [switch]$gpu,
+        [switch]$cpu
+    )
+    
+    if ($gpu) {
+        # GPU acceleration
+        ffmpeg -hwaccel d3d11va -i $source -c:v h264_amf -rc 1 -b:v 8000k -maxrate 8000k -bufsize 4000k -quality balanced -c:a copy $destination
+    }
+
+    if ($cpu) {
+        # CPU encoding
+        ffmpeg -i $source -c:v libx264 -crf 28 -preset medium -c:a aac -b:a 128k $destination
+    }
+
+    # defaults to CPU encoding
+    ffmpeg -i $source -c:v libx264 -crf 28 -preset medium -c:a aac -b:a 128k $destination
+}
+
+
 #######################################################################################################################
 #                                  Requirement for Oh-My-Posh, Chocolatey, Winget                                     #
 #######################################################################################################################
