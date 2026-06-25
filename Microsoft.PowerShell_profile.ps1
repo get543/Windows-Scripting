@@ -243,9 +243,33 @@ function hosts() {
 
 
 ######################## Windows Style Aliases
-function md5() { Get-FileHash -Algorithm MD5 $args }
-function sha1() { Get-FileHash -Algorithm SHA1 $args }
-function sha256() { Get-FileHash -Algorithm SHA256 $args }
+function md5($fileSource, $hashToCompare) {
+    $sourceHash = (Get-FileHash -Algorithm MD5 $fileSource).Hash
+
+    if ($sourceHash -ieq $hashToCompare) {
+        Write-Host "Hash Matched!" -ForegroundColor Green
+    } else {
+        Write-Host "Hash Doesn't Match!" -ForegroundColor Red
+    }
+}
+function sha1($fileSource, $hashToCompare) { 
+    $sourceHash = (Get-FileHash -Algorithm SHA1 $fileSource).Hash
+
+    if ($sourceHash -ieq $hashToCompare) {
+        Write-Host "Hash Matched!" -ForegroundColor Green
+    } else {
+        Write-Host "Hash Doesn't Match!" -ForegroundColor Red
+    }
+}
+function sha256($fileSource, $hashToCompare) {
+    $sourceHash = (Get-FileHash -Algorithm SHA256 $fileSource).Hash
+
+    if ($sourceHash -ieq $hashToCompare) {
+        Write-Host "Hash Matched!" -ForegroundColor Green
+    } else {
+        Write-Host "Hash Doesn't Match!" -ForegroundColor Red
+    }
+}
 function ShowNotification($title, $text) {
     # windows 10 notification balloon
     Add-Type -AssemblyName System.Windows.Forms
