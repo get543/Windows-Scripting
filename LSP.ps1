@@ -244,10 +244,10 @@ function WingetInstallCommand($name, $source, $id, $patern) {
     .PARAMETER source
     winget or msstore
 
-    .PARAMETER id
+    .PARAMETER id (optional)
     The base id to search for latest version. Example: PHP.PHP
 
-    .PARAMETER patern
+    .PARAMETER patern (optional)
     The pattern to match the latest version. Example: PHP\.PHP\.\d+\.\d+ (for PHP.PHP.x.x)
     #>
 
@@ -375,12 +375,11 @@ if ($jwp) {
 
 
     # Check vscode
-    if (winget list vscode -ne "No installed package found matching input criteria.") {
-        Write-Host "`nVSCode is already installed" -ForegroundColor Yellow
-    }
-    else {
-        Write-Host "`nInstalling VSCode" -ForegroundColor Yellow
-        winget install vscode
+    if (winget list --id "Microsoft.VisualStudioCode" | Select-String "Microsoft.VisualStudioCode") {
+        Write-Host "`nVisual Studio Code is installed" -ForegroundColor Yellow
+    } else {
+        Write-Host "`nInstalling Visual Studio Code" -ForegroundColor Yellow
+        WingetInstallCommand "Microsoft.VisualStudioCode" "winget"
     }
 
     # Install Composer
@@ -388,14 +387,33 @@ if ($jwp) {
         Write-Host "`nInstalling Composer" -ForegroundColor Yellow
         Invoke-WebRequest -Uri "https://getcomposer.org/Composer-Setup.exe" -OutFile "Composer-Setup.exe"
         Start-Process -FilePath "Composer-Setup.exe" -Wait
+    } else {
+        Write-Host "`nComposer is installed" -ForegroundColor Yellow
     }
 
     # Install NodeJS
     if (!(Get-Command node -ErrorAction SilentlyContinue)) {
         Write-Host "`nInstalling Node.js" -ForegroundColor Yellow
         WingetInstallCommand "OpenJS.NodeJS" "winget"
+    } else {
+        Write-Host "`nNode.js is installed" -ForegroundColor Yellow
     }
 
+    # Install laragon
+    if (!(winget list --id "LeNgocKhoa.Laragon" | Select-String "LeNgocKhoa.Laragon")) {
+        Write-Host "`nInstalling Laragon" -ForegroundColor Yellow
+        WingetInstallCommand "LeNgocKhoa.Laragon" "winget"
+    } else {
+        Write-Host "`nLaragon is already installed" -ForegroundColor Yellow
+    }
+
+    # Install wampserver
+    if (!(winget list --id "Wampserver.Wampserver" | Select-String "Wampserver.Wampserver")) {
+        Write-Host "`nInstalling Wampserver" -ForegroundColor Yellow
+        WingetInstallCommand "Wampserver.Wampserver" winget
+    } else {
+        Write-Host "`nWampserver is already installed" -ForegroundColor Yellow
+    }
 
     # CRITICAL: Refresh PATH immediately after install
     RefreshPath
