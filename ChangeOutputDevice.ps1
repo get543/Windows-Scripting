@@ -33,7 +33,7 @@ param (
 )
 
 $HeadphonesDeviceName = "*Headphones*"
-$SpeakersDeviceName = "*Output Monitor*"
+$SpeakersDeviceName = "*Output Front Panel*"
 $SoundcardDeviceName = "*Output Mixer*"
 
 function WindowsNotificationBalloon($text) {
