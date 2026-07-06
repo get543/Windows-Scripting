@@ -374,7 +374,7 @@ function Invoke-MSStoreUpdate {
     Updates Microsoft Store applications using winget.
     #>
 
-    if (!(Get-Command -Name Update-InboxApp)) { 
+    if (!(Get-Command -Name Update-InboxApp -ErrorAction SilentlyContinue)) { 
         $installPrompt = "The 'Update-InboxApp' command is not available. Install it now? [Y/n] "
         $shouldInstall = $false
         if ($YesToAll.IsPresent) {
