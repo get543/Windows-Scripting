@@ -233,6 +233,8 @@ function editrc() {
 }
 function reload() {
     . $PROFILE
+    Write-Host "`nRefreshing PATH environment variable..." -ForegroundColor Yellow
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
 }
 function sync() {
     syncthing --no-browser
@@ -335,7 +337,7 @@ function AutoHotKeyFolder() {
     Set-Location "${env:USERPROFILE}\Documents\AutoHotkey"
 }
 function FirefoxProfile() {
-    Set-Location "${env:APPDATA}\Mozilla\Firefox\Profiles\jrecet5l.default-release"
+    Set-Location "${env:APPDATA}\Mozilla\Firefox\Profiles\1xtd3qfe.default-release"
 }
 
 function SignOut() {
