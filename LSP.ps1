@@ -292,6 +292,41 @@ function CreateShortcutStartMenu($SourceFile, $ShortcutName) {
     
 }
 
+function Update-GdownIfNeeded {
+    <#
+    .DESCRIPTION
+    Ensure gdown is up-to-date (v6+ required)
+    #>
+
+    try {
+        $versionOutput = gdown --version 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "`ngdown not found; will install later." -ForegroundColor Yellow
+            return $false
+        }
+        # Parse version (e.g. "gdown 5.2.0" -> 5.2.0)
+        if ($versionOutput -match '(\d+\.\d+\.\d+)') {
+            $currentVersion = [version]$Matches[1]
+            $requiredVersion = [version]"6.0.0"
+            if ($currentVersion -ge $requiredVersion) {
+                Write-Host "`ngdown version $currentVersion is already up-to-date." -ForegroundColor Green
+                return $true
+            } else {
+                Write-Host "`ngdown version $currentVersion is old. Upgrading..." -ForegroundColor Yellow
+                pip install --upgrade gdown
+
+                RefreshPath
+                Write-Host "`nUpgrade complete." -ForegroundColor Green
+
+                return $true
+            }
+        }
+    } catch {
+        Write-Host "`nCould not check gdown version: $_" -ForegroundColor Red
+        return $false
+    }
+}
+
 
 #! ===================================================================
 #!                          -activation 
@@ -524,6 +559,8 @@ if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
     WingetInstall
 }
 
+Update-GdownIfNeeded
+
 if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
     Write-Host "`ngdown is not installed!" -ForegroundColor Red
     Write-Host "Run pip install gdown ? [Y/n] " -ForegroundColor Yellow -NoNewline
@@ -539,6 +576,9 @@ if (!(Get-Command gdown -ErrorAction SilentlyContinue)) {
         try {
             Write-Host "`nInstalling gdown using pip..." -ForegroundColor Yellow
             pip install gdown
+
+            # CRITICAL: Refresh PATH immediately after install
+            RefreshPath
         }
         catch {
             return Write-Host "`nOops, something's wrong. Maybe python or pip is not properly configured." -ForegroundColor Red
@@ -633,15 +673,19 @@ Write-Host ""
 switch ($choose) {
     1 { #* ACL 9
         if (Test-Path "ACL 9.rar") {
+            Write-Host "`nACL 9.rar already exists, continuing anyway..." -ForegroundColor Red
+        }
+
+        if (Test-Path "ACL 9") {
             Write-Host "`nACL 9 folder already exists, continuing anyway..." -ForegroundColor Red
         }
 
-        gdown --fuzzy "https://drive.google.com/file/d/13NuhwjDLhPBAQeGZDC90PA3HT2_wdXk8/view?usp=sharing" # ACL 9.rar
+        gdown "https://drive.google.com/file/d/13NuhwjDLhPBAQeGZDC90PA3HT2_wdXk8/view?usp=sharing" # ACL 9.rar
 
         UnZip "ACL 9.rar" ".\ACL 9\"
     }
     2 { #* adobe illustrator 2022
-        gdown --fuzzy "https://drive.google.com/file/d/1iHbLr-PkXe2BfbnyQlzki7WJiEV7wsEm/view?usp=sharing" # AILS2265.rar
+        gdown "https://drive.google.com/file/d/1iHbLr-PkXe2BfbnyQlzki7WJiEV7wsEm/view?usp=sharing" # AILS2265.rar
         UnZip "AILS2265.rar" ".\AILS2265\" "www.yasir252.com"
 
         Write-Host "`nIf installation is finished and scripts gets stuck, just end CorelDRAW process from task manager.`n" -ForegroundColor Red
@@ -658,7 +702,7 @@ switch ($choose) {
         Write-Host "`nIt is number 31 on the table." -ForegroundColor Red
     }
     3 { #* adobe photoshop 2023
-        gdown --fuzzy "https://drive.google.com/file/d/1YTyJnngcHi9abbbY-5RdOloVJ89o_Kdn/view?usp=sharing"
+        gdown "https://drive.google.com/file/d/1YTyJnngcHi9abbbY-5RdOloVJ89o_Kdn/view?usp=sharing"
        
         # Delete previous instalation folder
         if ((Test-Path "${env:\CommonProgramFiles(x86)}\Adobe\SLCache") -or (Test-Path "$env:ProgramData\Adobe\SLStore")) {
@@ -675,7 +719,7 @@ switch ($choose) {
         Write-Host "`nIt is number 31 on the table." -ForegroundColor Red
     }
     4 { #* adobe premier
-        gdown --fuzzy "https://drive.google.com/file/d/1gQN1_cxghX2LfNTOCZo0GfsvwJW96q33/view?usp=drive_link"
+        gdown "https://drive.google.com/file/d/1gQN1_cxghX2LfNTOCZo0GfsvwJW96q33/view?usp=drive_link"
         UnZip "PremierePro2023[www.yasir252.com].rar" ".\" "www.yasir252.com"
         
         Write-Host "Running Set-up.exe..." -ForegroundColor Yellow
@@ -688,7 +732,7 @@ switch ($choose) {
     5 { WingetInstallCommand "Google.AndroidStudio" "winget" } #* android studio
     6 { #* autocad 2023 Portable
         #! NEED TO DISABLE ANTIVIRUS
-        gdown --fuzzy "https://drive.google.com/file/d/1tEJr0CHnqhepEl03raAgs3DK_TGU1CMN/view?usp=drive_link"
+        gdown "https://drive.google.com/file/d/1tEJr0CHnqhepEl03raAgs3DK_TGU1CMN/view?usp=drive_link"
         UnZip "ACAD.2023.x64.Portable.rar" ".\ACAD.2023.x64.Portable\"
 
         Write-Host "Running AutoCad.exe as Admin..." -ForegroundColor Yellow
@@ -702,7 +746,7 @@ switch ($choose) {
     7 { WingetInstallCommand "Balsamiq.Wireframes" "winget" } #* balsamiq
     8 { WingetInstallCommand "XP9KN75RRB9NHS" "msstore" } #* capcut
     9 { #* circuit wizard
-        gdown --fuzzy "https://drive.google.com/file/d/1I6iz-uzUFr4FrwAOfx1sYqj6U_GUwqI0/view?usp=sharing"
+        gdown "https://drive.google.com/file/d/1I6iz-uzUFr4FrwAOfx1sYqj6U_GUwqI0/view?usp=sharing"
         UnZip "Circuit Wizard Student Version.zip" ".\"
 
         Set-Location "Circuit Wizard Student Version"
@@ -713,7 +757,7 @@ switch ($choose) {
     }
     10 { #* coreldraw
         #! NEED TO DISABLE ANTIVIRUS
-        gdown --fuzzy "https://drive.google.com/file/d/1_2AOYgETZlChXHvhNrlYqHM5dVNq9jui/view?usp=drive_link"
+        gdown "https://drive.google.com/file/d/1_2AOYgETZlChXHvhNrlYqHM5dVNq9jui/view?usp=drive_link"
         
         UnZip "CorelDRAW Graphics Suite 2021 v23.0.0.363.7z" ".\"
 
@@ -741,7 +785,7 @@ switch ($choose) {
             "${env:ProgramFiles}\Corel\CorelDRAW Graphics Suite 2021\Programs64\"
     }
     11 { #* cx programming
-        gdown --fuzzy "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
+        gdown "https://drive.google.com/file/d/1yCXn0j8c6EqvI4eKElYWNluau7w8oY46/view?usp=sharing"
 
         UnZip "[plc247.com]CxOne_V4.60.rar" ".\CX Programmer\" "plc247.com"
 
@@ -754,7 +798,7 @@ switch ($choose) {
     13 { WingetInstallCommand "Figma.Figma" "winget" } #* figma
     14 { WingetInstallCommand "9NBLGGH4LVX9" "msstore" } #* fluid ui
     15 { #* FluidSim
-        gdown --fuzzy "https://drive.google.com/file/d/1wFrPVIX1UHx7tS8ra4PPiDQSqoc0l0Lb/view?usp=drive_link"
+        gdown "https://drive.google.com/file/d/1wFrPVIX1UHx7tS8ra4PPiDQSqoc0l0Lb/view?usp=drive_link"
         UnZip "festo fluidsim 4.2 PH-20231010T134944Z-001.rar" ".\"
 
         CreateShortcutStartMenu "${env:USERPROFILE}\Downloads\festo fluidsim 4.2 PH-20231010T134944Z-001\festo fluidsim 4.2 PH\Hydraulic\bin\fl_sim_h.exe" "FluidSim Hydraulic.lnk" # Hydraulic
@@ -779,7 +823,7 @@ switch ($choose) {
         .\krishand-inventory-3.0.exe
     }
     19 { #* minitab+
-        gdown --fuzzy "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link";
+        gdown "https://drive.google.com/file/d/1wNvika8X7ft6KScOrzLvrAXX4t9K73Lx/view?usp=drive_link";
         Write-Host "`nmasukkan serial key dibawah ini, ketika diminta saat proses install `n`nKOPI-DVDD-OTCO-MOKE" -ForegroundColor Red
         Write-Host "`nRunning f4-minitab17-setup.exe..." -ForegroundColor Yellow
         .\f4-minitab17-setup.exe
@@ -798,7 +842,7 @@ switch ($choose) {
         & ([ScriptBlock]::Create((Invoke-RestMethod https://get.activated.win))) /Ohook
     }
     21 { #* visio
-        gdown --fuzzy "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
+        gdown "https://drive.google.com/file/d/1iIj9FWs0kB4ZD6obIKaU6SQkjekVO8ye/view?usp=sharing"
         UnZip "VISIO2024.zip" ".\"
 
         Set-Location "VISIO2024"
@@ -814,8 +858,8 @@ switch ($choose) {
         .\POM-QM.exe
     }
     25 { #* SPSS
-        gdown --fuzzy https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
-        gdown --fuzzy https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
+        gdown https://drive.google.com/file/d/1b1Lx46x-JtDfWpaXq5LFlTZ-pTsPMjpY/view?usp=drive_link # .exe
+        gdown https://drive.google.com/file/d/10j7mG_WODqRlFrygwqUEITIccYyi-ET5/view?usp=drive_link # lservrc
         
         Write-Host "`nRunning SPSS_Statistics_25.exe..." -ForegroundColor Yellow
         Start-Process -FilePath "SPSS_Statistics_25.exe" -WorkingDirectory "$env:USERPROFILE\Downloads" -Wait
@@ -830,7 +874,7 @@ switch ($choose) {
     }
     26 { WingetInstallCommand "MKLabs.StarUML" "winget" } # star uml
     27 { #* Tableau
-        gdown --fuzzy "https://drive.google.com/file/d/1NHNDnIcG0q6b4rfBJcYPxzKa9oEGMHop/view?usp=drive_link"
+        gdown "https://drive.google.com/file/d/1NHNDnIcG0q6b4rfBJcYPxzKa9oEGMHop/view?usp=drive_link"
         UnZip "Tableau Desktop 2023.1.0 (x64).kuyhAa.7z" ".\"
 
         Write-Host "`nIf the script gets stuck after installation, just close Tableau process from task manager.`n" -ForegroundColor Red
@@ -859,7 +903,7 @@ switch ($choose) {
     }
     28 { WingetInstallCommand "ApacheFriends.Xampp.8.2" "winget" "ApacheFriends.Xampp" "ApacheFriends\.Xampp\.\d+\.\d+" } # xampp
     29 { #* zahir
-        gdown --fuzzy "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
+        gdown "https://drive.google.com/file/d/1VhZ58l_tA7dpDFmOxocHMjPUt8Gqn8_P/view?usp=sharing"
         UnZip "Master ZAHIR 6.11a.zip" ".\"
 
         Write-Host "`nRunning setup.exe..." -ForegroundColor Yellow
@@ -871,13 +915,13 @@ switch ($choose) {
             Write-Host "`nDATA-SIMULASI 2012 folder already exists, continuing anyway..." -ForegroundColor Red
         }
 
-        gdown --fuzzy "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
+        gdown "https://drive.google.com/file/d/1PdGoSjSr5k2xVVCGgxnNuT7S31Crm8S9/view?usp=drive_link" # DATA-SIMULASI 2012.rar
         UnZip "DATA-SIMULASI 2012.rar" ".\DATA-SIMULASI 2012"
     }
     31 { #* Block Adobe Unlicense
         # Write-Host "`nDownloading and installing Adobe GenP Patch v3.7.1..." -ForegroundColor Red
         # Write-Host "`nThis is usually not needed, and require you do disable antivirus temporarily." -ForegroundColor Red
-        # gdown --fuzzy "https://drive.google.com/file/d/1O0F8XqLu5mxAjoZpExLLL0DCzhSWRVVL/view?usp=drive_link"
+        # gdown "https://drive.google.com/file/d/1O0F8XqLu5mxAjoZpExLLL0DCzhSWRVVL/view?usp=drive_link"
         # UnZip "GenP371[www.yasir252.com].rar" ".\GenP371\" "www.yasir252.com"
 
         # Write-Host "`nRunning GenP-v3.7.1.exe..." -ForegroundColor Yellow
@@ -899,47 +943,65 @@ switch ($choose) {
 
         $leftOverFiles = @(
             "${env:USERPROFILE}\Downloads\ACL 9.rar",
+            "${env:USERPROFILE}\Downloads\ACL 9.rar*.part",
 
             "${env:USERPROFILE}\Downloads\AILS2265.rar",
+            "${env:USERPROFILE}\Downloads\AILS2265.rar*.part",
             "${env:USERPROFILE}\Downloads\AILS2265",
 
             "${env:USERPROFILE}\Downloads\_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar",
+            "${env:USERPROFILE}\Downloads\_Getintopc.com_Adobe_Photoshop_2023_v24.2.0.315.rar*.part",
             "${env:USERPROFILE}\Downloads\Adobe_Photoshop_2023_v24.2.0.315",
 
             "${env:USERPROFILE}\Downloads\PremierePro2023[www.yasir252.com].rar",
+            "${env:USERPROFILE}\Downloads\PremierePro2023[www.yasir252.com].rar*.part",
             "${env:USERPROFILE}\Downloads\PremierePro2023.23.6.0.65",
 
             "${env:USERPROFILE}\Downloads\ACAD.2023.x64.Portable.rar",
+            "${env:USERPROFILE}\Downloads\ACAD.2023.x64.Portable.rar*.part",
 
             "${env:USERPROFILE}\Downloads\Circuit Wizard Student Version.zip",
+            "${env:USERPROFILE}\Downloads\Circuit Wizard Student Version.zip*.part",
 
             "${env:USERPROFILE}\Downloads\CorelDRAW Graphics Suite 2021 v23.0.0.363.7z",
+            "${env:USERPROFILE}\Downloads\CorelDRAW Graphics Suite 2021 v23.0.0.363.7z*.part",
             "${env:USERPROFILE}\Downloads\CorelDRAW Graphics Suite 2021 v23.0.0.363 (x64) + Fix {CracksHash}",
 
             "${env:USERPROFILE}\Downloads\[plc247.com]CxOne_V4.60.rar",
+            "${env:USERPROFILE}\Downloads\[plc247.com]CxOne_V4.60.rar*.part",
             "${env:USERPROFILE}\Downloads\CX Programmer",
 
             "${env:USERPROFILE}\Downloads\festo fluidsim 4.2 PH-20231010T134944Z-001.rar",
+            "${env:USERPROFILE}\Downloads\festo fluidsim 4.2 PH-20231010T134944Z-001.rar*.part",
 
             "${env:USERPROFILE}\Downloads\krishand-inventory-3.0.exe",
+            "${env:USERPROFILE}\Downloads\krishand-inventory-3.0.exe*.part",
             "${env:USERPROFILE}\Downloads\f4-minitab17-setup.exe",
+            "${env:USERPROFILE}\Downloads\f4-minitab17-setup.exe*.part",
             "${env:USERPROFILE}\Downloads\OfficeSetup.exe",
+            "${env:USERPROFILE}\Downloads\OfficeSetup.exe*.part",
 
             "${env:USERPROFILE}\Downloads\VISIO2024.zip",
+            "${env:USERPROFILE}\Downloads\VISIO2024.zip*.part",
             "${env:USERPROFILE}\Downloads\VISIO2024",
 
             "${env:USERPROFILE}\Downloads\POM-QM.exe",
+            "${env:USERPROFILE}\Downloads\POM-QM.exe*.part",
             
             "${env:USERPROFILE}\Downloads\SPSS_Statistics_25.exe",
+            "${env:USERPROFILE}\Downloads\SPSS_Statistics_25.exe*.part",
             "${env:USERPROFILE}\Downloads\lservrc",
 
             "${env:USERPROFILE}\Downloads\Tableau Desktop 2023.1.0 (x64).kuyhAa.7z",
+            "${env:USERPROFILE}\Downloads\Tableau Desktop 2023.1.0 (x64).kuyhAa.7z*.part",
             "${env:USERPROFILE}\Downloads\Tableau Desktop 2023.1.0 (x64).kuyhAa",
 
             "${env:USERPROFILE}\Downloads\Master ZAHIR 6.11a.zip",
+            "${env:USERPROFILE}\Downloads\Master ZAHIR 6.11a.zip*.part",
             "${env:USERPROFILE}\Downloads\Master ZAHIR 6.11a",
 
             "${env:USERPROFILE}\Downloads\GenP371[www.yasir252.com].rar",
+            "${env:USERPROFILE}\Downloads\GenP371[www.yasir252.com].rar*.part",
             "${env:USERPROFILE}\Downloads\GenP371"
         )
 
