@@ -76,6 +76,34 @@ A_TrayMenu.Add("Enable Discord RPC", (*) => EnableDiscordRPC())
 
 ;! ==============================================================================
 
+; Create a new, blank menu object for the sub-menu
+ResMenu := Menu()
+
+; Resolutions to this new sub-menu
+ResMenu.Add("1920x1080 (Native)", (*) => ChangeResolution(1920, 1080))
+ResMenu.Add("1440x992", (*) => ChangeResolution(1440, 992))
+ResMenu.Add("1280x1024", (*) => ChangeResolution(1280, 1024))
+ResMenu.Add("1280x960", (*) => ChangeResolution(1280, 960))
+ResMenu.Add("1280x882", (*) => ChangeResolution(1280, 882))
+ResMenu.Add("1024x768", (*) => ChangeResolution(1024, 768))
+
+; Attach the sub-menu to the main tray menu
+A_TrayMenu.Add("Custom Resolutions", ResMenu)
+
+ChangeResolution(w, h, colorDepth:=32, refreshRate:=60) {
+    dM := Buffer(156, 0)
+    NumPut("UShort", 156, dM, 36)
+    DllCall("EnumDisplaySettingsA", "Ptr", 0, "Int", -1, "Ptr", dM)
+    NumPut("UInt", 0x5C0000, dM, 40)
+    NumPut("UInt", colorDepth, dM, 104)
+    NumPut("UInt", w, dM, 108)
+    NumPut("UInt", h, dM, 112)
+    NumPut("UInt", refreshRate, dM, 120)
+    DllCall("ChangeDisplaySettingsA", "Ptr", dM, "UInt", 0)
+}
+
+;! ==============================================================================
+
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tray menu
 
