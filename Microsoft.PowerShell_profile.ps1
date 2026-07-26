@@ -35,6 +35,9 @@ function unzip($path, $destination) {
     }
     Expand-Archive -Path "${path}" -DestinationPath "${destination}"
 }
+function grep {
+    & "${env:PROGRAMFILES}\Git\usr\bin\grep.exe" $args
+}
 function df() {
     if ($args -eq "-H") { Get-Volume }
 }
@@ -195,20 +198,6 @@ function screen() {
 }
 
 ######################## From My Linux Machine
-function codefolder() {
-    if (Test-Path -Path "E:\UDIN\Code\code-desktop") {
-        Set-Location "E:\UDIN\Code\code-desktop"
-    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop") {
-        Set-Location "${env:USERPROFILE}\Documents\Code Folder\code-desktop"
-    }
-}
-function kuliah() {
-    if (Test-Path -Path "E:\UDIN\Kuliah\Mata Kuliah") {
-        Set-Location "E:\UDIN\Kuliah\Mata Kuliah"
-    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Kuliah\Mata Kuliah") {
-        Set-Location "${env:USERPROFILE}\Documents\Kuliah\Mata Kuliah"
-    }
-}
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
 }
@@ -243,6 +232,18 @@ function hosts() {
     & $env:SystemRoot\System32\drivers\etc\hosts
 }
 
+
+######################## !Folder Aliases
+<#
+?.USAGE
+Add public, non-sensitive aliases, functions, and customizations below.
+Do not put private local directory paths or API keys in this file.
+!Create a PrivateFolderAlias.ps1 in the same directory as this ($PROFILE) file
+#>
+$privateConfig = Join-Path (Split-Path $PROFILE) "PrivateFolderAlias.ps1"
+if (Test-Path $privateConfig) {
+    . $privateConfig
+}
 
 ######################## Windows Style Aliases
 function md5($fileSource, $hashToCompare) {
