@@ -80,17 +80,18 @@ A_TrayMenu.Add("Enable Discord RPC", (*) => EnableDiscordRPC())
 ResMenu := Menu()
 
 ; Resolutions to this new sub-menu
-ResMenu.Add("1920x1080 (Native)", (*) => ChangeResolution(1920, 1080))
-ResMenu.Add("1440x992", (*) => ChangeResolution(1440, 992))
-ResMenu.Add("1280x1024", (*) => ChangeResolution(1280, 1024))
-ResMenu.Add("1280x960", (*) => ChangeResolution(1280, 960))
-ResMenu.Add("1280x882", (*) => ChangeResolution(1280, 882))
-ResMenu.Add("1024x768", (*) => ChangeResolution(1024, 768))
+ResMenu.Add("1920x1080@75Hz (Native)", (*) => ChangeResolution(1920, 1080, 75))
+ResMenu.Add("1920x864@75Hz", (*) => ChangeResolution(1920, 864, 75))
+ResMenu.Add("1440x992@75Hz", (*) => ChangeResolution(1440, 992, 75))
+ResMenu.Add("1280x1024@75Hz", (*) => ChangeResolution(1280, 1024, 75))
+ResMenu.Add("1280x960@75Hz", (*) => ChangeResolution(1280, 960, 75))
+ResMenu.Add("1280x882@75Hz", (*) => ChangeResolution(1280, 882, 75))
+ResMenu.Add("1024x768@75Hz", (*) => ChangeResolution(1024, 768, 75))
 
 ; Attach the sub-menu to the main tray menu
 A_TrayMenu.Add("Custom Resolutions", ResMenu)
 
-ChangeResolution(w, h, colorDepth:=32, refreshRate:=60) {
+ChangeResolution(w, h, refreshRate, colorDepth:=32) {
     dM := Buffer(156, 0)
     NumPut("UShort", 156, dM, 36)
     DllCall("EnumDisplaySettingsA", "Ptr", 0, "Int", -1, "Ptr", dM)
