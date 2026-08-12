@@ -1,6 +1,10 @@
 ﻿#Requires AutoHotkey v2.0
 #SingleInstance Force
 
+;! ==============================================================================
+;! ==========================  MODIFY OR ADD TRAY MENU  =========================
+;! ==============================================================================
+
 ;! Remove the default Exit from the tray menu
 A_TrayMenu.Delete("E&xit")
 A_TrayMenu.Add("Edit Script", (*) => Edit())
@@ -9,7 +13,7 @@ A_TrayMenu.Add("Edit Script", (*) => Edit())
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Shortcut List", (*) => 
     MsgBox("Available Keyboard Shortcuts: `n`n"
-        . "- Alt + `` `t`t: Hold down any key (right now is left click)`n"
+        . "- Alt + `` `t`t: Hold down any key (right now is W & LSHIFT)`n"
         . "- Ctrl + Alt + X`t: Always On Top for currently active window`n"
         . "- Ctrl + Alt + .`t: Spam left click indefinitely`n"
         . "- Ctrl + Alt + O`t: Microphone Loopback Toggle`n"
@@ -108,9 +112,14 @@ ChangeResolution(w, h, refreshRate, colorDepth:=32) {
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tray menu
 
+
+
+;! ==============================================================================
+;! ==========================  ADD KEYBOARD SHORTCUTS  ==========================
 ;! ==============================================================================
 
-#Include "%A_ScriptDir%\Microphone Loopback.ahk"
+
+;! ==============================================================================
 
 !`:: ; press alt + `
 {
@@ -119,14 +128,14 @@ A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tr
 
     if (Toggle) {
         ; Send "{Up down}"          ; Presses down up-arrow key.
-        ; Send "{W down}"           ; Presses down W key.
-        ; Send "{LShift down}"      ; Presses down Left Shift key.
-        Send "{Click down}"         ; Hold down Left Click
+        Send "{W down}"           ; Presses down W key.
+        Send "{LShift down}"      ; Presses down Left Shift key.
+        ; Send "{Click down}"         ; Hold down Left Click
     } else {
         ; Send "{Up up}"          ; Releases up-arrow key.
-        ; Send "{W up}"           ; Releases W key.
-        ; Send "{LShift up}"      ; Releases Left Shift key.
-        Send "{Click up}"         ; Releases Left Click
+        Send "{W up}"           ; Releases W key.
+        Send "{LShift up}"      ; Releases Left Shift key.
+        ; Send "{Click up}"         ; Releases Left Click
     }
 }
 
@@ -184,11 +193,14 @@ RobloxClickAction() {
 
 ;! ==============================================================================
 
+#Include "%A_ScriptDir%\Microphone Loopback.ahk"
 
 ^!o:: ; press ctrl + alt + o
 { 
     MicrophoneLoopbackFunction() ; call the function from included file
 }
+
+;! ==============================================================================
 
 ^!m:: ; press ctrl + alt + m
 {
@@ -203,16 +215,22 @@ RobloxClickAction() {
     MicrophoneLoopbackFunction() ; call the function from included file
 }
 
+;! ==============================================================================
+
 PgUp:: ; press page up
 {
     Reload
 }
+
+;! ==============================================================================
 
 !F1:: ; press alt + f1
 {
     Send "!t" ; toggle twitch theatre mode
     Send "{F1}" ; toggle vertical tabs
 }
+
+;! ==============================================================================
 
 Insert:: ; press insert
 {
@@ -222,6 +240,8 @@ Insert:: ; press insert
         , 'Hide'  ; Hides the PowerShell window
     )
 }
+
+;! ==============================================================================
 
 ScrollLock:: ; press scroll lock
 {
