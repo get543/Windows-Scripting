@@ -12,7 +12,7 @@ $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administ
 #                                                   Custom Aliases                                                    #
 #######################################################################################################################
 
-######################## Linux Style Aliases
+######################## !Linux Style Aliases
 function whereis() {
     (Get-Command $args).Source
 }
@@ -36,7 +36,7 @@ function unzip($path, $destination) {
     Expand-Archive -Path "${path}" -DestinationPath "${destination}"
 }
 function grep {
-    & "${env:PROGRAMFILES}\Git\usr\bin\grep.exe" $args
+    $input | & "${env:PROGRAMFILES}\Git\usr\bin\grep.exe" $args
 }
 function df() {
     if ($args -eq "-H") { Get-Volume }
@@ -172,32 +172,9 @@ function timer($amount, $unit) {
 function bash() {
     & "${env:ProgramFiles}\Git\bin\bash.exe"
 }
-function convert() {
-    if (Test-Path -Path "E:\UDIN\Code\code-desktop\Python\Python-Currency-Converter\convert_currency.py") {
-        python E:\UDIN\Code\code-desktop\Python\Python-Currency-Converter\convert_currency.py @args
-    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Currency-Converter\convert_currency.py") {
-        python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Currency-Converter\convert_currency.py" @args
-    }
-}
-function temperature() {
-    if (Test-Path -Path "E:\UDIN\Code\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py") {
-        python E:\UDIN\Code\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py @args
-    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py") {
-        python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Temperature-Converter\convert_temperature.py" @args
-    }
-}
-function speedtest() {
-    if (Test-Path -Path "E:\UDIN\Code\code-desktop\Python\Python-Automation-Scripts\test_connection.py") {
-        python E:\UDIN\Code\code-desktop\Python\Python-Automation-Scripts\test_connection.py @args
-    } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Automation-Scripts\test_connection.py") {
-        python "${env:USERPROFILE}\Documents\Code Folder\code-desktop\Python\Python-Automation-Scripts\test_connection.py" @args
-    }
-}
-function screen() {
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\html\Camera Feed.html"
-}
 
-######################## From My Linux Machine
+
+######################## !From My Linux Machine
 function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
 }
@@ -238,7 +215,7 @@ function hosts() {
 ?.USAGE
 Add public, non-sensitive aliases, functions, and customizations below.
 Do not put private local directory paths or API keys in this file.
-!Create a PrivateFolderAlias.ps1 in the same directory as this ($PROFILE) file
+*Create a PrivateFolderAlias.ps1 in the same directory as this ($PROFILE) file
 #>
 $privateConfig = Join-Path (Split-Path $PROFILE) "PrivateFolderAlias.ps1"
 if (Test-Path $privateConfig) {
@@ -287,21 +264,7 @@ function ShowNotification($title, $text) {
     $BalloonNotification.ShowBalloonTip(5000)
 }
 
-######### Run Scripts #########
-function SystemUpgrade() {
-    # SystemUpgrade -GUI
-    if ($args.Count -gt 0 -and $args.ToLower() -eq "-gui") {
-        if (Test-Path -Path "E:\UDIN\Code\WINDOWS\GUI") {
-            return & "E:\UDIN\Code\WINDOWS\GUI\SystemUpgrade-GUI.ps1"
-        } elseif (Test-Path -Path "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI") {
-            return & "${env:USERPROFILE}\Documents\Code Folder\Windows\GUI\SystemUpgrade-GUI.ps1"
-        } else {
-            return Write-Host "Path for GUI scripts not found." -ForegroundColor Red
-        }
-    }
-
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\SystemUpgrade.ps1" @args
-}
+######### !Run Scripts #########
 function ChangeOutputDevice() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"
 }
@@ -317,13 +280,14 @@ function XAMPP() {
 function AutoLaunch() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"
 }
+function screen() {
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\html\Camera Feed.html"
+}
 
-######### Change Folder #########
+
+######### !Change Folder #########
 function Scripts() {
     Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting"
-}
-function USBScripts() {
-    Set-Location "F:\Code\WINDOWS\Scripts"
 }
 function WindowsUpdateFolder() {
     Set-Location "${env:windir}\SoftwareDistribution\Download"
@@ -357,7 +321,7 @@ function WindowsUpdateAll() {
     Get-WindowsUpdate -Install -AcceptAll
 }
 
-######################## Application Shortcut (admin)
+######################## !Application Shortcut (admin)
 function firefox() {
     Start-Process -FilePath "${env:ProgramFiles}\Mozilla Firefox\firefox.exe" -Verb RunAs
 }
@@ -365,7 +329,7 @@ function discord() {
     Start-Process -FilePath "${env:LOCALAPPDATA}\Discord\Update.exe" -Verb RunAs
 }
 
-######################## AUTOHOTKEY
+######################## !AUTOHOTKEY
 function ahkr { # Reload
     & "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe" /R $args
 }
@@ -379,7 +343,7 @@ function ahk2 { # AutoHotkey v2
     & "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe" $args
 }
 
-######################## FFMPEG
+######################## !FFMPEG (OBS Replay Buffer)
 function convertobsreplaybuffer {
     param(
         [Parameter(Position = 0, Mandatory = $true)]
