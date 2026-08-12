@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Stream</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #0f0f0f;
+        color: #fff;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      header {
+        text-align: center;
+        padding: 30px 0 10px;
+      }
+      h1 {
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, #e50914, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .subtitle {
+        color: #888;
+        margin-top: 8px;
+        font-size: 15px;
+      }
+      .search-wrap {
+        display: flex;
+        gap: 10px;
+        max-width: 720px;
+        margin: 25px auto;
+      }
+      input {
+        flex: 1;
+        padding: 14px 18px;
+        border: 2px solid #2a2a2a;
+        border-radius: 8px;
+        background: #1a1a1a;
+        color: #fff;
+        font-size: 16px;
+        transition: border-color 0.2s;
+      }
+      input:focus {
+        outline: none;
+        border-color: #e50914;
+      }
+      button {
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        background: #e50914;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #f40612;
+      }
+      .section {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .section .label {
+        color: #888;
+        font-size: 14px;
+        margin-right: 8px;
+      }
+      .pill {
+        padding: 6px 12px;
+        font-size: 13px;
+        margin: 4px 4px;
+        background: #2a2a2a;
+        border-radius: 6px;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .pill:hover {
+        background: #3a3a3a;
+      }
+      iframe {
+        width: 100%;
+        height: 600px;
+        border: none;
+        border-radius: 8px;
+        background: #000;
+        display: block;
+        margin-top: 10px;
+      }
+      #status {
+        text-align: center;
+        color: #888;
+        font-size: 13px;
+        margin-top: 10px;
+        min-height: 18px;
+      }
+      #results {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .card {
+        background: #1a1a1a;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .card:hover {
+        transform: scale(1.05);
+      }
+      .card img {
+        width: 100%;
+        height: 240px;
+        object-fit: cover;
+        background: #2a2a2a;
+      }
+      .card-info {
+        padding: 10px;
+      }
+      .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .card-year {
+        font-size: 12px;
+        color: #888;
+      }
+      .no-poster {
+        width: 100%;
+        height: 240px;
+        background: #2a2a2a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+      }
+
+      /* Subtitle Section */
+      #subtitleSection {
+        margin-top: 40px;
+        padding: 30px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        border: 1px solid #2a2a2a;
+      }
+      #subtitleSection h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .subtitle-notice {
+        background: #2a1a1a;
+        border: 1px solid #442a2a;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .subtitle-notice strong {
+        color: #ff6b6b;
+      }
+      .subtitle-search {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .subtitle-search input,
+      .subtitle-search select {
+        padding: 12px 16px;
+        border: 2px solid #2a2a2a;
+        border-radius: 8px;
+        background: #0f0f0f;
+        color: #fff;
+        font-size: 15px;
+      }
+      .subtitle-search input {
+        flex: 1;
+        min-width: 200px;
+      }
+      .subtitle-search select {
+        width: 150px;
+      }
+      .subtitle-search input:focus,
+      .subtitle-search select:focus {
+        outline: none;
+        border-color: #e50914;
+      }
+      #subtitleResults {
+        display: grid;
+        gap: 10px;
+      }
+      .sub-result {
+        background: #0f0f0f;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        transition: border-color 0.2s;
+      }
+      .sub-result:hover {
+        border-color: #e50914;
+      }
+      .sub-info {
+        flex: 1;
+      }
+      .sub-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      .sub-meta {
+        font-size: 13px;
+        color: #888;
+      }
+      .sub-download {
+        padding: 10px 20px;
+        background: #2a2a2a;
+        border: none;
+        border-radius: 6px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
+      .sub-download:hover {
+        background: #e50914;
+      }
+      .api-input-section {
+        background: #2a2a2a;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .api-input-section label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #ccc;
+      }
+      .api-input-section input {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #444;
+        border-radius: 6px;
+        background: #1a1a1a;
+        color: #fff;
+        font-family: monospace;
+      }
+      .api-input-section a {
+        color: #e50914;
+        text-decoration: none;
+      }
+      .api-input-section a:hover {
+        text-decoration: underline;
+      }
+      .help-text {
+        font-size: 13px;
+        color: #888;
+        margin-top: 8px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 768px) {
+        .search-wrap {
+          flex-direction: column;
+        }
+        iframe {
+          height: 260px;
+        }
+        #results {
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+        .card img,
+        .no-poster {
+          height: 180px;
+        }
+        .sub-result {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🎬 Movie Stream</h1>
+        <p class="subtitle">Search any movie by title and start watching</p>
+      </header>
+
+      <div class="search-wrap">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search for a movie..."
+        />
+        <button onclick="searchMovies()">🔍 Search</button>
+      </div>
+
+      <div class="section">
+        <span class="label">Quick picks:</span>
+        <button class="pill" onclick="quickSearch('Inception')">
+          Inception
+        </button>
+        <button class="pill" onclick="quickSearch('The Dark Knight')">
+          The Dark Knight
+        </button>
+        <button class="pill" onclick="quickSearch('The Matrix')">
+          The Matrix
+        </button>
+        <button class="pill" onclick="quickSearch('Interstellar')">
+          Interstellar
+        </button>
+        <button class="pill" onclick="quickSearch('Lone Survivor')">
+          Lone Survivor
+        </button>
+      </div>
+
+      <div id="results"></div>
+
+      <iframe
+        id="player"
+        src="https://www.vidking.net/embed/movie/1078605?autoPlay=true&nextEpisode=true&episodeSelector=true"
+        allowfullscreen
+      ></iframe>
+
+      <div id="status"></div>
+
+      <!-- Subtitle Section -->
+      <div id="subtitleSection">
+        <div class="subtitle-search">
+          <h2>💬 Subtitles</h2>
+
+          <a href="https://www.opensubtitles.com/en/subtitles" target="_blank">
+            <button>🔗 Download Straight from OpenSubtitles.com</button>
+          </a>
+        </div>
+
+        <div class="subtitle-search">
+          <input
+            type="text"
+            id="subtitleQuery"
+            placeholder="Movie title for subtitles..."
+          />
+          <select id="subtitleLang">
+            <option value="en">English</option>
+            <option value="id">Indonesian</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="it">Italian</option>
+            <option value="pt">Portuguese</option>
+            <option value="ru">Russian</option>
+            <option value="ja">Japanese</option>
+            <option value="ko">Korean</option>
+            <option value="zh">Chinese</option>
+            <option value="ar">Arabic</option>
+            <option value="hi">Hindi</option>
+            <option value="tr">Turkish</option>
+            <option value="pl">Polish</option>
+            <option value="nl">Dutch</option>
+            <option value="sv">Swedish</option>
+            <option value="no">Norwegian</option>
+            <option value="da">Danish</option>
+            <option value="fi">Finnish</option>
+            <option value="cs">Czech</option>
+          </select>
+          <button onclick="searchSubtitles()">🔍 Search Subtitles</button>
+        </div>
+
+        <div
+          id="subtitleStatus"
+          style="
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 15px;
+            min-height: 18px;
+          "
+        ></div>
+        <div id="subtitleResults"></div>
+      </div>
+    </div>
+
+    <script>
+      // ============================================
+      // REPLACE THESE WITH YOUR FREE API KEYS
+      // TMDB: https://www.themoviedb.org/settings/api
+      const TMDB_API_KEY = "e59a968635f58a25e00bb8b94bbbd012";
+      // OpenSubtitles: https://www.opensubtitles.com/en/consumers
+      const OPENSUBTITLES_API_KEY = "cf0AMApqWWIOzHFkxUIFEEfoPQlh5yFt";
+      // ============================================
+
+      const player = document.getElementById("player");
+      const input = document.getElementById("searchInput");
+      const status = document.getElementById("status");
+      const results = document.getElementById("results");
+
+      // Movie search
+      async function searchMovies() {
+        const query = input.value.trim();
+        if (!query) {
+          status.textContent = "❌ Please enter a movie title";
+          status.style.color = "#ff6b6b";
+          return;
+        }
+
+        if (TMDB_API_KEY === "YOUR_TMDB_API_KEY_HERE") {
+          status.textContent = "❌ Please add your TMDB API key in the code";
+          status.style.color = "#ff6b6b";
+          return;
+        }
+
+        try {
+          status.textContent = "🔍 Searching...";
+          status.style.color = "#888";
+
+          const response = await fetch(
+            `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`,
+          );
+          const data = await response.json();
+
+          if (data.results.length === 0) {
+            results.innerHTML =
+              '<p style="text-align:center;color:#888;">No movies found. Try a different search.</p>';
+            return;
+          }
+
+          displayResults(data.results.slice(0, 12));
+          status.textContent = `✅ Found ${data.results.length} results`;
+          status.style.color = "#888";
+
+          // Auto-fill subtitle search
+          document.getElementById("subtitleQuery").value = query;
+        } catch (error) {
+          status.textContent =
+            "❌ Error searching. Check your API key and try again.";
+          status.style.color = "#ff6b6b";
+          console.error(error);
+        }
+      }
+
+      function displayResults(movies) {
+        results.innerHTML = "";
+        movies.forEach((movie) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.onclick = () => playMovie(movie.id, movie.title);
+
+          const img = movie.poster_path
+            ? `<img src="https://image.tmdb.org/t/p/w300${movie.poster_path}" alt="${movie.title}" />`
+            : `<div class="no-poster">🎬<br/>No poster</div>`;
+
+          card.innerHTML = `
+        ${img}
+        <div class="card-info">
+          <div class="card-title">${movie.title}</div>
+          <div class="card-year">${movie.release_date?.substring(0, 4) || "N/A"}</div>
+        </div>
+      `;
+          results.appendChild(card);
+        });
+      }
+
+      function playMovie(id, title) {
+        const url = `https://www.vidking.net/embed/movie/${id}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+        player.src = url;
+        status.textContent = `▶ Playing: ${title}`;
+        status.style.color = "#888";
+        player.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function quickSearch(title) {
+        input.value = title;
+        searchMovies();
+      }
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") searchMovies();
+      });
+
+      // Subtitle search
+      async function searchSubtitles() {
+        const query = document.getElementById("subtitleQuery").value.trim();
+        const lang = document.getElementById("subtitleLang").value;
+        // const apiKey = document.getElementById('osApiKey').value.trim();
+        const apiKey = OPENSUBTITLES_API_KEY;
+        const subStatus = document.getElementById("subtitleStatus");
+        const subResults = document.getElementById("subtitleResults");
+
+        if (!query) {
+          subStatus.textContent = "❌ Please enter a movie title";
+          subStatus.style.color = "#ff6b6b";
+          return;
+        }
+
+        if (!apiKey) {
+          subStatus.textContent = "❌ Please enter your OpenSubtitles API key";
+          subStatus.style.color = "#ff6b6b";
+          return;
+        }
+
+        try {
+          subStatus.textContent = "🔍 Searching subtitles...";
+          subStatus.style.color = "#888";
+
+          const response = await fetch(
+            `https://api.opensubtitles.com/api/v1/subtitles?query=${encodeURIComponent(query)}&languages=${lang}`,
+            {
+              headers: {
+                "Api-Key": apiKey,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (!data.data || data.data.length === 0) {
+            subResults.innerHTML =
+              '<p style="text-align:center;color:#888;">No subtitles found. Try a different language or movie title.</p>';
+            subStatus.textContent = "";
+            return;
+          }
+
+          displaySubtitleResults(data.data.slice(0, 10));
+          subStatus.textContent = `✅ Found ${data.total_pages || "many"} subtitle files`;
+          subStatus.style.color = "#888";
+        } catch (error) {
+          subStatus.textContent =
+            "❌ Error searching subtitles. Check your API key and try again.";
+          subStatus.style.color = "#ff6b6b";
+          console.error(error);
+          subResults.innerHTML = "";
+        }
+      }
+
+      function displaySubtitleResults(subtitles) {
+        const subResults = document.getElementById("subtitleResults");
+        subResults.innerHTML = "";
+
+        subtitles.forEach((sub) => {
+          const item = document.createElement("div");
+          item.className = "sub-result";
+
+          const langName = sub.attributes?.language
+            ? getLanguageName(sub.attributes.language)
+            : "Unknown";
+          const downloads = sub.attributes?.download_count || 0;
+          const rating = sub.attributes?.vote_average
+            ? `${sub.attributes.vote_average}/10`
+            : "N/A";
+          const files = sub.attributes?.files?.[0];
+          const fileName = files?.file_name || "Unknown file";
+          const fileId = files?.file_id;
+
+          item.innerHTML = `
+        <div class="sub-info">
+          <div class="sub-name">${fileName}</div>
+          <div class="sub-meta">
+            ${langName} • ${downloads} downloads • Rating: ${rating}
+          </div>
+        </div>
+        <button class="sub-download" onclick="downloadSubtitle(${fileId}, '${fileName.replace(/'/g, "\\'")}')">
+          ⬇️ Download
+        </button>
+      `;
+          subResults.appendChild(item);
+        });
+      }
+
+      async function downloadSubtitle(fileId, fileName) {
+        // const apiKey = document.getElementById('osApiKey').value.trim();
+        const apiKey = OPENSUBTITLES_API_KEY;
+        const subStatus = document.getElementById("subtitleStatus");
+
+        if (!fileId) {
+          subStatus.textContent = "❌ No file ID available";
+          subStatus.style.color = "#ff6b6b";
+          return;
+        }
+
+        try {
+          subStatus.textContent = "⬇️ Preparing download...";
+          subStatus.style.color = "#888";
+
+          const response = await fetch(
+            "https://api.opensubtitles.com/api/v1/download",
+            {
+              method: "POST",
+              headers: {
+                "Api-Key": apiKey,
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify({ file_id: fileId }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (data.link) {
+            // Create download link
+            const a = document.createElement("a");
+            a.href = data.link;
+            a.download = fileName.replace(/\.[^/.]+$/, "") + ".webvtt";
+            a.target = "_blank";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            subStatus.textContent =
+              "✅ Download started! Use with VLC or other players.";
+            subStatus.style.color = "#888";
+          } else {
+            throw new Error("No download link returned");
+          }
+        } catch (error) {
+          subStatus.textContent =
+            "❌ Error downloading subtitle. Try another one.";
+          subStatus.style.color = "#ff6b6b";
+          console.error(error);
+        }
+      }
+
+      function getLanguageName(code) {
+        const names = {
+          en: "English",
+          id: "Indonesian",
+          es: "Spanish",
+          fr: "French",
+          de: "German",
+          it: "Italian",
+          pt: "Portuguese",
+          ru: "Russian",
+          ja: "Japanese",
+          ko: "Korean",
+          zh: "Chinese",
+          ar: "Arabic",
+          hi: "Hindi",
+          tr: "Turkish",
+          pl: "Polish",
+          nl: "Dutch",
+          sv: "Swedish",
+          no: "Norwegian",
+          da: "Danish",
+          fi: "Finnish",
+          cs: "Czech",
+        };
+        return names[code] || code;
+      }
+
+      // Auto-fill subtitle search when movie is selected
+      document
+        .getElementById("subtitleQuery")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") searchSubtitles();
+        });
+    </script>
+  </body>
+</html>
