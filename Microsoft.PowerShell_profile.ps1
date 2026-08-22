@@ -179,7 +179,10 @@ function scrcpyupdate() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ScreenCopyUpdate.ps1"
 }
 function ytdlp() {
-    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\ytdlpscript.ps1" @args
+    if ($args.Count -gt 0 -and $args.ToLower() -eq "-gui") {
+        return & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\yt-dlp\ytdlpscript-gui.ps1"
+    }
+    & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\yt-dlp\ytdlpscript.ps1" @args
 }
 function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
@@ -215,7 +218,8 @@ function hosts() {
 ?.USAGE
 Add public, non-sensitive aliases, functions, and customizations below.
 Do not put private local directory paths or API keys in this file.
-*Create a PrivateFolderAlias.ps1 in the same directory as this ($PROFILE) file
+*Create a PrivateFolderAlias.ps1 in the same directory as $PROFILE path
+*You can see PrivateFolderAlias-Example.ps1
 #>
 $privateConfig = Join-Path (Split-Path $PROFILE) "PrivateFolderAlias.ps1"
 if (Test-Path $privateConfig) {
