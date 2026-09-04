@@ -188,7 +188,11 @@ function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
 }
 function phone() {
-    & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off --stay-awake
+    if (!(Get-Command scrcpy) -and (Test-Path "C:\scrcpy")) {
+        & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off --stay-awake
+    } else {
+        scrcpy --video-bit-rate=20M --turn-screen-off --stay-awake
+    }
 }
 function sound() {
     mmsys.cpl sounds,1
@@ -286,6 +290,9 @@ function AutoLaunch() {
 }
 function screen() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\html\Camera Feed.html"
+}
+function WindhawkBackup() {
+    Invoke-RestMethod "https://raw.githubusercontent.com/scorpion421/Windhawk-Services-Backup-Utility/refs/heads/main/wsbu.py" | python
 }
 
 
