@@ -14,7 +14,7 @@ through switch parameters.
 PowerShell is run as an administrator is required for most operations in this script.
 
 .LINK
-https://github.com/get543/Windows-Scripting/blob/main/SystemUpgrade.ps1
+https://github.com/get543/Windows-Scripting/blob/main/SystemUpgrade/SystemUpgrade.ps1
 #>
 
 [CmdletBinding()]
@@ -46,11 +46,11 @@ function EmptyLine() {
 }
 
 
-
 <# -------------------------------------------------------- #>
 <#                Admin Relaunch & Checking                 #>
 <# -------------------------------------------------------- #>
-function NotAdminRelaunch() { #!BROKEN
+function NotAdminRelaunch() {
+    #!BROKEN
     <#
     .SYNOPSIS
     Admin or not ?
@@ -85,29 +85,34 @@ function NotAdminRelaunch() { #!BROKEN
                 -FilePath "wt.exe" `
                 -ArgumentList "pwsh -ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
                 -Verb RunAs
-        } elseif ($powershellInstalled) {
+        }
+        elseif ($powershellInstalled) {
             Write-Host "Using PowerShell $powershellVersion as the shell for Windows Terminal." -ForegroundColor Yellow
             Start-Process `
                 -FilePath "wt.exe" `
                 -ArgumentList "powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
                 -Verb RunAs
-        } else {
+        }
+        else {
             Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
         }
-    } elseif ($pwshInstalled -or $powershellInstalled) {
+    }
+    elseif ($pwshInstalled -or $powershellInstalled) {
         if ($pwshInstalled) {
             Start-Process `
                 -FilePath "pwsh.exe" `
                 -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
                 -Verb RunAs
             Write-Host "Launching with $(pwsh.exe -v) (pwsh.exe)..." -ForegroundColor Yellow
-        } elseif ($powershellInstalled) {
+        }
+        elseif ($powershellInstalled) {
             Write-Host "Launching with PowerShell $powershellVersion (powershell.exe)..." -ForegroundColor Yellow
             Start-Process `
                 -FilePath "powershell.exe" `
                 -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" $($MyInvocation.UnboundArguments)" `
                 -Verb RunAs
-        } else {
+        }
+        else {
             Write-Error "Cannot find any PowerShell executable. Please restart this script manually with admin access."
         }
     }
@@ -172,6 +177,157 @@ function EndingScript() {
    (__|_|_________________________________|_|__) " -ForegroundColor Magenta
 }
 
+function Read-CheckboxMenu {
+    <#
+    .SYNOPSIS
+    Displays an interactive terminal checkbox menu for multi-option selection.
+
+    .DESCRIPTION
+    Presents a list of options in the console where the user can navigate with Up/Down arrow keys,
+    toggle item selections with the Spacebar, and confirm choices with Enter. Returns an array of selected options.
+
+    .PARAMETER Options
+    An array of string options to display in the menu.
+
+    .PARAMETER Title
+    The header title displayed above the menu options.
+    #>
+
+    param(
+        [Parameter(Mandatory)][string[]]$Options,
+        [string]$Title = "Select options (Up/Down: Navigate, Space: Toggle, Enter: Confirm, Esc: Cancel):"
+    )
+
+    if ($Options.Count -eq 0) { return @() }
+
+    $selected = New-Object bool[] $Options.Count
+    $currentIndex = 0
+    $topIndex = 0
+
+    [Console]::CursorVisible = $false
+
+    Clear-Host
+    Write-Host $Title -ForegroundColor Cyan
+    $initialCursorTop = [Console]::CursorTop
+
+    $lastWidth = [Console]::WindowWidth
+    $lastHeight = [Console]::WindowHeight
+
+    try {
+        while ($true) {
+            $winWidth = [Console]::WindowWidth
+            $winHeight = [Console]::WindowHeight
+
+            # 1. Resize Detection
+            if ($winWidth -ne $lastWidth -or $winHeight -ne $lastHeight) {
+                Clear-Host
+                Write-Host $Title -ForegroundColor Cyan
+                $initialCursorTop = [Console]::CursorTop
+                $lastWidth = $winWidth
+                $lastHeight = $winHeight
+            }
+
+            # 2. Reserve room for Title + Status Footer + Safety Margin
+            $maxVisible = [Math]::Max(1, $winHeight - $initialCursorTop - 3)
+
+            # 3. Viewport Scrolling
+            if ($currentIndex -lt $topIndex) {
+                $topIndex = $currentIndex
+            }
+            elseif ($currentIndex -ge ($topIndex + $maxVisible)) {
+                $topIndex = $currentIndex - $maxVisible + 1
+            }
+
+            [Console]::SetCursorPosition(0, $initialCursorTop)
+
+            $endIndex = [Math]::Min($Options.Count - 1, $topIndex + $maxVisible - 1)
+            $renderedRows = ($endIndex - $topIndex) + 1
+
+            # 4. Render Items + Right-Edge Scrollbar Track
+            for ($r = 0; $r -lt $renderedRows; $r++) {
+                $i = $topIndex + $r
+                $isCurrent = ($i -eq $currentIndex)
+                $isChecked = $selected[$i]
+
+                $pointer = if ($isCurrent) { ">" } else { " " }
+                $box = if ($isChecked) { "[x]" } else { "[ ]" }
+                $lineText = "$pointer $box $($Options[$i])"
+
+                # Calculate scrollbar thumb position
+                $scrollChar = " "
+                if ($Options.Count -gt $maxVisible) {
+                    $thumbPos = if ($Options.Count -gt 1) { 
+                        [Math]::Floor(($currentIndex / ($Options.Count - 1)) * ($renderedRows - 1)) 
+                    }
+                    else { 0 }
+                    
+                    $scrollChar = if ($r -eq $thumbPos) { "█" } else { "░" }
+                }
+
+                # Reserve 2 spaces on far right for scrollbar track
+                $maxWidth = [Math]::Max(1, $winWidth - 3)
+                if ($lineText.Length -gt $maxWidth) {
+                    $lineText = $lineText.Substring(0, $maxWidth)
+                }
+                else {
+                    $lineText = $lineText.PadRight($maxWidth)
+                }
+
+                if ($isCurrent) {
+                    Write-Host $lineText -ForegroundColor Yellow -BackgroundColor Black -NoNewline
+                    Write-Host " $scrollChar" -ForegroundColor DarkGray -BackgroundColor Black
+                }
+                else {
+                    Write-Host $lineText -ForegroundColor Gray -BackgroundColor Black -NoNewline
+                    Write-Host " $scrollChar" -ForegroundColor DarkGray -BackgroundColor Black
+                }
+            }
+
+            # Clear leftover screen space if rows shrink
+            if ($renderedRows -lt $maxVisible) {
+                $blankLine = "".PadRight($winWidth - 1)
+                for ($r = $renderedRows; $r -lt $maxVisible; $r++) {
+                    Write-Host $blankLine -BackgroundColor Black
+                }
+            }
+
+            # 5. Render Status Footer Line
+            $selectedCount = ($selected | Where-Object { $_ -eq $true }).Count
+            $statusText = " [Item $($currentIndex + 1)/$($Options.Count) | Selected: $selectedCount/$($Options.Count)]"
+            $paddedStatus = $statusText.PadRight([Math]::Max(1, $winWidth - 1))
+            Write-Host $paddedStatus -ForegroundColor DarkCyan -BackgroundColor Black
+
+            # 6. Input Handling
+            $key = [Console]::ReadKey($true)
+
+            switch ($key.Key) {
+                'UpArrow' { 
+                    $currentIndex = if ($currentIndex -gt 0) { $currentIndex - 1 } else { $Options.Count - 1 }
+                }
+                'DownArrow' { 
+                    $currentIndex = if ($currentIndex -lt $Options.Count - 1) { $currentIndex + 1 } else { 0 }
+                }
+                'Spacebar' { 
+                    $selected[$currentIndex] = -not $selected[$currentIndex] 
+                }
+                'Escape' { 
+                    return @() 
+                }
+                'Enter' {
+                    $result = @()
+                    for ($i = 0; $i -lt $Options.Count; $i++) {
+                        if ($selected[$i]) { $result += $Options[$i] }
+                    }
+                    return $result
+                }
+            }
+        }
+    }
+    finally {
+        [Console]::CursorVisible = $true
+        Clear-Host
+    }
+}
 
 <# -------------------------------------------------------- #>
 <#                    Update Function                       #>
@@ -194,7 +350,8 @@ function Invoke-PSModuleUpdate {
     $shouldUpdate = $false
     if ($YesToAll.IsPresent -or $Upgrade.IsPresent) {
         $shouldUpdate = $true
-    } else {
+    }
+    else {
         Write-Host "Update all PowerShell modules? [Y/n] " -ForegroundColor Blue -NoNewline
         $UpdateModuleOption = Read-Host
         if (($UpdateModuleOption.ToLower() -eq "y") -or ($UpdateModuleOption -eq "")) {
@@ -212,7 +369,8 @@ function Invoke-PSModuleUpdate {
             Write-Warning "An error occurred while updating PowerShell modules."
             Write-Warning $_.Exception.Message
         }
-    } else {
+    }
+    else {
         EmptyLine
         Write-Host "Skipping PowerShell module updates." -ForegroundColor Yellow
     }
@@ -339,7 +497,8 @@ function Invoke-WindowsUpdate {
                     Write-Host "Update process finished. Re-checking for more updates..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 3
                 } while ($true)
-            } else {
+            }
+            else {
                 EmptyLine
                 Write-Host "Skipping Windows Update checks." -ForegroundColor Yellow
             }
@@ -498,40 +657,121 @@ function Invoke-WingetUpdate {
             $updateWingetOption = Read-Host
             if (($updateWingetOption.ToLower() -eq "y") -or ($updateWingetOption -eq "")) {
                 do {
-                    Clear-Host
-                    Write-Host "Checking for upgradable winget applications..." -ForegroundColor Yellow
-                    winget upgrade --include-unknown
-    
-                    EmptyLine
-                    Write-Host "Enter the App ID to upgrade. Separate multiple IDs with a space." -ForegroundColor Green
-                    Write-Host "Type 'all' to upgrade all applications, or 'exit' to skip." -ForegroundColor Green
-                    Write-Host "Example : Microsoft.VisualStudioCode Microsoft.PowerShell Obsidian.Obsidian" -ForegroundColor Green
-                    $updateChoice = Read-Host -Prompt "App ID "
-    
-                    if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
-                        EmptyLine
-                        Write-Host "Exiting winget upgrade." -ForegroundColor Yellow
-                        break
-                    }
-    
-                    if ($updateChoice.ToLower() -eq 'all') {
-                        EmptyLine
-                        Write-Host "Upgrading all applications..." -ForegroundColor Yellow
-                        winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements
-                    }
-                    else {
-                        $ArrayID = $updateChoice.Split(" ")
-                        EmptyLine
-                        Write-Host "Upgrading selected applications..." -ForegroundColor Yellow
-                        foreach ($appId in $ArrayID) {
-                            winget upgrade --id $appId --include-unknown --accept-package-agreements --accept-source-agreements
+                    # Capture winget output
+                    $wingetOutput = winget upgrade --accept-source-agreements
+
+                    $packageList = [System.Collections.Generic.List[PSCustomObject]]::new()
+                    $inTable = $false
+                    $isExplicitTable = $false
+                    $idStart = 0
+                    $idLength = 0
+
+                    # Parse output line-by-line
+                    for ($i = 0; $i -lt $wingetOutput.Count; $i++) {
+                        $line = $wingetOutput[$i]
+
+                        # Detect section header for explicit targeting
+                        if ($line -match 'require explicit targeting') {
+                            $isExplicitTable = $true
+                            $inTable = $false
+                            continue
+                        }
+
+                        # Detect table separators and dynamically locate column positions
+                        if ($line -match '^-{3,}$') {
+                            $inTable = $true
+                            $header = $wingetOutput[$i - 1]
+        
+                            $idStart = $header.IndexOf("Id")
+                            $versionStart = $header.IndexOf("Version")
+                            $idLength = $versionStart - $idStart
+                            continue
+                        }
+
+                        # Exit table on blank lines or winget summary/footer messages
+                        if ([string]::IsNullOrWhiteSpace($line) -or 
+                            $line -match 'package\(s\)' -or 
+                            $line -match 'Use --' -or 
+                            $line -match 'pins that prevent' -or
+                            $line -match 'upgrades available') {
+                            $inTable = $false
+                            continue
+                        }
+
+                        # Extract Name and Id when inside a valid table section
+                        if ($inTable) {
+                            if ($line.Length -gt $idStart) {
+                                # Extract Name (from start of line up to Id column position)
+                                $rawName = $line.Substring(0, [Math]::Min($idStart, $line.Length)).Trim()
+            
+                                # Extract Id (from Id column position up to Version column position)
+                                $rawId = if ($line.Length -ge ($idStart + $idLength)) {
+                                    $line.Substring($idStart, $idLength)
+                                }
+                                else {
+                                    $line.Substring($idStart)
+                                }
+                                $trimmedId = $rawId.Trim()
+
+                                if ($rawName -and $trimmedId) {
+                                    # Format label for display
+                                    $displayLabel = if ($isExplicitTable) { "  $rawName (Explicit)" } else { $rawName }
+                
+                                    # Disambiguate duplicate app names by appending Id in brackets if needed
+                                    if ($packageList.Display -contains $displayLabel) {
+                                        $displayLabel = "$displayLabel [$trimmedId]"
+                                    }
+
+                                    # Store as paired object
+                                    $packageList.Add([PSCustomObject]@{
+                                        Display = $displayLabel
+                                        Name    = $rawName
+                                        Id      = $trimmedId
+                                    })
+                                }
+                            }
                         }
                     }
+
+                    # Extract display names for the checkbox menu
+                    $options = $packageList.Display
+
+                    if ($options.Count -eq 0) {
+                        Write-Host "No packages found to display." -ForegroundColor Yellow
+                        return
+                    }
+
+                    # 4. Display names in your custom checkbox menu
+                    $selectedDisplays = Read-CheckboxMenu `
+                        -Options $options `
+                        -Title "`nHow To Use : `
+                        `n- Use Up/Down arrow keys to move pointer, use Space to toggle select/unselect, Enter to confirm `
+                        `n- To exit this, just unselect all and press Enter `
+                        `nSelect winget packages you want to uninstall:"
+
+                    if (-not $selectedDisplays -or $selectedDisplays.Count -eq 0) {
+                        break
+                    }
+
+                    # Map selected display names back to their full objects
+                    $selectedPackages = $packageList | Where-Object { $_.Display -in $selectedDisplays }
+
+                    # Output selected items
+                    Write-Host "`nSelected Packages to Uninstall:" -ForegroundColor Green
+                    $selectedPackages | ForEach-Object { Write-Host " - $($_.Name) ($($_.Id))" }
+
+                    # Execute uninstall using the Id
+                    $selectedPackages | ForEach-Object {
+                        Write-Host "`nUninstalling $($_.Name) [$($_.Id)]..." -ForegroundColor Yellow
+                        winget upgrade --id "$($_.Id)" --include-unknown --accept-package-agreements --accept-source-agreements
+                    }
+
                     EmptyLine
                     Write-Host "Winget upgrade process finished. Re-checking for more updates..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 3
                 } while ($true)
-            } else {
+            }
+            else {
                 EmptyLine
                 Write-Host "Skipping winget package updates." -ForegroundColor Yellow
             }
@@ -639,7 +879,8 @@ function Invoke-ChocolateyUpdate {
                     Write-Host "Chocolatey upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 3
                 } while ($true)
-            } else {
+            }
+            else {
                 EmptyLine
                 Write-Host "Skipping Chocolatey package updates." -ForegroundColor Yellow
             }
@@ -676,7 +917,8 @@ function Invoke-SystemScan {
     $shouldScan = $false
     if ($YesToAll.IsPresent -or $Scan.IsPresent) {
         $shouldScan = $true
-    } else {
+    }
+    else {
         Write-Host "Check for system corruption files? [Y/n] " -ForegroundColor Blue -NoNewline
         $scanOption = Read-Host
         if (($scanOption.ToLower() -eq "y") -or ($scanOption -eq "")) {
@@ -703,7 +945,8 @@ function Invoke-SystemScan {
 
         EmptyLine
         Write-Host "System corruption scan complete." -ForegroundColor Green
-    } else {
+    }
+    else {
         EmptyLine
         Write-Host "Skipping system corruption file scan." -ForegroundColor Yellow
     }
@@ -722,7 +965,8 @@ function Invoke-SystemCleanup {
     $shouldCleanup = $false
     if ($YesToAll.IsPresent -or $Cleanup.IsPresent) {
         $shouldCleanup = $true
-    } else {
+    }
+    else {
         Write-Host "Delete unused files and folders ? [Y/n] " -ForegroundColor Blue -NoNewline
         $cleanupOption = Read-Host
         if (($cleanupOption.ToLower() -eq "y") -or ($cleanupOption -eq "")) {
@@ -782,7 +1026,8 @@ function Invoke-SystemCleanup {
 
         EmptyLine
         Write-Host "System cleanup complete." -ForegroundColor Green
-    } else {
+    }
+    else {
         EmptyLine
         Write-Host "Skipping system cleanup." -ForegroundColor Yellow
     }
@@ -827,7 +1072,8 @@ function Invoke-PipUpgrade {
                     $outdated = pip list --outdated
                     if ($outdated) {
                         $outdated
-                    } else {
+                    }
+                    else {
                         EmptyLine
                         Write-Host "No outdated pip packages found." -ForegroundColor Green
                         Start-Sleep -Seconds 3
@@ -862,7 +1108,8 @@ function Invoke-PipUpgrade {
                     Write-Host "Pip upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 3
                 } while ($true)
-            } else {
+            }
+            else {
                 EmptyLine
                 Write-Host "Skipping pip package updates." -ForegroundColor Yellow
                 return
@@ -922,7 +1169,8 @@ function Invoke-NpmUpgrade {
                         if ($package -eq "npm") {
                             Write-Host "Updating npm itself..." -ForegroundColor Yellow
                             npm install -g npm@latest
-                        } else {
+                        }
+                        else {
                             Write-Host "No NPM upgrade needed..." -ForegroundColor Yellow
                         }
                     }
@@ -934,7 +1182,8 @@ function Invoke-NpmUpgrade {
                         EmptyLine
                         Write-Host "Checking for outdated local npm packages..." -ForegroundColor Yellow
                         npm outdated
-                    } else {
+                    }
+                    else {
                         EmptyLine
                         Write-Host "Checking for outdated global npm packages..." -ForegroundColor Yellow
                         npm -g outdated
@@ -992,7 +1241,8 @@ function Invoke-NpmUpgrade {
                                 EmptyLine
                                 Write-Host "Attempting to upgrade '$pkg' locally..."
                                 npm update $pkg
-                            } else {
+                            }
+                            else {
                                 EmptyLine
                                 Write-Host "Attempting to upgrade '$pkg' globally..."
                                 npm -g update $pkg
@@ -1004,7 +1254,8 @@ function Invoke-NpmUpgrade {
                     Write-Host "NPM upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 3
                 } while ($true)
-            } else {
+            }
+            else {
                 EmptyLine
                 Write-Host "Skipping npm package updates." -ForegroundColor Yellow
                 return
@@ -1020,7 +1271,8 @@ function Invoke-NpmUpgrade {
                 if ($package -eq "npm") {
                     Write-Host "Updating npm itself..." -ForegroundColor Yellow
                     npm install -g npm@latest
-                } else {
+                }
+                else {
                     Write-Host "No NPM upgrade needed..." -ForegroundColor Yellow
                 }
             }
