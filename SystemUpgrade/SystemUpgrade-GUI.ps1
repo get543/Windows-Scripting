@@ -39,288 +39,307 @@ $XAML.SelectNodes("//*[@Name]") | ForEach-Object {
     }
 }
 
-# Get all variables that starts with var_
-# ForEach-Object {
-#     Write-Output (Get-Variable var_*)
-# }
-
-function Set-TaskProgress {
-    param(
-        [string]$TaskName,
-        [double]$Value,
-        [bool]$IsIndeterminate = $false
-    )
-    if ($var_RunningTask) { $var_RunningTask.Content = $TaskName }
-    if ($var_ProgressBar) {
-        $var_ProgressBar.IsIndeterminate = $IsIndeterminate
-        $var_ProgressBar.Value = $Value
-    }
-    # Force WPF UI Dispatcher to refresh UI immediately
-    if ($PSForm.Dispatcher) {
-        $PSForm.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Background)
-    }
-}
-
-function Append-Output {
-    param([string]$text)
-    if ($var_OutputTextBox) {
-        $var_OutputTextBox.AppendText($text + "`r`n")
-        $var_OutputTextBox.ScrollToEnd()
-        if ($PSForm.Dispatcher) {
-            $PSForm.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Background)
-        }
-    }
-}
-
 function checkBOX() {
+    $selectedTasks = [ordered]@{
+        UpdatePSModule       = $var_UpdatePSModule.IsChecked -eq $true
+        WindowsUpdate        = $var_WindowsUpdate.IsChecked -eq $true
+        WingetUpgrade        = $var_WingetUpgrade.IsChecked -eq $true
+        MicrosoftStoreUpdate = $var_MicrosoftStoreUpdate.IsChecked -eq $true
+        NPMUpgrade           = $var_NPMUpgrade.IsChecked -eq $true
+        PipUpgrade           = $var_PipUpgrade.IsChecked -eq $true
+        ChocoUpgrade         = $var_ChocoUpgrade.IsChecked -eq $true
+        CheckCorruptionFiles = $var_CheckCorruptionFiles.IsChecked -eq $true
+        DeleteTempFiles      = $var_DeleteTempFiles.IsChecked -eq $true
+    }
+
     $selectedCount = 0
-    if ($var_UpdatePSModule.IsChecked) { $selectedCount++ }
-    if ($var_WindowsUpdate.IsChecked) { $selectedCount++ }
-    if ($var_WingetUpgrade.IsChecked) { $selectedCount++ }
-    if ($var_MicrosoftStoreUpdate.IsChecked) { $selectedCount++ }
-    if ($var_NPMUpgrade.IsChecked) { $selectedCount++ }
-    if ($var_PipUpgrade.IsChecked) { $selectedCount++ }
-    if ($var_ChocoUpgrade.IsChecked) { $selectedCount++ }
-    if ($var_CheckCorruptionFiles.IsChecked) { $selectedCount++ }
-    if ($var_DeleteTempFiles.IsChecked) { $selectedCount++ }
+    foreach ($val in $selectedTasks.Values) {
+        if ($val) { $selectedCount++ }
+    }
 
     if ($selectedCount -eq 0) {
         [System.Windows.MessageBox]::Show("Please select at least one task to run.", "No Tasks Selected", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
         return
     }
 
+    # Disable RunButton while background tasks are running
+    $var_RunButton.IsEnabled = $false
+
     if ($var_OutputTextBox) {
         $var_OutputTextBox.Clear()
-        Append-Output "Starting tasks..."
+        $var_OutputTextBox.AppendText("Starting tasks...`r`n")
     }
 
-    $completedCount = 0
-
-    #! PowerShell Module Update
-    if ($var_UpdatePSModule.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Updating Module ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-
-        Write-Host "`nChecking update for all PowerShell modules..." -ForegroundColor Yellow
-        $runCommand = "Update-Module -AcceptLicense -ErrorAction Stop"
-        Append-Output "`n> $runCommand"
-        $PSModuleOutput = $runCommand 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-            $_
-        }
-
-        if (!$PSModuleOutput) {
-            Write-Host "No need to, there's no module that needs to be updated. 😁👍" -ForegroundColor Yellow
-            Append-Output "No need to, there's no module that needs to be updated. 😁👍"
-        }
-        $completedCount++
+    if ($var_RunningTask) { $var_RunningTask.Content = "Starting tasks..." }
+    if ($var_ProgressBar) {
+        $var_ProgressBar.IsIndeterminate = $false
+        $var_ProgressBar.Value = 0
     }
 
-    #! Windows Upate
-    if ($var_WindowsUpdate.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Installing Windows Updates ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+    # Setup Synchronized Hashtable for Background Runspace
+    $syncHash = [hashtable]::Synchronized(@{})
+    $syncHash.Window          = $PSForm
+    $syncHash.OutputTextBox   = $var_OutputTextBox
+    $syncHash.RunningTask     = $var_RunningTask
+    $syncHash.ProgressBar     = $var_ProgressBar
+    $syncHash.RunButton       = $var_RunButton
+    $syncHash.SelectedTasks   = $selectedTasks
+    $syncHash.SelectedCount   = $selectedCount
 
-        Write-Host "`nInstalling all available Windows Updates..." -ForegroundColor Yellow
-        $runCommand = Install-WindowsUpdate -AcceptAll -IgnoreReboot
-        Append-Output "`n> $runCommand"
-        $runCommand 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
-        $completedCount++
-    }
+    # Create background runspace to keep WPF UI responsive
+    $runspace = [runspacefactory]::CreateRunspace()
+    $runspace.Open()
 
-    #! Winget Upgrade
-    if ($var_WingetUpgrade.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Upgrading Winget ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+    $ps = [powershell]::Create()
+    $ps.Runspace = $runspace
 
-        Write-Host "`nUpgrading all installed applications..." -ForegroundColor Yellow
-        $runCommand = winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements
-        Append-Output "`n> $runCommand"
-        $runCommand 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
+    $ps.AddScript({
+        param($sync)
 
-        $completedCount++
-    }
-
-    #! Microsoft Store Update
-    if ($var_MicrosoftStoreUpdate.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Upgrading Store Applications ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-
-        Write-Host "`nUpgrading all installed microsoft store applications..." -ForegroundColor Yellow
-        $runCommand = powershell.exe -Command "Get-AppxPackage | Update-InboxApp"
-        Append-Output "`n> $runCommand"
-        $runCommand 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
-        $completedCount++
-    }
-
-    #! NPM Update
-    if ($var_NPMUpgrade.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Upgrading NPM Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-
-        Write-Host "`nUpgrading all installed npm applications..." -ForegroundColor Yellow
-        $runCommand = npm update -g --all
-        Append-Output "`n> $runCommand"
-        $runCommand 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
-        $completedCount++
-    }
-
-    #! PIP Update
-    if ($var_PipUpgrade.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Upgrading Pip Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-
-        Write-Host "`nUpgrading all installed pip applications..." -ForegroundColor Yellow
-        Append-Output "`n> pip list --outdated"
-        $outdatedPip = pip list --outdated 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-            $_
-        }
-        
-        $lines = $outdatedPip | Select-Object -Skip 2
-        foreach ($line in $lines) {
-            $pkg = ($line -split "\s+")[0].Trim()
-            if ($pkg) {
-                Append-Output "> pip install --upgrade $pkg"
-                pip install --upgrade $pkg 2>&1 | ForEach-Object {
-                    Write-Host $_
-                    Append-Output $_
+        function Set-TaskProgress {
+            param(
+                [string]$TaskName,
+                [double]$Value,
+                [bool]$IsIndeterminate = $false
+            )
+            $sync.Window.Dispatcher.Invoke([action]{
+                if ($sync.RunningTask) { $sync.RunningTask.Content = $TaskName }
+                if ($sync.ProgressBar) {
+                    $sync.ProgressBar.IsIndeterminate = $IsIndeterminate
+                    $sync.ProgressBar.Value = $Value
                 }
-            }
-        }
-        $completedCount++
-    }
-
-    #! Choco Upgrade
-    if ($var_ChocoUpgrade.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Upgrading Chocolatey Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-
-        Write-Host "`nChecking for outdated chocolatey packages" -ForegroundColor Yellow
-        Append-Output "`n> choco outdated"
-        choco outdated 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
-         
-        Write-Host "`nUpdating all chocolatey application(s)..." -ForegroundColor Yellow
-        Append-Output "`n> choco upgrade --yes all"
-        choco upgrade --yes all 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
-        $completedCount++
-    }
-    
-    #! System Corruption Scan
-    if ($var_CheckCorruptionFiles.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Checking System Files ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-        
-        Write-Host "`n(1/4) Run 'chkdsk' (check disk)" -ForegroundColor Yellow
-        Append-Output "`n> chkdsk /scan"
-        chkdsk /scan 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
+            })
         }
 
-        Write-Host "`n(2/4) Run 'sfc /SCANNOW' (System File Checker) - 1st scan" -ForegroundColor Yellow
-        Append-Output "`n> sfc /SCANNOW"
-        sfc /SCANNOW 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
+        function Append-Output {
+            param([string]$text)
+            $sync.Window.Dispatcher.Invoke([action]{
+                if ($sync.OutputTextBox) {
+                    $sync.OutputTextBox.AppendText($text + "`r`n")
+                    $sync.OutputTextBox.ScrollToEnd()
+                }
+            })
         }
 
-        Write-Host "`n(3/4) Run DISM (Deployment Image Servicing and Management tool)" -ForegroundColor Yellow
-        Append-Output "`n> DISM /Online /Cleanup-Image /Restorehealth"
-        DISM /Online /Cleanup-Image /Restorehealth 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
+        $selectedCount = $sync.SelectedCount
+        $tasks = $sync.SelectedTasks
+        $completedCount = 0
 
-        Write-Host "`n(4/4) Run 'sfc /SCANNOW' (System File Checker) - 2nd scan" -ForegroundColor Yellow
-        Append-Output "`n> sfc /SCANNOW"
-        sfc /SCANNOW 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
-        $completedCount++
-    }
-    
-    #! Delete Temp Files and Folders & Clear Recyle Bin
-    if ($var_DeleteTempFiles.IsChecked) {
-        $pct = ($completedCount / $selectedCount) * 100
-        Set-TaskProgress -TaskName "Deleting Temporary Files ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
-        
-        Write-Host "`nRunning Disk Cleanup..." -ForegroundColor Yellow
-        $runDiskCleanup = "cleanmgr.exe /d $env:HOMEDRIVE /VERYLOWDISK"
-        Append-Output "`n> $runDiskCleanup"
-        $runDiskCleanup 2>&1 | ForEach-Object {
-            Write-Host $_
-            Append-Output $_
-        }
+        #! PowerShell Module Update
+        if ($tasks.UpdatePSModule) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Updating Module ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-        Write-Host "`nDeleting Temporary Files..." -ForegroundColor Yellow
-        try {
-            $deleteTempFiles1 = Get-ChildItem -Path "$env:windir\Temp" -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-            Append-Output "`n> $deleteTempFiles1"
-            $deleteTempFiles1 2>&1 | ForEach-Object {
-                Write-Host $_
-                Append-Output $_
+            Append-Output "`nChecking update for all PowerShell modules..."
+            Append-Output "> Update-Module -AcceptLicense"
+            $hasOutput = $false
+            try {
+                Update-Module -AcceptLicense -ErrorAction SilentlyContinue 2>&1 | ForEach-Object {
+                    $hasOutput = $true
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
             }
 
-            $deleteTempFiles2 = Get-ChildItem -Path "$env:windir\Temp" -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-            Append-Output "`n> $deleteTempFiles2"
-            $deleteTempFiles2 2>&1 | ForEach-Object {
-                Write-Host $_
-                Append-Output $_
+            if (-not $hasOutput) {
+                Append-Output "No need to, there's no module that needs to be updated. 😁👍"
             }
-
-            $deleteTempFiles3 = Get-ChildItem -Path $env:TEMP -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-            Append-Output "`n> $deleteTempFiles3"
-            $deleteTempFiles3 2>&1 | ForEach-Object {
-                Write-Host $_
-                Append-Output $_
-            }
-
-            $deleteTempFiles4 = Get-ChildItem -Path $env:TEMP -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-            Append-Output "`n> $deleteTempFiles4"
-            $deleteTempFiles4 2>&1 | ForEach-Object {
-                Write-Host $_
-                Append-Output $_
-            }
-
-        } catch {
-            Append-Output "`nAn error occurred during temporary file deletion. $_.Exception.Message"
-            Write-Warning "An error occurred during temporary file deletion. $_.Exception.Message"
+            $completedCount++
         }
 
-        $completedCount++
-    }
-    
-    Set-TaskProgress -TaskName "Done!" -Value 100 -IsIndeterminate $false
-    Append-Output "`nAll tasks completed successfully!"
+        #! Windows Update
+        if ($tasks.WindowsUpdate) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Installing Windows Updates ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-    $ButtonType = [System.Windows.MessageBoxButton]::OK
-    $MessageboxTitle = "Tweaks are Finished "
-    $Messageboxbody = ("Done")
-    $MessageIcon = [System.Windows.MessageBoxImage]::Information
+            Append-Output "`nInstalling all available Windows Updates..."
+            Append-Output "> Install-WindowsUpdate -AcceptAll -IgnoreReboot"
+            try {
+                Install-WindowsUpdate -AcceptAll -IgnoreReboot 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+            $completedCount++
+        }
 
-    [System.Windows.MessageBox]::Show($Messageboxbody, $MessageboxTitle, $ButtonType, $MessageIcon)
+        #! Winget Upgrade
+        if ($tasks.WingetUpgrade) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Upgrading Winget ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+
+            Append-Output "`nUpgrading all installed applications..."
+            Append-Output "> winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements"
+            try {
+                winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+
+            $completedCount++
+        }
+
+        #! Microsoft Store Update
+        if ($tasks.MicrosoftStoreUpdate) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Upgrading Store Applications ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+
+            Append-Output "`nUpgrading all installed microsoft store applications..."
+            Append-Output "> Get-AppxPackage | Update-InboxApp"
+            try {
+                powershell.exe -Command "Get-AppxPackage | Update-InboxApp" 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+            $completedCount++
+        }
+
+        #! NPM Update
+        if ($tasks.NPMUpgrade) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Upgrading NPM Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+
+            Append-Output "`nUpgrading all installed npm applications..."
+            Append-Output "> npm update -g --all"
+            try {
+                npm update -g --all 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+            $completedCount++
+        }
+
+        #! PIP Update
+        if ($tasks.PipUpgrade) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Upgrading Pip Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+
+            Append-Output "`nUpgrading all installed pip applications..."
+            Append-Output "> pip list --outdated"
+            try {
+                $outdatedPip = pip list --outdated 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                    $_.ToString()
+                }
+                
+                $lines = $outdatedPip | Select-Object -Skip 2
+                foreach ($line in $lines) {
+                    $pkg = ($line -split "\s+")[0].Trim()
+                    if ($pkg) {
+                        Append-Output "> pip install --upgrade $pkg"
+                        pip install --upgrade $pkg 2>&1 | ForEach-Object {
+                            Append-Output $_.ToString()
+                        }
+                    }
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+            $completedCount++
+        }
+
+        #! Choco Upgrade
+        if ($tasks.ChocoUpgrade) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Upgrading Chocolatey Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+
+            Append-Output "`nChecking for outdated chocolatey packages"
+            Append-Output "> choco outdated"
+            try {
+                choco outdated 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+                
+                Append-Output "`nUpdating all chocolatey application(s)..."
+                Append-Output "> choco upgrade --yes all"
+                choco upgrade --yes all 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+            $completedCount++
+        }
+
+        #! System Corruption Scan
+        if ($tasks.CheckCorruptionFiles) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Checking System Files ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+            
+            try {
+                Append-Output "`n(1/4) Run 'chkdsk' (check disk)"
+                Append-Output "> chkdsk /scan"
+                chkdsk /scan 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+
+                Append-Output "`n(2/4) Run 'sfc /SCANNOW' (System File Checker) - 1st scan"
+                Append-Output "> sfc /SCANNOW"
+                sfc /SCANNOW 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+
+                Append-Output "`n(3/4) Run DISM (Deployment Image Servicing and Management tool)"
+                Append-Output "> DISM /Online /Cleanup-Image /Restorehealth"
+                DISM /Online /Cleanup-Image /Restorehealth 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+
+                Append-Output "`n(4/4) Run 'sfc /SCANNOW' (System File Checker) - 2nd scan"
+                Append-Output "> sfc /SCANNOW"
+                sfc /SCANNOW 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+            } catch {
+                Append-Output $_.Exception.Message
+            }
+            $completedCount++
+        }
+
+        #! Delete Temp Files and Folders & Clear Recycle Bin
+        if ($tasks.DeleteTempFiles) {
+            $pct = ($completedCount / $selectedCount) * 100
+            Set-TaskProgress -TaskName "Deleting Temporary Files ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
+            
+            Append-Output "`nRunning Disk Cleanup..."
+            Append-Output "> cleanmgr.exe /d $env:HOMEDRIVE /VERYLOWDISK"
+            try {
+                cleanmgr.exe /d $env:HOMEDRIVE /VERYLOWDISK 2>&1 | ForEach-Object {
+                    Append-Output $_.ToString()
+                }
+
+                Append-Output "`nDeleting Temporary Files..."
+                Get-ChildItem -Path "$env:windir\Temp" -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+                Get-ChildItem -Path "$env:windir\Temp" -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+                Get-ChildItem -Path $env:TEMP -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+                Get-ChildItem -Path $env:TEMP -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+                Append-Output "Temporary files deleted successfully."
+            } catch {
+                Append-Output "`nAn error occurred during temporary file deletion: $($_.Exception.Message)"
+            }
+
+            $completedCount++
+        }
+
+        Set-TaskProgress -TaskName "Done!" -Value 100 -IsIndeterminate $false
+        Append-Output "`nAll tasks completed successfully!"
+
+        $sync.Window.Dispatcher.Invoke([action]{
+            $sync.RunButton.IsEnabled = $true
+            [System.Windows.MessageBox]::Show("Done", "Tweaks are Finished", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+        })
+    }) | Out-Null
+
+    $ps.AddArgument($syncHash) | Out-Null
+    $null = $ps.BeginInvoke()
 }
 
 $var_RunButton.Add_Click({checkBOX})
