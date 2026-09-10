@@ -11,7 +11,7 @@ A_TrayMenu.Add("Edit Script", (*) => Edit())
 
 ;! Modify the existing tray menu
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
-A_TrayMenu.Add("Shortcut List", (*) => 
+A_TrayMenu.Add("Shortcut List", (*) =>
     MsgBox("Available Keyboard Shortcuts: `n`n"
         . "- Alt + `` `t`t: Hold down any key (right now is W & LSHIFT)`n"
         . "- Ctrl + Alt + X`t: Always On Top for currently active window`n"
@@ -23,39 +23,35 @@ A_TrayMenu.Add("Shortcut List", (*) =>
         . "- Alt + F1`t`t: Toggle Twitch Theatre Mode & Vertical Tabs`n"
         . "- Insert`t`t: Switch Output Device Script`n"
         . "- Scroll Lock`t: Start OBS Replay Buffer"
-    )
-)
+    ))
 
 ;! Add custom item to the bottom of the tray menu
-A_TrayMenu.Add("Set Output Device from Script", (*) => 
+A_TrayMenu.Add("Set Output Device from Script", (*) =>
     RunWait(
         'powershell.exe -ExecutionPolicy Bypass -File "'
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1" -SetDevice'
-    )
-)
+    ))
 
-A_TrayMenu.Add("Auto Launch Apps", (*) => 
+A_TrayMenu.Add("Auto Launch Apps", (*) =>
     RunWait(
-        '*RunAs powershell.exe -ExecutionPolicy Bypass -File "' 
+        '*RunAs powershell.exe -ExecutionPolicy Bypass -File "'
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"'
-    )
-)
+    ))
 
-A_TrayMenu.Add("Toggle DNS", (*) => 
+A_TrayMenu.Add("Toggle DNS", (*) =>
     RunWait(
-        '*RunAs powershell.exe -ExecutionPolicy Bypass -File "' 
+        '*RunAs powershell.exe -ExecutionPolicy Bypass -File "'
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ToggleDNS.ps1"'
-    )
-)
+    ))
 
 ;! ==============================================================================
 
 HttpServer_MenuHandler(*) {
     IB := InputBox("Please enter a file path.", "File Path")
-    
+
     if (IB.Result = "Cancel" || IB.Value = "")
         return
-    
+
     ScriptPath := A_MyDocuments "\PowerShell\Scripts\Windows-Scripting\File-Share.ps1"
     FilePath := Trim(IB.Value, '"')
 
@@ -65,7 +61,6 @@ HttpServer_MenuHandler(*) {
 }
 
 A_TrayMenu.Add("HTTP Server", HttpServer_MenuHandler)
-
 
 ;! ==============================================================================
 
@@ -95,7 +90,7 @@ ResMenu.Add("1024x768@75Hz", (*) => ChangeResolution(1024, 768, 75))
 ; Attach the sub-menu to the main tray menu
 A_TrayMenu.Add("Custom Resolutions", ResMenu)
 
-ChangeResolution(w, h, refreshRate, colorDepth:=32) {
+ChangeResolution(w, h, refreshRate, colorDepth := 32) {
     dM := Buffer(156, 0)
     NumPut("UShort", 156, dM, 36)
     DllCall("EnumDisplaySettingsA", "Ptr", 0, "Int", -1, "Ptr", dM)
@@ -109,15 +104,142 @@ ChangeResolution(w, h, refreshRate, colorDepth:=32) {
 
 ;! ==============================================================================
 
+#Include "%A_ScriptDir%\OCR.ahk"
+
+A_TrayMenu.Add("Text Extractor", (*) => RunScreenOCR())
+
+; !https://github.com/Descolada/OCR/blob/main/Examples/Example10_OCRScreenSnip.ahk
+RunScreenOCR() {
+    ScreenSnipperProcessName := "ScreenClippingHost.exe"
+    SavedClip := ClipboardAll()
+    A_Clipboard := "" ; Start off blank for clipboard detection
+    RunWait "ms-screenclip:"
+    WinWaitActive "ahk_exe " ScreenSnipperProcessName, , 2
+    loop {
+        DllCall("user32.dll\GetCursorPos", "int64P", &pt64 := 0)
+        try {
+            if WinGetProcessName(hWnd := DllCall("GetAncestor", "Ptr", DllCall("user32.dll\WindowFromPoint", "int64",
+                pt64, "ptr"), "UInt", 2, "ptr")) != ScreenSnipperProcessName
+                break
+        } catch
+            break
+
+    }
+    ClipWait(1, 1)
+    Sleep 100
+    if !DllCall("IsClipboardFormatAvailable", "uint", 2) ; Check for a bitmap stream
+        return A_Clipboard := SavedClip ; Restore clipboard if user pressed Escape
+    DllCall("OpenClipboard", "ptr", A_ScriptHwnd)
+    hData := DllCall("GetClipboardData", "uint", 2, "ptr")
+    hBitmap := DllCall("User32.dll\CopyImage", "UPtr", hData, "UInt", 0, "Int", 0, "Int", 0, "UInt", 0x2000, "Ptr")
+    DllCall("CloseClipboard")
+
+    result := OCR.FromBitmap(hBitmap, { scale: 2 })
+    text := rearrangeOCRresult(result)
+
+    A_Clipboard := text
+    Tooltip "Clipboard set to formatted OCR result:`n" text
+    SetTimer () => Tooltip(), -7000
+}
+
+; Courtesy of rommmcek https://www.autohotkey.com/boards/viewtopic.php?f=83&t=116406&p=556071#p556071
+; UPW OCR groups recognized text into areas, not lines: a known issue
+; this function takes an OCR result and rearranges the recognized text into the lines where they appear
+; - result: an OCR result
+; - diff: tolerance of the lines/words. If 0 auto setting will occur (medium height (in pixels) of the text).
+; returns a string with the recognized lines, separated by linefeed
+rearrangeOCRresult(result, diff := 0) {
+    /*diff - (UInt) tolerance of the lines/words. If 0 auto setting will occur (medium height (in pixels) of the text).
+      wr - (boolean) word, if false lines (as outputed by EasyOCR) will be processed, otherwise words.
+      ht - (UInt) horizontal iteration for minimal formatting. If 0 no horizontal formatting will occure.
+      vt - (UInt) vertical iteration for minimal formatting. If 0 no vertical formatting will occure.
+      hd - (UInt) horizontal distance, a factor of how many diff units should trigger horizontal formating.
+      vd - (UInt) vertical distance, a factor of how many diff units should trigger vertical formating.
+      ds - (UInt) diff scaling factor to manually correct auto setting.
+      arr - (internal) array to sort lines/words.
+      hm - (internal) used to get medium height of the text.
+      txt - (internal) to store lines/words.
+      bb1 - (internal) below bottom 1, to approx. correct base bottom line of the text (add more characters if needed).
+    bb2 - (internal) below bottom 2, to assess correction factor (add more characters if needed).*/
+    local arr, hm, txt, wr, ht, vt, hd, vd, ds, aInd, lw, bb2, oy, arr, i, j, k, l, ii, oy
+    loop (arr := Map(), hm := 0, txt := "", wr := 0, ht := 2, vt := 1, hd := 2, vd := 3, ds := 0.75, diff := 0, 2) {
+        for lw in (aInd := A_Index, bb1 := "[,;gjpqyQ]", bb2 := "[A-Z0-9%bdfhkltij]", wr ? result.words : result.lines) {
+            if (lb := wr ? lw : OCR.WordsBoundingRect(lw.Words*), aInd = 1 && !diff) {
+                hm += lb.h
+            } else {
+                while (diff ? "" : diff := Round(ds * hm / result.lines.Length), x := lb.x, y := lb.y, w := lb.w, h :=
+                lb.h, txt := lw.text, A_Index <= (ma := 2 * diff - 1)) {
+                    if arr.Has(yh := (hh := Round(y + h - (RegExMatch(txt, bb1) ? RegExMatch(txt, bb2) ? h / 5 : h / 3 :
+                        0))) - (A_Index - diff))
+                        break
+                    else A_Index = ma ? yh := hh : ""
+                }
+                arr.Has(yh) ? "" : arr[yh] := Map(), arr[yh][x] := [x, yh, w, h, txt]
+            }
+        }
+    }
+    mf(ks, ch, it) {
+        loop (gp := "", ks * it)
+            gp .= ch
+        return gp
+    }
+    for i, j in (text := "", oy := 0, arr) {
+        for k, l in (vp := (ii := i - oy) > vd * diff ? mf(Round(ii / vd / diff), "`n", vt) : "", text .= vp, oi := i,
+        ok := 0, j)
+            sp := (kk := k - ok) > hd * diff ? mf(Round(kk / hd / diff), "`s", ht) : "", text .= sp l[5] " ", ok := k +
+            l[3], oy := l[2]
+        text .= "`n"
+    }
+    return text
+}
+
+;! ==============================================================================
+
+A_TrayMenu.Add("Check SpotiFLAC Server", (*) => CheckSpotiflacServer())
+
+CheckSpotiflacServer() {
+
+    ; Path to SpotiFLAC.exe (replace with the full path if it's not in the same folder as this script)
+    global spotiFlacPath := "C:\Users\" . A_UserName . "\Downloads\SpotiFLAC.exe"
+
+    SetTimer CheckServerStatus, 60000 ; Check every 60 seconds
+
+    CheckServerStatus() {
+        static lastNotifiedHour := -1
+
+        currentHour := Integer(A_Hour)
+
+        ; Check if current hour is divisible by 3 (0, 3, 6, 9, 12, 15, 18, 21)
+        isUptimeHour := (Mod(currentHour, 3) == 0)
+
+        ; Trigger action once at the start of each uptime window
+        if (isUptimeHour && lastNotifiedHour != currentHour) {
+
+            ; Launch SpotiFLAC
+            try {
+                Run spotiFlacPath
+            } catch {
+                TrayTip "Server is online, but failed to launch SpotiFLAC. Check the file path.", "Error", "16"
+            }
+
+            ; Show notification and play alert sound
+            TrayTip "Server is ONLINE! SpotiFLAC has been launched.", "Server Status Alert", 1
+            SoundPlay "*-1"
+
+            ; Remember this hour so it doesn't trigger repeatedly every minute
+            lastNotifiedHour := currentHour
+        }
+    }
+}
+
+;! ==============================================================================
+
 A_TrayMenu.Add() ; Add a separator line to the existing tray menu
 A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tray menu
-
-
 
 ;! ==============================================================================
 ;! ==========================  ADD KEYBOARD SHORTCUTS  ==========================
 ;! ==============================================================================
-
 
 ;! ==============================================================================
 
@@ -196,7 +318,7 @@ RobloxClickAction() {
 #Include "%A_ScriptDir%\Microphone Loopback.ahk"
 
 ^!o:: ; press ctrl + alt + o
-{ 
+{
     MicrophoneLoopbackFunction() ; call the function from included file
 }
 
@@ -204,9 +326,8 @@ RobloxClickAction() {
 
 ^!m:: ; press ctrl + alt + m
 {
-    ; if there's no scrcpy.exe window active    
-    if not (WinExist("ahk_exe scrcpy.exe"))
-    {
+    ; if there's no scrcpy.exe window active
+    if not (WinExist("ahk_exe scrcpy.exe")) {
         ; Sends a hotkey presses
         Send "^!p" ; Opens a scrcpy no console (ctrl + alt + p)
         Sleep 5000 ; Delay for 5s
@@ -246,5 +367,5 @@ Insert:: ; press insert
 ScrollLock:: ; press scroll lock
 {
     SetWorkingDir A_ProgramFiles "\obs-studio\bin\64bit" ; cd to OBS directory
-    Run "obs64.exe --minimize-to-tray --startreplaybuffer" 
+    Run "obs64.exe --minimize-to-tray --startreplaybuffer"
 }
