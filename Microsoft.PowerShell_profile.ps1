@@ -188,10 +188,14 @@ function matrix() {
     & "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\Matrix.bat"
 }
 function phone() {
+    if ($args -eq "emulator") {
+        return emulator -avd Android_17_-_API_37.1 -feature -Vulkan
+    }
+
     if (!(Get-Command scrcpy) -and (Test-Path "C:\scrcpy")) {
-        & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off --stay-awake
+        & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off --stay-awake $args
     } else {
-        scrcpy --video-bit-rate=20M --turn-screen-off --stay-awake
+        scrcpy --video-bit-rate=20M --turn-screen-off --stay-awake $args
     }
 }
 function sound() {
@@ -210,7 +214,10 @@ function reload() {
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
 }
 function sync() {
-    syncthing --no-browser
+    Start-Process -FilePath "syncthing" -ArgumentList "--no-browser" -WindowStyle Hidden
+}
+function unsync() {
+    Stop-Process -Name "syncthing" -ErrorAction SilentlyContinue
 }
 function hosts() {
     & $env:SystemRoot\System32\drivers\etc\hosts
