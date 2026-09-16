@@ -214,7 +214,7 @@ function Read-CheckboxMenu {
         Write-Host ($CommandOutput | Out-String) -ForegroundColor Gray
     }
 
-    Write-Host $Title -ForegroundColor Cyan
+    Write-Host $Title -ForegroundColor DarkRed
     $initialCursorTop = [Console]::CursorTop
 
     $lastWidth = [Console]::WindowWidth
@@ -225,19 +225,26 @@ function Read-CheckboxMenu {
             $winWidth = [Console]::WindowWidth
             $winHeight = [Console]::WindowHeight
 
-            # 1. Resize Detection
+            # Resize Detection
             if ($winWidth -ne $lastWidth -or $winHeight -ne $lastHeight) {
                 Clear-Host
-                Write-Host $Title -ForegroundColor Cyan
+                
+                if ($CommandOutput -and ($null -ne $CommandOutput)) {
+                    # Pipe to Out-String so Write-Host renders formatted table/list layouts accurately
+                    EmptyLine
+                    Write-Host ($CommandOutput | Out-String) -ForegroundColor Gray
+                }
+                Write-Host $Title -ForegroundColor DarkRed
+
                 $initialCursorTop = [Console]::CursorTop
                 $lastWidth = $winWidth
                 $lastHeight = $winHeight
             }
 
-            # 2. Reserve room for Title + Status Footer + Safety Margin
+            # Reserve room for Title + Status Footer + Safety Margin
             $maxVisible = [Math]::Max(1, $winHeight - $initialCursorTop - 3)
 
-            # 3. Viewport Scrolling
+            # Viewport Scrolling
             if ($currentIndex -lt $topIndex) {
                 $topIndex = $currentIndex
             }
@@ -250,7 +257,7 @@ function Read-CheckboxMenu {
             $endIndex = [Math]::Min($Options.Count - 1, $topIndex + $maxVisible - 1)
             $renderedRows = ($endIndex - $topIndex) + 1
 
-            # 4. Render Items + Right-Edge Scrollbar Track
+            # Render Items + Right-Edge Scrollbar Track
             for ($r = 0; $r -lt $renderedRows; $r++) {
                 $i = $topIndex + $r
                 $isCurrent = ($i -eq $currentIndex)
@@ -298,13 +305,13 @@ function Read-CheckboxMenu {
                 }
             }
 
-            # 5. Render Status Footer Line
+            # Render Status Footer Line
             $selectedCount = ($selected | Where-Object { $_ -eq $true }).Count
             $statusText = " [Item $($currentIndex + 1)/$($Options.Count) | Selected: $selectedCount/$($Options.Count)]"
             $paddedStatus = $statusText.PadRight([Math]::Max(1, $winWidth - 1))
             Write-Host $paddedStatus -ForegroundColor DarkCyan -BackgroundColor Black
 
-            # 6. Input Handling
+            # Input Handling
             $key = [Console]::ReadKey($true)
 
             switch ($key.Key) {
@@ -484,17 +491,24 @@ function Invoke-WindowsUpdate {
 
                     $options = [string[]]$displayMap.Keys
 
-                    # Display Titles in your custom checkbox menu
-                    $selectedTitles = Read-CheckboxMenu `
-                        -Options $options `
-                        -CommandOutput $updates `
-                        -Title "`nHow To Use: `
-                                `n- Up/Down: Navigate `
-                                `n- Space: Toggle `
-                                `n- A: Select/Deselect All `
-                                `n- Enter: Confirm `
-                                `n- Esc: Exit `
-                                `nSelect windows update you want to install:"
+                    $title = @"
+How To Use:
+- Up/Down: Navigate
+- Space: Toggle
+- A: Select/Deselect All
+- Enter: Confirm
+- Esc: Exit
+
+Select windows update you want to install:
+"@
+
+                    $menuParams = @{
+                        Options       = $options
+                        CommandOutput = $updates
+                        Title         = $title
+                    }
+
+                    $selectedTitles = Read-CheckboxMenu @menuParams
 
                     if (-not $selectedTitles) { break }
 
@@ -506,44 +520,6 @@ function Invoke-WindowsUpdate {
                     $selectedKBs | ForEach-Object { Write-Host " - KB$_" }
 
                     Install-WindowsUpdate -KBArticleID $selectedKBs -AcceptAll -IgnoreReboot
-
-
-
-                    # EmptyLine
-                    # Write-Host "Enter the KB Article ID to install. Separate multiple IDs with a space." -ForegroundColor Green
-                    # Write-Host "Type 'all' to install all updates, or 'exit' to skip." -ForegroundColor Green
-                    # Write-Host "Example : KB5026958 KB5026958 KB5025233" -ForegroundColor Green
-                    # $updateChoice = Read-Host -Prompt "KB Article ID "
-    
-                    # if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
-                    #     EmptyLine
-                    #     Write-Host "Exiting Windows Update." -ForegroundColor Yellow
-                    #     break
-                    # }
-    
-                    # if ($updateChoice.ToLower() -eq 'all') {
-                    #     EmptyLine
-                    #     Write-Host "Installing all available Windows Updates..." -ForegroundColor Yellow
-                    #     try {
-                    #         Install-WindowsUpdate -AcceptAll -IgnoreReboot
-                    #     }
-                    #     catch {
-                    #         Write-Warning "Install-WindowsUpdate command failed."
-                    #         Write-Warning $_.Exception.Message
-                    #     }
-                    # }
-                    # else {
-                    #     $ArrayID = $updateChoice.Split(" ")
-                    #     EmptyLine
-                    #     Write-Host "Installing selected Windows Updates..." -ForegroundColor Yellow
-                    #     try {
-                    #         Install-WindowsUpdate -KBArticleID $ArrayID -AcceptAll -IgnoreReboot
-                    #     }
-                    #     catch {
-                    #         Write-Warning "Install-WindowsUpdate command failed for specific KBs."
-                    #         Write-Warning $_.Exception.Message
-                    #     }
-                    # }
 
                     EmptyLine
                     Write-Host "Update process finished. Re-checking for more updates..." -ForegroundColor Yellow
@@ -797,18 +773,26 @@ function Invoke-WingetUpdate {
                         Write-Host "No packages found to display." -ForegroundColor Yellow
                         break
                     }
-
+                    
                     # Display names in your custom checkbox menu
-                    $selectedDisplays = Read-CheckboxMenu `
-                        -Options $options `
-                        -CommandOutput $wingetOutput `
-                        -Title "`nHow To Use: `
-                                `n- Up/Down: Navigate `
-                                `n- Space: Toggle `
-                                `n- A: Select/Deselect All `
-                                `n- Enter: Confirm `
-                                `n- Esc: Exit `
-                                `nSelect winget packages you want to upgrade:"
+                    $title = @"
+How To Use:
+- Up/Down: Navigate
+- Space: Toggle
+- A: Select/Deselect All
+- Enter: Confirm
+- Esc: Exit
+
+Select winget packages you want to upgrade:
+"@
+
+                    $menuParams = @{
+                        Options       = $options
+                        CommandOutput = $wingetOutput
+                        Title         = $title
+                    }
+
+                    $selectedPackages = Read-CheckboxMenu @menuParams
 
                     if (-not $selectedDisplays -or $selectedDisplays.Count -eq 0) {
                         break
@@ -908,32 +892,50 @@ function Invoke-ChocolateyUpdate {
             if (($updateChocoOption.ToLower() -eq "y") -or ($updateChocoOption -eq "")) {
                 do {
                     Clear-Host
-                    Write-Host "Checking for outdated Chocolatey packages..." -ForegroundColor Yellow
-                    choco outdated
-    
+
+                    # Capture outdated Chocolatey packages
                     EmptyLine
-                    Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
-                    Write-Host "Type 'all' to upgrade all packages, or 'exit' to skip." -ForegroundColor Green
-                    Write-Host "Example : python hwinfo chocolatey" -ForegroundColor Green
-                    $updateChoice = Read-Host -Prompt "Package Name"
-    
-                    if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
+                    Write-Host "Checking for outdated Chocolatey packages..." -ForegroundColor Yellow
+                    $chocoOutput = choco outdated 2>$null
+
+                    # Extract package names cleanly using Chocolatey limit-output (-r)
+                    $packages = (choco outdated -r 2>$null) | ForEach-Object { ($_ -split '\|')[0] }
+
+                    if (-not $packages) {
                         EmptyLine
-                        Write-Host "Exiting Chocolatey upgrade." -ForegroundColor Yellow
+                        Write-Host "No outdated packages found." -ForegroundColor Yellow
                         break
                     }
-    
-                    EmptyLine
-                    if ($updateChoice.ToLower() -eq 'all') {
-                        Write-Host "Upgrading all packages..." -ForegroundColor Yellow
-                        choco upgrade all -y
+
+                    # Pass names into your Read-CheckboxMenu function
+                    $title = @"
+How To Use:
+- Up/Down: Navigate
+- Space: Toggle
+- A: Select/Deselect All
+- Enter: Confirm
+- Esc: Exit
+
+Select Chocolatey packages you want to upgrade:"
+"@
+
+                    $menuParams = @{
+                        Options       = $packages
+                        CommandOutput = $chocoOutput
+                        Title         = $title
                     }
-                    else {
-                        $ArrayID = $updateChoice.Split(" ")
-                        Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
-                        foreach ($pkg in $ArrayID) {
-                            choco upgrade $pkg -y
-                        }
+
+                    $selectedPackages = Read-CheckboxMenu @menuParams
+
+                    if (-not $selectedPackages) { break }
+
+                    # Execute choco upgrade
+                    Write-Host "`nSelected Packages to Upgrade:" -ForegroundColor Green
+                    $selectedPackages | ForEach-Object { Write-Host " - $_" }
+
+                    foreach ($pkg in $selectedPackages) {
+                        Write-Host "`nUpgrading $pkg..." -ForegroundColor Yellow
+                        choco upgrade $pkg -y
                     }
     
                     EmptyLine
@@ -1135,33 +1137,8 @@ function Invoke-PipUpgrade {
                     Write-Host "Checking for outdated pip packages..." -ForegroundColor Yellow
                     $pipOutput = pip list --outdated 2>$null
 
-                    # Parse package names from the table
-                    $inTable = $false
-
                     # Directly fetch package names using JSON conversion
                     $packages = (pip list --outdated --format=json 2>$null | ConvertFrom-Json).name
-
-                    # Using line matching
-                    # $packages = foreach ($line in $pipOutput) {
-                    #     # Match the separator line containing dashes and spaces
-                    #     if ($line -match '^[- ]+$' -and $line -match '---') {
-                    #         $inTable = $true
-                    #         continue
-                    #     }
-
-                    #     if ($inTable) {
-                    #         $trimmed = $line.Trim()
-                            
-                    #         # Stop at blank lines or pip notices at the bottom
-                    #         if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed -match '^\[' -or $trimmed -match '^NOTICE') {
-                    #             break
-                    #         }
-                            
-                    #         # Extract the first column (Package Name)
-                    #         $pkgName = ($trimmed -split '\s+')[0]
-                    #         if ($pkgName) { $pkgName }
-                    #     }
-                    # }
 
                     if (-not $packages) {
                         EmptyLine
@@ -1170,16 +1147,24 @@ function Invoke-PipUpgrade {
                     }
 
                     # Pass names into your Read-CheckboxMenu function
-                    $selectedPackages = Read-CheckboxMenu `
-                        -Options $packages `
-                        -CommandOutput $pipOutput `
-                        -Title "`nHow To Use: `
-                                `n- Up/Down: Navigate `
-                                `n- Space: Toggle `
-                                `n- A: Select/Deselect All `
-                                `n- Enter: Confirm `
-                                `n- Esc: Exit `
-                                `nSelect pip packages you want to upgrade:"
+                    $title = @"
+How To Use:
+- Up/Down: Navigate
+- Space: Toggle
+- A: Select/Deselect All
+- Enter: Confirm
+- Esc: Exit
+
+Select pip packages you want to upgrade:"
+"@
+
+                    $menuParams = @{
+                        Options       = $packages
+                        CommandOutput = $pipOutput
+                        Title         = $title
+                    }
+
+                    $selectedPackages = Read-CheckboxMenu @menuParams
 
                     if (-not $selectedPackages) { break }
 
@@ -1279,27 +1264,41 @@ function Invoke-NpmUpgrade {
                         # Fetch outdated packages as JSON (suppressing exit code warnings)
                         $jsonRaw = npm outdated --json 2>$null
 
-                        if (-not $jsonRaw) {
+                        if (-not $jsonRaw -and ($null -eq $jsonRaw)) {
                             EmptyLine
-                            Write-Host "All npm packages are up to date!" -ForegroundColor Green
+                            Write-Host "All local npm packages are up to date!" -ForegroundColor Green
                             break
                         }
 
                         # Extract package names directly from object keys
                         $packages = ($jsonRaw | ConvertFrom-Json).PSObject.Properties.Name
 
+                        if (-not $packages) {
+                            EmptyLine
+                            Write-Host "No outdated packages found." -ForegroundColor Yellow
+                            break
+                        }
+
                         # Pass names into your Read-CheckboxMenu function
-                        $selectedPackages = Read-CheckboxMenu `
-                            -Options $packages `
-                            -CommandOutput $npmOutdated `
-                            -Title "`nHow To Use: `
-                                `n- Up/Down: Navigate `
-                                `n- Space: Toggle `
-                                `n- A: Select/Deselect All `
-                                `n- Enter: Confirm `
-                                `n- Esc: Exit `
-                                `n[WARNING] THIS WILL UPDATE NPM PACKAGE TO THE LATEST VERSION `
-                                `nSelect local npm packages you want to update:"
+                        $title = @"
+How To Use:
+- Up/Down: Navigate
+- Space: Toggle
+- A: Select/Deselect All
+- Enter: Confirm
+- Esc: Exit
+
+[WARNING] THIS WILL UPDATE NPM PACKAGE TO THE LATEST VERSION
+Select local npm packages you want to update:
+"@
+
+                        $menuParams = @{
+                            Options       = $packages
+                            CommandOutput = $npmOutdated
+                            Title         = $title
+                        }
+
+                        $selectedPackages = Read-CheckboxMenu @menuParams
 
                         if (-not $selectedPackages) { break }
 
@@ -1320,27 +1319,42 @@ function Invoke-NpmUpgrade {
                         # Fetch outdated packages as JSON (suppressing exit code warnings)
                         $jsonRaw = npm -g outdated --json 2>$null
 
-                        if (-not $jsonRaw) {
+                        if (-not $jsonRaw -and ($null -eq $jsonRaw)) {
                             EmptyLine
                             Write-Host "All global npm packages are up to date!" -ForegroundColor Green
-                            return
+                            break
                         }
 
                         # Extract package names directly from object keys
                         $packages = ($jsonRaw | ConvertFrom-Json).PSObject.Properties.Name
 
+                        if (-not $packages) {
+                            EmptyLine
+                            Write-Host "No outdated packages found." -ForegroundColor Yellow
+                            break
+                        }
+                        
+
                         # Pass names into your Read-CheckboxMenu function
-                        $selectedPackages = Read-CheckboxMenu `
-                            -Options $packages `
-                            -CommandOutput $npmOutdated `
-                            -Title "`nHow To Use: `
-                                    `n- Up/Down: Navigate `
-                                    `n- Space: Toggle `
-                                    `n- A: Select/Deselect All `
-                                    `n- Enter: Confirm `
-                                    `n- Esc: Exit `
-                                    `n[WARNING] THIS WILL UPDATE NPM PACKAGE TO THE LATEST VERSION `
-                                    `nSelect global npm packages you want to update:"
+                        $title = @"
+How To Use:
+- Up/Down: Navigate
+- Space: Toggle
+- A: Select/Deselect All
+- Enter: Confirm
+- Esc: Exit
+
+[WARNING] THIS WILL UPDATE NPM PACKAGE TO THE LATEST VERSION
+Select global npm packages you want to update:
+"@
+
+                        $menuParams = @{
+                            Options       = $packages
+                            CommandOutput = $npmOutdated
+                            Title         = $title
+                        }
+
+                        $selectedPackages = Read-CheckboxMenu @menuParams
 
                         if (-not $selectedPackages) { break }
 
@@ -1353,72 +1367,6 @@ function Invoke-NpmUpgrade {
                             npm -g install ${pkg}@latest
                         }
                     }
-
-
-                    #! ============================================================
-                    #!                  THIS IS THE OLD ONE
-                    #! ============================================================
-
-                    # EmptyLine
-                    # Write-Host "Enter the package name to upgrade. Separate multiple names with a space." -ForegroundColor Green
-                    # Write-Host "Type 'all-global' to upgrade all global packages, 'all-local' for local, or 'all' for both." -ForegroundColor Green
-                    # Write-Host "Type 'all-latest' to upgrade all local packages to the latest version." -ForegroundColor Green
-                    # Write-Host "Type 'exit' to skip." -ForegroundColor Green
-                    # Write-Host "Example : express react typescript" -ForegroundColor Green
-                    # $updateChoice = Read-Host -Prompt "Package Name"
-    
-                    # if ($updateChoice.ToLower() -eq 'exit' -or [string]::IsNullOrEmpty($updateChoice)) {
-                    #     EmptyLine
-                    #     Write-Host "Exiting npm upgrade." -ForegroundColor Yellow
-                    #     break
-                    # }
-    
-                    # if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-global') {
-                    #     EmptyLine
-                    #     Write-Host "Upgrading all global packages..." -ForegroundColor Yellow
-                    #     npm -g update --all
-                    # }
-    
-                    # if ($updateChoice.ToLower() -eq 'all' -or $updateChoice.ToLower() -eq 'all-local') {
-                    #     EmptyLine
-                    #     Write-Host "Upgrading all local packages..." -ForegroundColor Yellow
-                    #     npm update --all
-                        
-                    # }
-                    
-                    # if ($updateChoice.ToLower() -eq 'all-latest') {
-                    #     EmptyLine
-                    #     Write-Host "Upgrading all local packages to the latest version..." -ForegroundColor Yellow
-                    #     npm outdated | Select-Object -Skip 1 | ForEach-Object { $package = ($_ -split '\s+')[0]; npm install $package@latest }
-                    # }
-
-                    # if (($updateChoice.ToLower() -ne 'all') -and 
-                    #     ($updateChoice.ToLower() -ne 'all-local') -and 
-                    #     ($updateChoice.ToLower() -ne 'all-global') -and
-                    #     ($updateChoice.ToLower() -ne 'all-latest')) {
-
-                    #     $packageNames = $updateChoice.Split(" ")
-
-                    #     EmptyLine
-                    #     Write-Host "Upgrading selected packages..." -ForegroundColor Yellow
-
-                    #     foreach ($pkg in $packageNames) {
-                    #         # A bit tricky to know if it's global or local, so we can try local first, then global.
-                    #         if ((Get-ChildItem -Filter "package.json" -ErrorAction SilentlyContinue) -or 
-                    #             (Get-ChildItem -Filter "package-lock.json" -ErrorAction SilentlyContinue) -or
-                    #             (Get-ChildItem -Filter "node_modules" -ErrorAction SilentlyContinue)) {
-    
-                    #             EmptyLine
-                    #             Write-Host "Attempting to upgrade '$pkg' locally..."
-                    #             npm update $pkg
-                    #         }
-                    #         else {
-                    #             EmptyLine
-                    #             Write-Host "Attempting to upgrade '$pkg' globally..."
-                    #             npm -g update $pkg
-                    #         }
-                    #     }
-                    # }
     
                     EmptyLine
                     Write-Host "NPM upgrade process finished. Re-checking for more outdated packages..." -ForegroundColor Yellow
@@ -1474,9 +1422,9 @@ function Invoke-NpmUpgrade {
 
 
 
-<####################################################################>
-<#                       Main Function                              #>
-<####################################################################>
+<#!###################################################################>
+<#!                       Main Function                              #>
+<#!###################################################################>
 function Main() {
     <#
     .SYNOPSIS
