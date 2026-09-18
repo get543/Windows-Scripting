@@ -59,16 +59,89 @@ $inputXAML = @"
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Modern ComboBox Style -->
         <Style TargetType="ComboBox">
             <Setter Property="Background" Value="#2D2D2D"/>
-            <Setter Property="Foreground" Value="#000000"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="BorderBrush" Value="#444444"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="#2D2D2D"/>
+                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border x:Name="itemBorder" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="itemBorder" Property="Background" Value="#106EBE"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border x:Name="comboBorder" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6">
+                                <Grid>
+                                    <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Left"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+                                    <Path Data="M 0,0 L 8,0 L 4,4 Z" Fill="#B8C7D9" HorizontalAlignment="Right"
+                                          VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                </Grid>
+                            </Border>
+                            <ToggleButton x:Name="DropDownButton" Background="Transparent" BorderThickness="0"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                          ClickMode="Press" Focusable="False" Opacity="0.01"/>
+                            <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False" Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Slide">
+                                <Border Background="#2D2D2D" BorderBrush="#555555" BorderThickness="1" CornerRadius="6">
+                                    <ScrollViewer MaxHeight="260" CanContentScroll="True">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="comboBorder" Property="BorderBrush" Value="#0078D4"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="comboBorder" Property="BorderBrush" Value="#0078D4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Modern CheckBox Style -->
@@ -78,6 +151,84 @@ $inputXAML = @"
             <Setter Property="Margin" Value="0,6,0,6"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="CheckBorder" Width="18" Height="18" CornerRadius="5"
+                                    Background="#2D2D2D" BorderBrush="#555555" BorderThickness="1">
+                                <Path x:Name="CheckMark" Data="M 3,9 L 7,13 L 15,4" Stroke="#FFFFFF"
+                                      StrokeThickness="2" Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckBorder" Property="Background" Value="#0078D4"/>
+                                <Setter TargetName="CheckBorder" Property="BorderBrush" Value="#0078D4"/>
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBorder" Property="BorderBrush" Value="#0078D4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark ScrollBar Style -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="#202020"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{TemplateBinding Background}" Margin="1,2">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True"
+                                Orientation="{TemplateBinding Orientation}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Background="Transparent" BorderThickness="0" IsTabStop="False"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Background="#666666" BorderThickness="0" Margin="1,0">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="ThumbBorder" Background="{TemplateBinding Background}"
+                                                        CornerRadius="4" Margin="1"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#8A8A8A"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#A0A0A0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Background="Transparent" BorderThickness="0" IsTabStop="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter Property="Height" Value="10"/>
+                                <Setter Property="MinHeight" Value="10"/>
+                                <Setter Property="Width" Value="Auto"/>
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Modern RadioButton Style -->
@@ -156,7 +307,9 @@ $inputXAML = @"
         </Style>
     </Window.Resources>
 
-    <Grid Margin="24">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  CanContentScroll="True" Focusable="False">
+    <Grid Margin="24" MinHeight="752">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -173,7 +326,7 @@ $inputXAML = @"
         </StackPanel>
 
         <!-- Main Content Options Area -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Focusable="False" Margin="0,0,0,6">
+        <Grid Grid.Row="1" Margin="0,0,0,6">
             <StackPanel>
                 <!-- Card 1: URL & Output Path -->
                 <Border Style="{StaticResource CardBorder}">
@@ -181,7 +334,7 @@ $inputXAML = @"
                         <TextBlock Text="Target &amp; Output Directory" Style="{StaticResource SectionHeader}"/>
                         
                         <Label Content="Media URL / Link:" Target="{Binding ElementName=UrlTextBox}"/>
-                        <TextBox x:Name="UrlTextBox" Margin="0,0,0,12" Height="32"/>
+                        <TextBox x:Name="UrlTextBox" Margin="0,0,0,12" Height="40" Padding="10,0"/>
 
                         <Label Content="Save Directory:" Target="{Binding ElementName=OutputPathTextBox}"/>
                         <Grid>
@@ -189,7 +342,7 @@ $inputXAML = @"
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="OutputPathTextBox" Grid.Column="0" Height="32" Margin="0,0,8,0"/>
+                            <TextBox x:Name="OutputPathTextBox" Grid.Column="0" Height="40" Padding="10,0" Margin="0,0,8,0"/>
                             <Button x:Name="BrowseButton" Grid.Column="1" Content="Browse..." 
                                     Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="32"/>
                         </Grid>
@@ -258,7 +411,7 @@ $inputXAML = @"
                     </StackPanel>
                 </Border>
             </StackPanel>
-        </ScrollViewer>
+        </Grid>
 
         <!-- Status & Console Output Section -->
         <Grid Grid.Row="2" Margin="0,0,0,12">
@@ -300,6 +453,7 @@ $inputXAML = @"
                     Content="Start Download" Width="180" Height="38" Padding="12,0"/>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </Window>
 "@
 
