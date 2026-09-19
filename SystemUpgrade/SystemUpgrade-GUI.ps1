@@ -39,6 +39,51 @@ $XAML.SelectNodes("//*[@Name]") | ForEach-Object {
     }
 }
 
+$packageUpdateCheckboxes = @(
+    $var_UpdatePSModule,
+    $var_WindowsUpdate,
+    $var_MicrosoftStoreUpdate,
+    $var_WingetUpgrade,
+    $var_ChocoUpgrade,
+    $var_NPMUpgrade,
+    $var_PipUpgrade
+)
+
+$maintenanceCheckboxes = @(
+    $var_CheckCorruptionFiles,
+    $var_DeleteTempFiles
+)
+
+$allTaskCheckboxes = $packageUpdateCheckboxes + $maintenanceCheckboxes
+
+function Update-CheckboxButtonLabel {
+    param(
+        [Parameter(Mandatory)][object]$Button,
+        [Parameter(Mandatory)][object[]]$Checkboxes,
+        [AllowEmptyString()][string]$SectionName = ""
+    )
+
+    $allChecked = $Checkboxes.Count -gt 0 -and ($Checkboxes | Where-Object { $_.IsChecked -ne $true }).Count -eq 0
+    $Button.Content = if ($allChecked) { "Uncheck All $SectionName" } else { "Check All $SectionName" }
+}
+
+function Toggle-Checkboxes {
+    param(
+        [Parameter(Mandatory)][object[]]$Checkboxes,
+        [Parameter(Mandatory)][object]$Button,
+        [AllowEmptyString()][string]$SectionName = ""
+    )
+
+    $allChecked = $Checkboxes.Count -gt 0 -and ($Checkboxes | Where-Object { $_.IsChecked -ne $true }).Count -eq 0
+    foreach ($checkbox in $Checkboxes) {
+        if ($checkbox) {
+            $checkbox.IsChecked = -not $allChecked
+        }
+    }
+
+    Update-CheckboxButtonLabel -Button $Button -Checkboxes $Checkboxes -SectionName $SectionName
+}
+
 function checkBOX() {
     $selectedTasks = [ordered]@{
         UpdatePSModule       = $var_UpdatePSModule.IsChecked -eq $true
@@ -341,6 +386,35 @@ function checkBOX() {
     $ps.AddArgument($syncHash) | Out-Null
     $null = $ps.BeginInvoke()
 }
+
+$var_CheckAllButton.Add_Click({
+    Toggle-Checkboxes -Checkboxes $allTaskCheckboxes -Button $var_CheckAllButton -SectionName ""
+})
+
+$var_CheckAllPackageUpdatesButton.Add_Click({
+    Toggle-Checkboxes -Checkboxes $packageUpdateCheckboxes -Button $var_CheckAllPackageUpdatesButton -SectionName "in Section"
+})
+
+$var_CheckAllMaintenanceButton.Add_Click({
+    Toggle-Checkboxes -Checkboxes $maintenanceCheckboxes -Button $var_CheckAllMaintenanceButton -SectionName "in Section"
+})
+
+foreach ($checkbox in $allTaskCheckboxes) {
+    $checkbox.Add_Checked({
+        Update-CheckboxButtonLabel -Button $var_CheckAllButton -Checkboxes $allTaskCheckboxes -SectionName ""
+        Update-CheckboxButtonLabel -Button $var_CheckAllPackageUpdatesButton -Checkboxes $packageUpdateCheckboxes -SectionName "in Section"
+        Update-CheckboxButtonLabel -Button $var_CheckAllMaintenanceButton -Checkboxes $maintenanceCheckboxes -SectionName "in Section"
+    })
+    $checkbox.Add_Unchecked({
+        Update-CheckboxButtonLabel -Button $var_CheckAllButton -Checkboxes $allTaskCheckboxes -SectionName ""
+        Update-CheckboxButtonLabel -Button $var_CheckAllPackageUpdatesButton -Checkboxes $packageUpdateCheckboxes -SectionName "in Section"
+        Update-CheckboxButtonLabel -Button $var_CheckAllMaintenanceButton -Checkboxes $maintenanceCheckboxes -SectionName "in Section"
+    })
+}
+
+Update-CheckboxButtonLabel -Button $var_CheckAllButton -Checkboxes $allTaskCheckboxes -SectionName ""
+Update-CheckboxButtonLabel -Button $var_CheckAllPackageUpdatesButton -Checkboxes $packageUpdateCheckboxes -SectionName "in Section"
+Update-CheckboxButtonLabel -Button $var_CheckAllMaintenanceButton -Checkboxes $maintenanceCheckboxes -SectionName "in Section"
 
 $var_RunButton.Add_Click({checkBOX})
 

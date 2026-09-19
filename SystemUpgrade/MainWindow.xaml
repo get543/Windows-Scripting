@@ -68,6 +68,56 @@
             </Setter>
         </Style>
 
+        <!-- Dark ScrollBar Style -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="#202020"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{TemplateBinding Background}" Margin="1,2">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True"
+                                   Orientation="{TemplateBinding Orientation}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Background="Transparent" BorderThickness="0" IsTabStop="False"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Background="#666666" BorderThickness="0" Margin="1,0">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="ThumbBorder" Background="{TemplateBinding Background}"
+                                                        CornerRadius="4" Margin="1"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#8A8A8A"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#A0A0A0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Background="Transparent" BorderThickness="0" IsTabStop="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter Property="Height" Value="10"/>
+                                <Setter Property="MinHeight" Value="10"/>
+                                <Setter Property="Width" Value="Auto"/>
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Modern Primary Button Style -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#0078D4"/>
@@ -97,7 +147,9 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="24">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  CanContentScroll="True" Focusable="False">
+    <Grid Margin="24" MinHeight="692">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -114,56 +166,72 @@
         </StackPanel>
 
         <!-- Main Content Area with Cards -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Focusable="False" Margin="0,0,0,10">
-            <StackPanel>
-                <!-- Card 1: Package & App Upgrades -->
-                <Border Style="{StaticResource CardBorder}">
-                    <StackPanel>
-                        <TextBlock Text="Package &amp; Application Updates" Style="{StaticResource SectionHeader}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <Button x:Name="CheckAllButton" Style="{StaticResource PrimaryButtonStyle}"
+                    Content="Check All" Height="30" Padding="12,0" HorizontalAlignment="Right"
+                    Margin="0,0,0,12"/>
 
-                            <StackPanel Grid.Column="0">
-                                <CheckBox x:Name="UpdatePSModule" Content="Update All PowerShell Modules"/>
-                                <CheckBox x:Name="WindowsUpdate" Content="Update All Windows Update"/>
-                                <CheckBox x:Name="MicrosoftStoreUpdate" Content="Update All Microsoft Store Applications"/>
-                                <CheckBox x:Name="WingetUpgrade" Content="Update All Winget Package Manager Applications"/>
-                            </StackPanel>
+            <!-- Card 1: Package & App Upgrades -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Package &amp; Application Updates" Style="{StaticResource SectionHeader}" Margin="0"/>
+                        <Button x:Name="CheckAllPackageUpdatesButton" Grid.Column="1"
+                                Style="{StaticResource PrimaryButtonStyle}" Content="Check All in Section"
+                                Height="28" Padding="10,0" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <CheckBox x:Name="UpdatePSModule" Content="Update All PowerShell Modules"/>
+                            <CheckBox x:Name="WindowsUpdate" Content="Update All Windows Update"/>
+                            <CheckBox x:Name="MicrosoftStoreUpdate" Content="Update All Microsoft Store Applications"/>
+                            <CheckBox x:Name="WingetUpgrade" Content="Update All Winget Package Manager Applications"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <CheckBox x:Name="ChocoUpgrade" Content="Update All Chocolatey Package Manager"/>
+                            <CheckBox x:Name="NPMUpgrade" Content="Update All NPM Global Packages"/>
+                            <CheckBox x:Name="PipUpgrade" Content="Update All Python Pip Packages"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-                            <StackPanel Grid.Column="1">
-                                <CheckBox x:Name="ChocoUpgrade" Content="Update All Chocolatey Package Manager"/>
-                                <CheckBox x:Name="NPMUpgrade" Content="Update All NPM Global Packages"/>
-                                <CheckBox x:Name="PipUpgrade" Content="Update All Python Pip Packages"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <!-- Card 2: System Maintenance -->
-                <Border Style="{StaticResource CardBorder}">
-                    <StackPanel>
-                        <TextBlock Text="System Maintenance" Style="{StaticResource SectionHeader}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0">
-                                <CheckBox x:Name="CheckCorruptionFiles" Content="Scan &amp; Repair Corruption (sfc / DISM / chkdsk)"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1">
-                                <CheckBox x:Name="DeleteTempFiles" Content="Delete Temporary Files (Disk Cleanup &amp; Temp Files)"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+            <!-- Card 2: System Maintenance -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="System Maintenance" Style="{StaticResource SectionHeader}" Margin="0"/>
+                        <Button x:Name="CheckAllMaintenanceButton" Grid.Column="1"
+                                Style="{StaticResource PrimaryButtonStyle}" Content="Check All in Section"
+                                Height="28" Padding="10,0" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <CheckBox x:Name="CheckCorruptionFiles" Content="Scan &amp; Repair Corruption (sfc / DISM / chkdsk)"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <CheckBox x:Name="DeleteTempFiles" Content="Delete Temporary Files (Disk Cleanup &amp; Temp Files)"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
 
         <!-- Status & Progress Section -->
         <Grid Grid.Row="2" Margin="0,0,0,16">
@@ -196,4 +264,5 @@
                     Content="Run Selected Tweaks" Width="180" Height="38" Padding="12,0" HorizontalAlignment="Right"/>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </Window>
