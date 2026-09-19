@@ -792,7 +792,7 @@ Select winget packages you want to upgrade:
                         Title         = $title
                     }
 
-                    $selectedPackages = Read-CheckboxMenu @menuParams
+                    $selectedDisplays = Read-CheckboxMenu @menuParams
 
                     if (-not $selectedDisplays -or $selectedDisplays.Count -eq 0) {
                         break
