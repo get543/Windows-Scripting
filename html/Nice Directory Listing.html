@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remote Directory Browser</title>
+    
+    <!-- 1. Load Tailwind CSS First -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Configure Tailwind to use Class-based Dark Mode -->
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+
+    <!-- 3. Prevent Flash of Unstyled Content (FOUC) -->
+    <script>
+      const savedTheme = localStorage.getItem('theme') || 'system';
+      if (savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+    <style>
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+      
+      .dark ::-webkit-scrollbar-track { background: #1e293b; }
+      .dark ::-webkit-scrollbar-thumb { background: #475569; }
+      .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+      
+      /* Modal Animation */
+      .modal-content {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          transform: scale(0.95);
+          opacity: 0;
+      }
+      .modal-content.active {
+          transform: scale(1);
+          opacity: 1;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans antialiased transition-colors duration-200">
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+      
+      <!-- Header & URL Input -->
+      <header class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 p-2 rounded-lg">🌐</span>
+            Remote File Browser
+          </h1>
+          
+          <div class="flex items-center gap-2">
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle" class="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Toggle Theme">
+                <!-- Icon injected via JS -->
+            </button>
+
+            <!-- View Toggle -->
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1 shadow-sm">
+              <button id="view-grid" class="p-2 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-100 transition" title="Grid View">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              </button>
+              <button id="view-list" class="p-2 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition" title="List View">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- URL Target Bar -->
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm mb-4 transition-colors">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Target Directory URL</label>
+            <div class="flex gap-2">
+                <input type="url" id="server-url" placeholder="https://files.example.com/public/" class="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition font-mono text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500" />
+                <button id="fetch-btn" class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Fetch
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">⚠️ Note: The target server must allow CORS (Cross-Origin Resource Sharing) for client-side fetching to work.</p>
+        </div>
+
+        <nav id="breadcrumb" class="flex items-center text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 shadow-sm overflow-x-auto transition-colors"></nav>
+      </header>
+
+      <!-- Toolbar -->
+      <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <div class="relative flex-1">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="search" placeholder="Search files and folders..." class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500" />
+        </div>
+        <div class="flex gap-2">
+          <!-- Added dark:[color-scheme:dark] so the native OS dropdown options render in dark mode -->
+          <select id="sort-by" class="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-700 dark:text-slate-200 font-medium appearance-none pr-8 cursor-pointer dark:[color-scheme:dark]">
+            <option value="name">Sort by Name</option>
+            <option value="date">Sort by Date</option>
+            <option value="size">Sort by Size</option>
+          </select>
+          <button id="sort-order" class="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5 min-w-[100px] justify-center">
+            <span id="sort-icon">↓</span> <span id="sort-text">Desc</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- File Grid / List Container -->
+      <div id="file-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="preview-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="modal-content bg-white dark:bg-slate-800 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 id="modal-title" class="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-md">File Preview</h3>
+                <button onclick="closePreview()" class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-auto flex-1 flex items-center justify-center bg-slate-100 dark:bg-slate-900 transition-colors"></div>
+        </div>
+    </div>
+
+    <script>
+      let currentBaseUrl = ""; 
+      let currentRelativePath = "";
+      let filesData = [];
+      let currentSort = { field: "name", direction: "asc" };
+      let currentView = localStorage.getItem('fileBrowserView') || 'grid';
+
+      // --- THEME TOGGLE LOGIC ---
+      const themeIcons = {
+          system: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`,
+          light: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
+          dark: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+      };
+
+      function applyTheme(theme) {
+          localStorage.setItem('theme', theme);
+          const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          
+          if (isDark) {
+              document.documentElement.classList.add('dark');
+          } else {
+              document.documentElement.classList.remove('dark');
+          }
+          
+          const toggleBtn = document.getElementById('theme-toggle');
+          if (toggleBtn) {
+              toggleBtn.innerHTML = themeIcons[theme];
+              toggleBtn.title = `Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`;
+          }
+      }
+
+      function cycleTheme() {
+          const currentTheme = localStorage.getItem('theme') || 'system';
+          // Cycle: system -> light -> dark -> system
+          const nextTheme = currentTheme === 'system' ? 'light' : (currentTheme === 'light' ? 'dark' : 'system');
+          applyTheme(nextTheme);
+      }
+
+      // Listen for OS level theme changes if user is on 'system'
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          if (localStorage.getItem('theme') === 'system') applyTheme('system');
+      });
+      // --------------------------
+
+      function escapeHtml(str) {
+          if (!str) return "";
+          return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#039;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      async function loadFiles(targetUrl) {
+          if (!targetUrl) return;
+          if (!targetUrl.endsWith('/')) targetUrl += '/';
+          
+          currentBaseUrl = targetUrl;
+          const urlObj = new URL(targetUrl);
+          currentRelativePath = urlObj.pathname;
+
+          try {
+              renderBreadcrumbs();
+              const container = document.getElementById("file-container");
+              container.className = ""; 
+              container.innerHTML = `
+                  <div class="col-span-full flex items-center justify-center py-20 text-slate-400 dark:text-slate-500">
+                      <svg class="animate-spin h-8 w-8 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span class="text-lg font-medium">Fetching directory...</span>
+                  </div>`;
+
+              const response = await fetch(targetUrl, { cache: "no-store" });
+              if (!response.ok) throw new Error(`HTTP ${response.status} (${response.statusText})`);
+              
+              const htmlText = await response.text();
+              filesData = parseApacheListing(htmlText, targetUrl);
+              updateDisplay();
+          } catch (err) {
+              document.getElementById("file-container").innerHTML = `
+                  <div class="col-span-full flex flex-col items-center justify-center py-20 text-red-500">
+                      <span class="text-5xl mb-4">⚠️</span>
+                      <p class="text-lg font-semibold mb-2">Failed to load directory</p>
+                      <p class="text-sm text-red-400 text-center max-w-md">
+                          ${err.message}.<br>
+                          <span class="font-bold">CORS Block?</span> The target server might not allow cross-origin requests.
+                      </p>
+                  </div>`;
+          }
+      }
+
+      function parseSizeToBytes(sizeStr) {
+          if (!sizeStr || sizeStr === "-" || sizeStr === "Folder" || sizeStr === "File") return -1;
+          const units = { K: 1024, M: 1024 ** 2, G: 1024 ** 3, T: 1024 ** 4 };
+          const cleanStr = sizeStr.trim().toUpperCase();
+          const match = cleanStr.match(/^([\d\.]+)\s*([KMG]B?)?$/);
+          if (match) {
+              const val = parseFloat(match[1]);
+              const unit = match[2] ? match[2][0] : null;
+              return unit && units[unit] ? val * units[unit] : val;
+          }
+          return parseFloat(sizeStr) || 0;
+      }
+
+      function parseApacheListing(htmlText, currentUrl) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlText, "text/html");
+          const links = doc.querySelectorAll("a");
+          const files = [];
+
+          links.forEach((a) => {
+              const href = a.getAttribute("href");
+              if (!href || href.startsWith("?") || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("javascript:")) return;
+              const text = a.textContent.trim();
+              if (["Name", "Last modified", "Size", "Description", "Type"].includes(text)) return;
+
+              const resolvedUrl = new URL(href, currentUrl);
+              const isDir = href.endsWith("/") || resolvedUrl.pathname.endsWith("/");
+              let pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
+              let cleanName = decodeURIComponent(pathSegments.pop() || text);
+              
+              if (text === "Parent Directory" || href === "../") {
+                  files.push({ name: "..", type: "directory", sizeDisplay: "Parent", sizeBytes: -1, dateDisplay: "", href: "../", url: new URL("../", currentUrl).href, isParent: true });
+                  return;
+              }
+
+              let sizeStr = "", dateStr = "";
+              const row = a.closest("tr");
+              if (row) {
+                  const cells = row.querySelectorAll("td");
+                  cells.forEach(cell => {
+                      const cellText = cell.textContent.trim();
+                      if (cellText.match(/\d{4}-\d{2}-\d{2}/) || cellText.match(/\d{2}-\w{3}-\d{4}/) || cellText.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) dateStr = cellText;
+                      else if (cellText.match(/^[\d\.]+\s*[KMG]B?$/i) || cellText === "-") sizeStr = cellText;
+                  });
+              } else {
+                  let nextNode = a.nextSibling;
+                  while(nextNode) {
+                      if (nextNode.nodeType === Node.TEXT_NODE) {
+                          const nodeText = nextNode.textContent.trim();
+                          if (nodeText.match(/\d{4}-\d{2}-\d{2}/) || nodeText.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) dateStr = dateStr ? dateStr + " " + nodeText : nodeText;
+                          else if (nodeText.match(/^[\d\.]+\s*[KMG]B?$/i) || nodeText === "-") sizeStr = nodeText;
+                      }
+                      nextNode = nextNode.nextSibling;
+                  }
+              }
+
+              files.push({ name: cleanName || text, type: isDir ? "directory" : "file", sizeDisplay: isDir ? "Folder" : (sizeStr || "File"), sizeBytes: isDir ? -1 : parseSizeToBytes(sizeStr), dateDisplay: dateStr || "-", href: href, url: resolvedUrl.href, isParent: false });
+          });
+          
+          const uniqueFiles = [], seen = new Set();
+          files.forEach(f => { if (!seen.has(f.url)) { seen.add(f.url); uniqueFiles.push(f); } });
+          return uniqueFiles;
+      }
+
+      function renderBreadcrumbs() {
+          const container = document.getElementById("breadcrumb");
+          const urlObj = new URL(currentBaseUrl);
+          const basePath = urlObj.origin + "/";
+          let parts = urlObj.pathname.split("/").filter(Boolean);
+          
+          let html = `<button data-url="${basePath}" class="breadcrumb-btn flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              ${urlObj.hostname}
+          </button>`;
+          let accumulatedUrl = basePath;
+
+          parts.forEach((part, index) => {
+              accumulatedUrl = new URL(part + "/", accumulatedUrl).href;
+              const isLast = index === parts.length - 1;
+              html += `<svg class="text-slate-300 dark:text-slate-600 mx-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+
+              if (isLast) html += `<span class="font-medium text-slate-800 dark:text-slate-100 truncate">${decodeURIComponent(part)}</span>`;
+              else html += `<button data-url="${accumulatedUrl}" class="breadcrumb-btn text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition truncate">${decodeURIComponent(part)}</button>`;
+          });
+
+          container.innerHTML = html;
+          container.querySelectorAll('.breadcrumb-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                  document.getElementById('server-url').value = btn.dataset.url;
+                  loadFiles(btn.dataset.url);
+              });
+          });
+      }
+
+      function navigateTo(href) {
+          document.getElementById("search").value = "";
+          const targetUrl = new URL(href, currentBaseUrl).href;
+          document.getElementById('server-url').value = targetUrl;
+          loadFiles(targetUrl);
+      }
+
+      function getFileIcon(filename, isDir) {
+          if (isDir) return '📁';
+          const ext = filename.split('.').pop().toLowerCase();
+          const iconMap = { png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', webp: '🖼️', svg: '🎨', mp4: '🎬', mkv: '🎬', mov: '🎬', webm: '🎬', ogv: '🎬', mp3: '🎵', wav: '🎵', ogg: '🎵', m4a: '🎵', flac: '🎵', js: '⚡', ts: '⚡', py: '🐍', json: '📋', html: '🌐', css: '🎨', pdf: '📕', txt: '📝', md: '📝', doc: '📘', docx: '📘', xls: '📈', xlsx: '📈', zip: '📦', rar: '📦', tar: '📦', gz: '📦', '7z': '📦', ps1: '⚙️' };
+          return iconMap[ext] || '📄';
+      }
+
+      function isPreviewable(filename) {
+          const ext = filename.split('.').pop().toLowerCase();
+          return {
+              isImage: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext),
+              isText: ['txt', 'md', 'json', 'js', 'css', 'html', 'py', 'log', 'sh', 'csv', 'yml', 'yaml', 'xml', 'env', 'ps1', 'bat'].includes(ext),
+              isVideo: ['mp4', 'webm', 'ogv', 'mov'].includes(ext),
+              isAudio: ['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext)
+          };
+      }
+
+      async function openPreview(url, filename) {
+          const modal = document.getElementById('preview-modal');
+          const modalContent = modal.querySelector('.modal-content');
+          const modalTitle = document.getElementById('modal-title');
+          const modalBody = document.getElementById('modal-body');
+          const { isImage, isText, isVideo, isAudio } = isPreviewable(filename);
+          const ext = filename.split('.').pop().toLowerCase();
+
+          modalTitle.innerText = filename;
+          modalBody.innerHTML = `<div class="text-center py-12 text-slate-400 dark:text-slate-500 animate-pulse"><span class="text-6xl block mb-4">${getFileIcon(filename, false)}</span><p>Loading preview...</p></div>`;
+          
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          setTimeout(() => modalContent.classList.add('active'), 10);
+
+          if (isImage) {
+              modalBody.innerHTML = `<img src="${url}" alt="${filename}" class="max-h-[75vh] object-contain rounded-lg shadow-sm">`;
+          } else if (isVideo) {
+              modalBody.innerHTML = `<video controls autoplay class="max-h-[75vh] w-full rounded-lg shadow-lg bg-black" title="${filename}"><source src="${url}" type="video/${ext === 'mov' ? 'mp4' : ext}"></video>`;
+          } else if (isAudio) {
+              modalBody.innerHTML = `
+                  <div class="text-center p-10 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl w-full max-w-md shadow-inner flex flex-col items-center">
+                      <span class="text-7xl block mb-6">${getFileIcon(filename, false)}</span>
+                      <p class="font-medium text-slate-700 dark:text-slate-200 mb-6 truncate w-full" title="${filename}">${filename}</p>
+                      <audio controls autoplay class="w-full focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-full"><source src="${url}" type="audio/${ext}"></audio>
+                  </div>`;
+          } else if (isText) {
+              try {
+                  const res = await fetch(url);
+                  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                  const text = await res.text();
+                  const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                  modalBody.innerHTML = `<pre class="w-full text-left font-mono text-xs p-5 bg-slate-950 text-slate-100 rounded-xl border border-slate-700 overflow-auto max-h-[70vh] selection:bg-slate-700"><code>${safeText}</code></pre>`;
+              } catch (err) {
+                  modalBody.innerHTML = `<div class="text-center text-red-500 py-8"><span class="text-5xl block mb-3">⚠️</span><p class="font-semibold">Failed to load text preview.</p><p class="text-sm text-red-400">${err.message}</p></div>`;
+              }
+          } else {
+              modalBody.innerHTML = `
+                  <div class="text-center py-10 px-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-inner flex flex-col items-center">
+                      <span class="text-6xl block mb-5">${getFileIcon(filename, false)}</span>
+                      <p class="text-slate-700 dark:text-slate-200 mb-2 font-medium">Preview Unavailable</p>
+                      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">No inline viewer for this file type (${ext.toUpperCase()}).</p>
+                      <a href="${url}" target="_blank" download class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow hover:shadow-lg active:scale-95">Download File</a>
+                  </div>`;
+          }
+      }
+
+      function closePreview() {
+          const modal = document.getElementById('preview-modal');
+          const modalContent = modal.querySelector('.modal-content');
+          const modalBody = document.getElementById('modal-body');
+          const activeMedia = modalBody.querySelectorAll('audio, video');
+          activeMedia.forEach(media => { media.pause(); media.currentTime = 0; media.load(); });
+
+          modalContent.classList.remove('active');
+          setTimeout(() => {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+              modalBody.innerHTML = ''; 
+          }, 200);
+      }
+
+      function renderFiles(files) {
+          const container = document.getElementById("file-container");
+          if (files.length === 0) {
+              container.className = "";
+              container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500"><span class="text-5xl mb-4">🔍</span><p class="text-lg font-medium">No files found</p><p class="text-sm">Try adjusting your search or navigate to another folder.</p></div>`;
+              return;
+          }
+
+          if (currentView === 'grid') {
+              container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
+              container.innerHTML = files.map(renderGridItem).join("");
+          } else {
+              container.className = "flex flex-col bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm transition-colors";
+              container.innerHTML = `
+                  <div class="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <div class="col-span-6">Name</div>
+                      <div class="col-span-3">Last Modified</div>
+                      <div class="col-span-3 text-right">Size</div>
+                  </div>
+                  ${files.map(renderListItem).join("")}`;
+          }
+      }
+
+      function renderGridItem(file) {
+          const icon = getFileIcon(file.name, file.type === "directory");
+          return `
+              <div data-type="${file.type}" data-href="${escapeHtml(file.href)}" data-url="${escapeHtml(file.url)}" data-name="${escapeHtml(file.name)}"
+                   class="group p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all duration-200 flex flex-col items-center text-center cursor-pointer select-none relative overflow-hidden">
+                  <div class="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-200">${icon}</div>
+                  <p class="font-medium text-slate-700 dark:text-slate-200 truncate w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors px-1" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</p>
+                  <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">${file.sizeDisplay}</p>
+              </div>`;
+      }
+
+      function renderListItem(file) {
+          const icon = getFileIcon(file.name, file.type === "directory");
+          return `
+              <div data-type="${file.type}" data-href="${escapeHtml(file.href)}" data-url="${escapeHtml(file.url)}" data-name="${escapeHtml(file.name)}"
+                   class="grid grid-cols-12 gap-4 px-6 py-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-blue-50/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer select-none items-center group">
+                  <div class="col-span-12 md:col-span-6 flex items-center gap-3 min-w-0 overflow-hidden">
+                      <span class="text-xl flex-shrink-0">${icon}</span>
+                      <p class="font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</p>
+                  </div>
+                  <div class="col-span-6 md:col-span-3 text-sm text-slate-500 dark:text-slate-400 truncate" title="${file.dateDisplay || '-'}">${file.dateDisplay || '-'}</div>
+                  <div class="col-span-6 md:col-span-3 text-sm text-slate-500 dark:text-slate-400 text-right md:text-left truncate">${file.sizeDisplay}</div>
+              </div>`;
+      }
+
+      function updateDisplay() {
+          const query = document.getElementById("search").value.toLowerCase().trim();
+          let processedFiles = filesData.filter((f) => f.name.toLowerCase().includes(query));
+
+          processedFiles.sort((a, b) => {
+              if (a.isParent) return -1;
+              if (b.isParent) return 1;
+              if (a.type === "directory" && b.type !== "directory") return -1;
+              if (a.type !== "directory" && b.type === "directory") return 1;
+
+              let result = 0;
+              if (currentSort.field === "name") result = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+              else if (currentSort.field === "date") {
+                  const dateA = new Date(a.dateDisplay).getTime() || 0;
+                  const dateB = new Date(b.dateDisplay).getTime() || 0;
+                  result = dateA - dateB;
+              } else if (currentSort.field === "size") result = a.sizeBytes - b.sizeBytes;
+              return currentSort.direction === "asc" ? result : -result;
+          });
+
+          renderFiles(processedFiles);
+      }
+
+      document.getElementById('file-container').addEventListener('click', (e) => {
+          const item = e.target.closest('[data-type]');
+          if (!item) return;
+          if (item.dataset.type === 'directory') navigateTo(item.dataset.href);
+          else openPreview(item.dataset.url, item.dataset.name);
+      });
+
+      document.getElementById("search").addEventListener("input", updateDisplay);
+      document.getElementById("sort-by").addEventListener("change", (e) => { currentSort.field = e.target.value; updateDisplay(); });
+      document.getElementById("sort-order").addEventListener("click", () => {
+          currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+          document.getElementById("sort-icon").innerText = currentSort.direction === "asc" ? "↑" : "↓";
+          document.getElementById("sort-text").innerText = currentSort.direction === "asc" ? "Asc" : "Desc";
+          updateDisplay();
+      });
+
+      document.getElementById('fetch-btn').addEventListener('click', () => {
+          const url = document.getElementById('server-url').value.trim();
+          if (url) { localStorage.setItem('lastBrowserUrl', url); loadFiles(url); }
+      });
+      
+      document.getElementById('server-url').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') document.getElementById('fetch-btn').click();
+      });
+
+      function setView(view) {
+          currentView = view;
+          localStorage.setItem('fileBrowserView', view);
+          const gridBtn = document.getElementById('view-grid');
+          const listBtn = document.getElementById('view-list');
+          
+          if (view === 'grid') {
+              gridBtn.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-100');
+              gridBtn.classList.remove('text-slate-400', 'dark:text-slate-500');
+              listBtn.classList.remove('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-100');
+              listBtn.classList.add('text-slate-400', 'dark:text-slate-500');
+          } else {
+              listBtn.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-100');
+              listBtn.classList.remove('text-slate-400', 'dark:text-slate-500');
+              gridBtn.classList.remove('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-100');
+              gridBtn.classList.add('text-slate-400', 'dark:text-slate-500');
+          }
+          updateDisplay();
+      }
+
+      document.getElementById("view-grid").addEventListener("click", () => setView('grid'));
+      document.getElementById("view-list").addEventListener("click", () => setView('list'));
+
+      document.addEventListener('DOMContentLoaded', () => {
+          // Initialize Theme UI
+          applyTheme(localStorage.getItem('theme') || 'system');
+          document.getElementById('theme-toggle').addEventListener('click', cycleTheme);
+
+          setView(currentView); 
+          const previewModal = document.getElementById('preview-modal');
+          previewModal.addEventListener('click', (e) => { if (e.target.id === 'preview-modal') closePreview(); });
+          document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePreview(); });
+          
+          const savedUrl = localStorage.getItem('lastBrowserUrl') || '';
+          document.getElementById('server-url').value = savedUrl;
+          if (savedUrl) loadFiles(savedUrl);
+      });
+    </script>
+  </body>
+</html>
