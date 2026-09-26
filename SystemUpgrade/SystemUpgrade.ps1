@@ -469,6 +469,7 @@ function Invoke-WindowsUpdate {
                     Clear-Host
 
                     # Fetch available updates directly as PowerShell objects
+                    EmptyLine
                     Write-Host "Checking for Windows Updates..." -ForegroundColor Yellow
                     $updates = Get-WindowsUpdate
     

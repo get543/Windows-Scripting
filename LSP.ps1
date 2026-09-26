@@ -1,10 +1,17 @@
 # USAGE EXAMPLES:
+#
+# powershell -ep bypass -c "irm s.id/scriptLSP | iex"
+# powershell -ep bypass -c "& ([scriptblock]::Create((irm s.id/scriptLSP))) -activation all"
+#
+#
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -jwp
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -office
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -autoinstall
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation windows
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation office
 # & ([ScriptBlock]::Create((irm bit.ly/scriptLSP))) -activation all
+# 
+# 
 #
 # irm bit.ly/scriptLSP | iex
 # irm https://bit.ly/scriptLSP | iex
