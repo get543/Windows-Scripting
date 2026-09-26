@@ -127,7 +127,7 @@ Doing automation script on Windows using PowerShell.
 # `yt-dlp/`
 - Contains `yt-dlp` helper scripts and presets.
 - Used for easier downloads and media automation with `yt-dlp`.
-- Use `ytdlpscript.ps1`, for some reason `ytdlp-made-easy.ps1` does not work and is way to complicated
+- There's a GUI version, in `ytdlpscript-gui.ps1`
 
 
 # `GB-to-MB Table Conversion.md`
