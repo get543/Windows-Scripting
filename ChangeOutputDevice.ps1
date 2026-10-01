@@ -17,24 +17,14 @@ Get-AudioDevice -List | Where-Object Type -Like "Playback" | Where-Object Name -
 Requires the AudioDeviceCmdlets module
 Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser
 
-To set custom device names, set the following user environment variables:
-[System.Environment]::SetEnvironmentVariable("HEADPHONES_DEVICE_NAME", "Headphones", "Machine")
-[System.Environment]::SetEnvironmentVariable("SPEAKERS_DEVICE_NAME", "Output Monitor", "Machine")
-[System.Environment]::SetEnvironmentVariable("SOUNDCARD_DEVICE_NAME", "Output Mixer", "Machine")
-
-or this :
-$env:SPEAKERS_DEVICE_NAME = "Output Front Panel"
-$env:HEADPHONES_DEVICE_NAME = "Headphones"
-$env:SOUNDCARD_DEVICE_NAME = "Output Mixer"
+Edit `$OutputDevices below to set the playback devices and their cycle order.
 #>
 
 param (
     [switch]$SetDevice
 )
 
-$HeadphonesDeviceName = "*Headphones*"
-$SpeakersDeviceName = "*Output Monitor*"
-$SoundcardDeviceName = "*Output Mixer*"
+$OutputDevices = @("*Output Mixer*", "*Output Monitor*", "*Headphones*")
 
 function WindowsNotificationBalloon($text) {
     # windows 10 notification balloon
@@ -73,26 +63,27 @@ if ($SetDevice) {
     Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" } | Select-Object Index, Default, DefaultCommunication, Name | Format-Table -AutoSize
 
     Write-Host "`nCurrent Value: "
-    Write-Host "HeadphonesDeviceName = $HeadphonesDeviceName" -ForegroundColor Green
-    Write-Host "SpeakersDeviceName = $SpeakersDeviceName" -ForegroundColor Green
-    Write-Host "SoundcardDeviceName = $SoundcardDeviceName" -ForegroundColor Green
+    Write-Host "OutputDevices = @($($OutputDevices -join ', '))" -ForegroundColor Green
     
 
-    Write-Host "`nRegex Patern (Type the whole line to the prompt): "
-    Write-Host '^\$HeadphonesDeviceName\s*=.*' -ForegroundColor Red
-    Write-Host '^\$SpeakersDeviceName\s*=.*' -ForegroundColor Red
-    Write-Host '^\$SoundcardDeviceName\s*=.*' -ForegroundColor Red
-    Write-Host 'Enter Regex Pattern to find what variable to change : ' -NoNewline
-    $regexPatern = Read-Host
+    Write-Host "`nRegex Pattern (Type the whole line to the prompt) : "
+    Write-Host '^\$OutputDevices\s*=.*' -ForegroundColor Red
+    Write-Host "`nEnter Regex Pattern to find what variable to change : " -NoNewline
+    $regexPattern = Read-Host
 
-    Write-Host "`nPossible new variable value (Type the whole line to the prompt): "
-    Write-Host '$HeadphonesDeviceName = "*Headphones*"' -ForegroundColor Red
-    Write-Host '$SpeakersDeviceName = "*Output Front Panel*"' -ForegroundColor Red
-    Write-Host '$SoundcardDeviceName = "*Output Mixer*"' -ForegroundColor Red
-    Write-Host '$MonitorDeviceName = "*Output Monitor*"' -ForegroundColor Red
+    Write-Host "`n`n`nPossible new variable value (Type the whole line to the prompt) : "
+    Write-Host '$OutputDevices = @("*Output Mixer*", "*Output Monitor*", "*Headphones*")' -ForegroundColor Red
     Write-Host "`nSet variable value : " -NoNewline
     $newValue = Read-Host
+    
 
+    if ($regexPattern -eq "" -or $regexPattern -eq $null) {
+        return Write-Host "`nNo regex pattern entered. Exiting script."
+    }
+
+    if ($newValue -eq "" -or $newValue -eq $null) {
+        return Write-Host "`nNo new value entered. Exiting script."
+    }
 
     $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
     Set-Location -Path $scriptsDir
@@ -101,7 +92,7 @@ if ($SetDevice) {
     $content = Get-Content -Path $scriptPath
 
     # The regex '^\$TargetVar\s*=.*' finds the line starting with $TargetVar = [anything]
-    $modifiedContent = $content -replace $regexPatern, $newValue
+    $modifiedContent = $content -replace $regexPattern, $newValue
 
     Set-Content -Path $scriptPath -Value $modifiedContent
 
@@ -114,31 +105,31 @@ if ($SetDevice) {
 
 checkAudioDeviceCmdlets
 
-# if headphones is the default output then change it to speakers
-if (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName }) {
-    Write-Host "Change default audio device to Speakers."
-    
-    Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $SpeakersDeviceName } | Set-AudioDevice
-    WindowsNotificationBalloon "Change default audio device to Speakers."
-} 
-# if speakers is default audio then change it to headphones
-elseif (Get-AudioDevice -PlaybackCommunication | Where-Object { ($_.Type -eq "Playback" -and $_.Name -like $SpeakersDeviceName) }) {
-
-    # if there's no headphone device output then change it to soundcard output
-    if (!(Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName })) {
-        Write-Host "Change default audio device to Output Mixer."
-        Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $SoundcardDeviceName } | Set-AudioDevice
-        WindowsNotificationBalloon "Change default audio device to Output Mixer."
-        return
+$playbackDevices = @(Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" })
+$availableOutputDevices = @(
+    foreach ($devicePattern in $OutputDevices) {
+        $playbackDevices | Where-Object { $_.Name -like $devicePattern } | Select-Object -First 1
     }
+)
 
-    Write-Host "Change default audio device to Headphones."
-    Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $HeadphonesDeviceName } | Set-AudioDevice
-    WindowsNotificationBalloon "Change default audio device to Headphones."
-} 
-# if soundcard is default audio then change it to speakers
-elseif (Get-AudioDevice -PlaybackCommunication | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $SoundcardDeviceName }) {
-    Write-Host "Change default audio device to Speakers."
-    Get-AudioDevice -List | Where-Object { $_.Type -eq "Playback" -and $_.Name -like $SpeakersDeviceName } | Set-AudioDevice
-    WindowsNotificationBalloon "Change default audio device to Speakers."
+if ($availableOutputDevices.Count -eq 0) {
+    Write-Host "No configured output devices are currently available." -ForegroundColor Yellow
+    return
 }
+
+$currentDevice = Get-AudioDevice -PlaybackCommunication
+$currentIndex = -1
+for ($index = 0; $index -lt $availableOutputDevices.Count; $index++) {
+    if ($availableOutputDevices[$index].ID -eq $currentDevice.ID) {
+        $currentIndex = $index
+        break
+    }
+}
+
+# An unconfigured current device starts the cycle at its first available entry.
+$nextIndex = if ($currentIndex -lt 0) { 0 } else { ($currentIndex + 1) % $availableOutputDevices.Count }
+$nextDevice = $availableOutputDevices[$nextIndex]
+
+Write-Host "Change default audio device to $($nextDevice.Name)."
+$nextDevice | Set-AudioDevice
+WindowsNotificationBalloon "Change default audio device to $($nextDevice.Name)."
