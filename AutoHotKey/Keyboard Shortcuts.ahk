@@ -24,19 +24,29 @@ A_TrayMenu.Add("Shortcut List", (*) =>
         . "- Insert`t`t: Switch Output Device Script`n"
         . "- Scroll Lock`t: Start OBS Replay Buffer"
     ))
-
+    
 ;! Add custom item to the bottom of the tray menu
-A_TrayMenu.Add("Set Output Device from Script", (*) =>
-    RunWait(
-        'powershell.exe -ExecutionPolicy Bypass -File "'
-        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1" -SetDevice'
-    ))
+;! ==============================================================================
+
+A_TrayMenu.Add("Set Output Device from Script", SetOutputDeviceFromScript)
+
+SetOutputDeviceFromScript(*) {
+    scriptPath := '"' A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"'
+    try {
+        RunWait('pwsh.exe -ExecutionPolicy Bypass -File ' scriptPath ' -SetDevice')
+    } catch {
+        RunWait('powershell.exe -ExecutionPolicy Bypass -File ' scriptPath ' -SetDevice')
+    }
+}
+;! ==============================================================================
 
 A_TrayMenu.Add("Auto Launch Apps", (*) =>
     RunWait(
         '*RunAs powershell.exe -ExecutionPolicy Bypass -File "'
         A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"'
     ))
+    
+;! ==============================================================================
 
 A_TrayMenu.Add("Toggle DNS", (*) =>
     RunWait(
@@ -355,11 +365,12 @@ PgUp:: ; press page up
 
 Insert:: ; press insert
 {
-    RunWait(
-        'powershell.exe -ExecutionPolicy Bypass -File "'
-        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"',
-        , 'Hide'  ; Hides the PowerShell window
-    )
+    scriptPath := '"' A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"'
+    try {
+        RunWait('pwsh.exe -ExecutionPolicy Bypass -File ' scriptPath, , 'Hide')
+    } catch {
+        RunWait('powershell.exe -ExecutionPolicy Bypass -File ' scriptPath, , 'Hide')
+    }
 }
 
 ;! ==============================================================================
