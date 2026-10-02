@@ -24,7 +24,7 @@ param (
     [switch]$SetDevice
 )
 
-$OutputDevices = @("*Output Mixer*", "*Output Monitor*", "*Headphones*")
+$OutputDevices = @("*Output Monitor*", "*Headphones*", "*Output Mixer*")
 
 function WindowsNotificationBalloon($text) {
     # windows 10 notification balloon
@@ -72,16 +72,16 @@ if ($SetDevice) {
     $regexPattern = Read-Host
 
     Write-Host "`n`n`nPossible new variable value (Type the whole line to the prompt) : "
-    Write-Host '$OutputDevices = @("*Output Mixer*", "*Output Monitor*", "*Headphones*")' -ForegroundColor Red
+    Write-Host '$OutputDevices = @("*Output Monitor*", "*Headphones*", "*Output Mixer*")' -ForegroundColor Red
     Write-Host "`nSet variable value : " -NoNewline
     $newValue = Read-Host
     
 
-    if ($regexPattern -eq "" -or $regexPattern -eq $null) {
+    if ($null -eq $regexPattern -or $regexPattern -eq "") {
         return Write-Host "`nNo regex pattern entered. Exiting script."
     }
 
-    if ($newValue -eq "" -or $newValue -eq $null) {
+    if ($null -eq $newValue -or $newValue -eq "") {
         return Write-Host "`nNo new value entered. Exiting script."
     }
 
