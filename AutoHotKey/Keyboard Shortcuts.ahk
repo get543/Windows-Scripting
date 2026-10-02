@@ -375,6 +375,13 @@ Insert:: ; press insert
 
 ;! ==============================================================================
 
+; Calls the OutputDeviceSwap.ahk script to handle the output device switching logic
+; by pressing Alt+Insert it will switch between the active output devices defined in the ActiveDevices array.
+; It uses SoundVolumeView.exe from NirSoft downloaded via winget
+#Include "%A_ScriptDir%\OutputDeviceSwap.ahk"
+
+;! ==============================================================================
+
 ScrollLock:: ; press scroll lock
 {
     SetWorkingDir A_ProgramFiles "\obs-studio\bin\64bit" ; cd to OBS directory
