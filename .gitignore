@@ -19,3 +19,5 @@ Build-Script.ps1
 Install-Software.ps1
 LSP-AllInOne.ps1
 LSP-JWP.ps1
+
+.sentry-native
