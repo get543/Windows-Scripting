@@ -31,7 +31,7 @@ A_TrayMenu.Add("Shortcut List", (*) =>
 A_TrayMenu.Add("Set Output Device from Script", SetOutputDeviceFromScript)
 
 SetOutputDeviceFromScript(*) {
-    scriptPath := '"' A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"'
+    scriptPath := '"' A_ScriptDir '\..\ChangeOutputDevice.ps1"'
     try {
         RunWait('pwsh.exe -ExecutionPolicy Bypass -File ' scriptPath ' -SetDevice')
     } catch {
@@ -43,7 +43,7 @@ SetOutputDeviceFromScript(*) {
 A_TrayMenu.Add("Auto Launch Apps", (*) =>
     RunWait(
         '*RunAs powershell.exe -ExecutionPolicy Bypass -File "'
-        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\AutoLaunchApp.ps1"'
+        A_ScriptDir '\..\AutoLaunchApp.ps1"'
     ))
     
 ;! ==============================================================================
@@ -51,7 +51,7 @@ A_TrayMenu.Add("Auto Launch Apps", (*) =>
 A_TrayMenu.Add("Toggle DNS", (*) =>
     RunWait(
         '*RunAs powershell.exe -ExecutionPolicy Bypass -File "'
-        A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ToggleDNS.ps1"'
+        A_ScriptDir '\..\ToggleDNS.ps1"'
     ))
 
 ;! ==============================================================================
@@ -62,7 +62,7 @@ HttpServer_MenuHandler(*) {
     if (IB.Result = "Cancel" || IB.Value = "")
         return
 
-    ScriptPath := A_MyDocuments "\PowerShell\Scripts\Windows-Scripting\File-Share.ps1"
+    ScriptPath := A_ScriptDir '\..\File-Share.ps1'
     FilePath := Trim(IB.Value, '"')
 
     ; Run PowerShell using -File for better space handling.
@@ -260,13 +260,13 @@ A_TrayMenu.Add("Exit", (*) => ExitApp()) ; Add Exit item to the bottom of the tr
 
     if (Toggle) {
         ; Send "{Up down}"          ; Presses down up-arrow key.
-        Send "{W down}"           ; Presses down W key.
-        Send "{LShift down}"      ; Presses down Left Shift key.
-        ; Send "{Click down}"         ; Hold down Left Click
+        Send "{W down}"             ; Presses down W key.
+        Send "{LShift down}"        ; Presses down Left Shift key.
+        ; Send "{Click down}"       ; Hold down Left Click
     } else {
-        ; Send "{Up up}"          ; Releases up-arrow key.
-        Send "{W up}"           ; Releases W key.
-        Send "{LShift up}"      ; Releases Left Shift key.
+        ; Send "{Up up}"            ; Releases up-arrow key.
+        Send "{W up}"               ; Releases W key.
+        Send "{LShift up}"          ; Releases Left Shift key.
         ; Send "{Click up}"         ; Releases Left Click
     }
 }
@@ -332,14 +332,15 @@ RobloxClickAction() {
     MicrophoneLoopbackFunction() ; call the function from included file
 }
 
-;! ==============================================================================
 
 ^!m:: ; press ctrl + alt + m
 {
     ; if there's no scrcpy.exe window active
     if not (WinExist("ahk_exe scrcpy.exe")) {
-        ; Sends a hotkey presses
-        Send "^!p" ; Opens a scrcpy no console (ctrl + alt + p)
+        ; Sends a hotkey presses from DesktopShortcut\scrcpy no console.lnk
+        ; Send "^!p" ; Opens a scrcpy no console (ctrl + alt + p)
+        RunWait('wscript.exe "' A_ScriptDir '\..\scrcpy-noconsole.vbs"', , 'Hide')
+
         Sleep 5000 ; Delay for 5s
     }
 
@@ -365,7 +366,7 @@ PgUp:: ; press page up
 
 Insert:: ; press insert
 {
-    scriptPath := '"' A_MyDocuments '\PowerShell\Scripts\Windows-Scripting\ChangeOutputDevice.ps1"'
+    scriptPath := '"' A_ScriptDir '\..\ChangeOutputDevice.ps1"'
     try {
         RunWait('pwsh.exe -ExecutionPolicy Bypass -File ' scriptPath, , 'Hide')
     } catch {

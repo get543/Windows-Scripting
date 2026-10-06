@@ -1,6 +1,8 @@
-#Requires AutoHotkey v2.0
-
 ;! DOES NOT WORK ON VALORANT!
+;! The plan is to create a agent auto-select script but it failed because VAC too strong
+
+
+#Requires AutoHotkey v2.0
 
 CoordMode("Pixel", "Screen")
 CoordMode("Mouse", "Screen")
