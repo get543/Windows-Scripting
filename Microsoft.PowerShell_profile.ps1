@@ -6,7 +6,14 @@ $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal $identity
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-
+function show-help() {
+    $tokens = $null
+    $parseErrors = $null
+    $profileAst = [System.Management.Automation.Language.Parser]::ParseFile($PROFILE, [ref]$tokens, [ref]$parseErrors)
+    $profileAst.FindAll({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | ForEach-Object {
+        Write-Output $_.Name
+    }
+}
 
 #######################################################################################################################
 #                                                   Custom Aliases                                                    #
@@ -35,7 +42,7 @@ function unzip($path, $destination) {
     }
     Expand-Archive -Path "${path}" -DestinationPath "${destination}"
 }
-function grep {
+function grep() {
     $input | & "${env:PROGRAMFILES}\Git\usr\bin\grep.exe" $args
 }
 function df() {
@@ -172,6 +179,10 @@ function timer($amount, $unit) {
 function bash() {
     & "${env:ProgramFiles}\Git\bin\bash.exe"
 }
+function aiproxyapi() {
+    Set-Location $env:LOCALAPPDATA\Microsoft\WinGet\Packages\LuisPater.CLIProxyAPI_Microsoft*
+    .\cli-proxy-api.exe $args
+}
 
 
 ######################## !From My Linux Machine
@@ -192,10 +203,15 @@ function phone() {
         return emulator -avd Android_17_-_API_37.1 -feature -Vulkan
     }
 
+    # clear the duplicate cache by restarting the ADB server
+    # happens because ADB's mDNS daemon registered multiple TLS services for the same phone.
+    # adb kill-server
+    # adb devices
+
     if (!(Get-Command scrcpy) -and (Test-Path "C:\scrcpy")) {
         & "${env:HOMEDRIVE}\scrcpy\scrcpy.exe" --video-bit-rate=20M --turn-screen-off --stay-awake $args
     } else {
-        scrcpy --video-bit-rate=20M --turn-screen-off --stay-awake $args
+        scrcpy --video-bit-rate=20M --stay-awake $args
     }
 }
 function sound() {
@@ -278,6 +294,23 @@ function ShowNotification($title, $text) {
     $BalloonNotification.Visible = $true
     $BalloonNotification.ShowBalloonTip(5000)
 }
+function ClearCache() {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+
+    $paths = @(
+        "$env:SystemRoot\Prefetch\*",
+        "$env:SystemRoot\Temp\*",
+        "$env:TEMP\*",
+        "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*"
+    )
+
+    foreach ($path in $paths) {
+        if ($PSCmdlet.ShouldProcess($path, 'Remove cached files')) {
+            Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
 
 ######### !Run Scripts #########
 function ChangeOutputDevice() {
@@ -317,7 +350,7 @@ function ChocolateyApps() {
     Set-Location "${env:HOMEDRIVE}\ProgramData\chocolatey\lib"
 }
 function AutoHotKeyFolder() {
-    Set-Location "${env:USERPROFILE}\Documents\AutoHotkey"
+    Set-Location "${env:USERPROFILE}\Documents\PowerShell\Scripts\Windows-Scripting\AutoHotkey"
 }
 function FirefoxProfile() {
     Set-Location "${env:APPDATA}\Mozilla\Firefox\Profiles\1xtd3qfe.default-release"
