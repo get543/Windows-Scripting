@@ -186,5 +186,30 @@ HideOSD() {
 
 CommitDeviceChange(deviceName) {
     ; SoundVolumeView parameter 'all' sets both Default Playback and Communications roles
-    Run('SoundVolumeView.exe /SetDefault "' . deviceName . '" all', , "Hide")
+    command := 'SoundVolumeView.exe /SetDefault "' . deviceName . '" all'
+
+    try {
+        Run(command, , "Hide")
+    } catch Error {
+        answer := MsgBox(
+            "SoundVolumeView.exe was not found. Install it with winget?`n`n"
+            . "A terminal will open to show the installation progress.",
+            "SoundVolumeView required",
+            "YesNo Icon!"
+        )
+        if (answer != "Yes")
+            return
+
+        try {
+            RunWait('winget install --id NirSoft.SoundVolumeView --exact')
+            Run(command, , "Hide")
+        } catch Error as err {
+            MsgBox(
+                "Installation or launch failed. Ensure winget is installed and available, "
+                . "then try again.`n`n" . err.Message,
+                "SoundVolumeView error",
+                "Icon!"
+            )
+        }
+    }
 }
