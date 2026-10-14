@@ -614,7 +614,11 @@ function Invoke-MSStoreUpdate {
         EmptyLine
         Write-Host "Updating all Microsoft Store applications..." -ForegroundColor Yellow
         try {
-            powershell.exe -Command "Get-AppxPackage | Update-InboxApp"
+            # powershell.exe -Command "Get-AppxPackage | Update-InboxApp"
+            $UpdateScriptPath = "..\Update-MicrosoftStoreApps.ps1"
+            if (Test-Path $UpdateScriptPath) {
+                . $UpdateScriptPath
+            }
         }
         catch {
             Write-Warning "An error occurred while updating Microsoft Store applications."
