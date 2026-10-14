@@ -203,6 +203,10 @@ function phone() {
         return emulator -avd Android_17_-_API_37.1 -feature -Vulkan
     }
 
+    if ($args -eq "audio") {
+        return scrcpy --no-video --no-control --audio-codec=opus @args
+    }
+
     # clear the duplicate cache by restarting the ADB server
     # happens because ADB's mDNS daemon registered multiple TLS services for the same phone.
     # adb kill-server
