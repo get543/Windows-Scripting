@@ -14,7 +14,7 @@ $buttonNames = @(
 $deadline = (Get-Date).AddSeconds(10)
 $clicked = $false
 
-Write-Host "Waiting for the Microsoft Store update button..." -ForegroundColor Cyan
+Write-Host "`nWaiting for the Microsoft Store update button..." -ForegroundColor Yellow
 
 while ((Get-Date) -lt $deadline -and -not $clicked) {
 
@@ -47,7 +47,7 @@ while ((Get-Date) -lt $deadline -and -not $clicked) {
                     )) {
                         $pattern.Invoke()
 
-                        Write-Host "Clicked '$buttonName'." -ForegroundColor Green
+                        Write-Host "`nClicked '$buttonName'" -ForegroundColor Green
                         $clicked = $true
                         break
                     }
@@ -70,6 +70,6 @@ while ((Get-Date) -lt $deadline -and -not $clicked) {
 }
 
 if (-not $clicked) {
-    Write-Host "Could not find the update button within 10 seconds." -ForegroundColor Yellow
-    Write-Host "Check the Store window, its language, and the button label."
+    Write-Host "`nCould not find the update button within 10 seconds." -ForegroundColor Yellow
+    Write-Host "Check the Store window, its language, and the button label." -ForegroundColor Yellow
 }

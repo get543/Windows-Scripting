@@ -21,3 +21,6 @@ LSP-AllInOne.ps1
 LSP-JWP.ps1
 
 .sentry-native
+
+# exclude everything that has (exclude) in the filename
+*(exclude)*
