@@ -14,6 +14,55 @@
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 
+if (-not ("YtDlp.GuiOutputPump" -as [type])) {
+    Add-Type -TypeDefinition @"
+using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace YtDlp {
+    public sealed class GuiOutputChunk {
+        public string StreamName { get; private set; }
+        public string Text { get; private set; }
+
+        public GuiOutputChunk(string streamName, string text) {
+            StreamName = streamName;
+            Text = text;
+        }
+    }
+
+    public sealed class GuiOutputPump {
+        public ConcurrentQueue<GuiOutputChunk> Chunks { get; private set; }
+        public Task StandardOutputTask { get; private set; }
+        public Task StandardErrorTask { get; private set; }
+
+        public GuiOutputPump() {
+            Chunks = new ConcurrentQueue<GuiOutputChunk>();
+        }
+
+        public void Start(Process process) {
+            StandardOutputTask = Task.Factory.StartNew(
+                () => ReadStream(process.StandardOutput, "stdout"),
+                TaskCreationOptions.LongRunning);
+            StandardErrorTask = Task.Factory.StartNew(
+                () => ReadStream(process.StandardError, "stderr"),
+                TaskCreationOptions.LongRunning);
+        }
+
+        private void ReadStream(StreamReader reader, string streamName) {
+            char[] buffer = new char[512];
+            int count;
+            while ((count = reader.Read(buffer, 0, buffer.Length)) > 0) {
+                Chunks.Enqueue(new GuiOutputChunk(streamName, new string(buffer, 0, count)));
+            }
+        }
+    }
+}
+"@
+}
+
 # --- XAML UI Definition ---
 $inputXAML = @"
 <Window x:Name="window"
@@ -485,12 +534,65 @@ if ($var_OutputPathTextBox) {
 # --- Helper Functions ---
 function Add-OutputText {
     param([string]$text)
+    if ($script:YtDlpProgressActive) {
+        Write-Host ""
+        if ($var_OutputTextBox) { $var_OutputTextBox.AppendText("`r`n") }
+        $script:YtDlpProgressActive = $false
+        $script:YtDlpProgressLength = 0
+    }
     Write-Host $text
     if ($var_OutputTextBox) {
         $var_OutputTextBox.AppendText($text + "`r`n")
         $var_OutputTextBox.ScrollToEnd()
         if ($PSForm.Dispatcher) {
             $PSForm.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Background)
+        }
+    }
+}
+
+function Set-ProgressOutput {
+    param([string]$text)
+
+    $padding = [Math]::Max(0, $script:YtDlpProgressLength - $text.Length)
+    Write-Host -NoNewline ("`r" + $text + (" " * $padding))
+    $script:YtDlpProgressLength = [Math]::Max($script:YtDlpProgressLength, $text.Length)
+    $script:YtDlpProgressActive = $true
+
+    if ($var_OutputTextBox) {
+        $currentText = $var_OutputTextBox.Text
+        $lineStart = $currentText.LastIndexOf("`n") + 1
+        $var_OutputTextBox.Select($lineStart, $currentText.Length - $lineStart)
+        $var_OutputTextBox.SelectedText = $text
+        $var_OutputTextBox.ScrollToEnd()
+    }
+}
+
+function Receive-YtDlpOutputChunk {
+    param([YtDlp.GuiOutputChunk]$Chunk)
+
+    $streamName = $Chunk.StreamName
+    foreach ($character in $Chunk.Text.ToCharArray()) {
+        if ($script:YtDlpPendingCarriageReturn[$streamName]) {
+            $script:YtDlpPendingCarriageReturn[$streamName] = $false
+            if ([int]$character -eq 10) {
+                Add-OutputText $script:YtDlpOutputBuffers[$streamName]
+                $script:YtDlpOutputBuffers[$streamName] = ""
+                continue
+            }
+
+            Set-ProgressOutput $script:YtDlpOutputBuffers[$streamName]
+            $script:YtDlpOutputBuffers[$streamName] = ""
+        }
+
+        if ([int]$character -eq 13) {
+            $script:YtDlpPendingCarriageReturn[$streamName] = $true
+        }
+        elseif ([int]$character -eq 10) {
+            Add-OutputText $script:YtDlpOutputBuffers[$streamName]
+            $script:YtDlpOutputBuffers[$streamName] = ""
+        }
+        else {
+            $script:YtDlpOutputBuffers[$streamName] += $character
         }
     }
 }
@@ -606,31 +708,41 @@ function Invoke-YtDlpProcess {
         return
     }
 
-    # Poll both streams on the WPF UI thread so output is live without cross-runspace callbacks.
+    # Pump raw stream chunks off-thread; parse progress carriage returns on the UI thread.
     $script:ActiveYtDlpProcess = $process
+    $script:YtDlpOutputPump = New-Object YtDlp.GuiOutputPump
+    $script:YtDlpOutputBuffers = @{ stdout = ""; stderr = "" }
+    $script:YtDlpPendingCarriageReturn = @{ stdout = $false; stderr = $false }
+    $script:YtDlpProgressActive = $false
+    $script:YtDlpProgressLength = 0
+    $script:YtDlpOutputPump.Start($process)
+
     $script:YtDlpOutputTimer = New-Object System.Windows.Threading.DispatcherTimer
     $script:YtDlpOutputTimer.Interval = [TimeSpan]::FromMilliseconds(75)
     $script:YtDlpOutputTimer.add_Tick({
         $activeProcess = $script:ActiveYtDlpProcess
         if (-not $activeProcess) { return }
 
-        while ($activeProcess.StandardOutput.Peek() -ge 0) {
-            $line = $activeProcess.StandardOutput.ReadLine()
-            if ($line) { Add-OutputText $line }
-        }
-        while ($activeProcess.StandardError.Peek() -ge 0) {
-            $line = $activeProcess.StandardError.ReadLine()
-            if ($line) { Add-OutputText $line }
+        $chunk = $null
+        while ($script:YtDlpOutputPump.Chunks.TryDequeue([ref]$chunk)) {
+            Receive-YtDlpOutputChunk $chunk
+            $chunk = $null
         }
 
-        if ($activeProcess.HasExited) {
-            while (-not $activeProcess.StandardOutput.EndOfStream) {
-                $line = $activeProcess.StandardOutput.ReadLine()
-                if ($line) { Add-OutputText $line }
-            }
-            while (-not $activeProcess.StandardError.EndOfStream) {
-                $line = $activeProcess.StandardError.ReadLine()
-                if ($line) { Add-OutputText $line }
+        if ($activeProcess.HasExited -and
+            $script:YtDlpOutputPump.StandardOutputTask.IsCompleted -and
+            $script:YtDlpOutputPump.StandardErrorTask.IsCompleted -and
+            $script:YtDlpOutputPump.Chunks.IsEmpty) {
+            foreach ($streamName in @("stdout", "stderr")) {
+                if ($script:YtDlpPendingCarriageReturn[$streamName]) {
+                    Set-ProgressOutput $script:YtDlpOutputBuffers[$streamName]
+                    $script:YtDlpOutputBuffers[$streamName] = ""
+                    $script:YtDlpPendingCarriageReturn[$streamName] = $false
+                }
+                elseif ($script:YtDlpOutputBuffers[$streamName].Length -gt 0) {
+                    Add-OutputText $script:YtDlpOutputBuffers[$streamName]
+                    $script:YtDlpOutputBuffers[$streamName] = ""
+                }
             }
 
             $script:YtDlpOutputTimer.Stop()
