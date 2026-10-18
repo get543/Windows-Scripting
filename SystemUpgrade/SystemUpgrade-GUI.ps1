@@ -234,11 +234,19 @@ function checkBOX() {
             Set-TaskProgress -TaskName "Upgrading Store Applications ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
             Append-Output "`nUpgrading all installed microsoft store applications..."
-            Append-Output "> Get-AppxPackage | Update-InboxApp"
+            $UpdateScriptPath = Join-Path $PSScriptRoot '..\Update-MicrosoftStoreApps.ps1'
+            Append-Output "> . $UpdateScriptPath"
+
             try {
-                powershell.exe -Command "Get-AppxPackage | Update-InboxApp" 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
+                if (Test-Path $UpdateScriptPath) {
+                    . $UpdateScriptPath 2>&1 | ForEach-Object {
+                        Append-Output $_.ToString()
+                    }
                 }
+
+                # powershell.exe -Command "Get-AppxPackage | Update-InboxApp" 2>&1 | ForEach-Object {
+                #     Append-Output $_.ToString()
+                # }
             } catch {
                 Append-Output $_.Exception.Message
             }

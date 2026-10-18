@@ -39,3 +39,14 @@ function convert() {
         python E:\Code\Python-Currency-Converter\convert_currency.py @args
     }
 }
+
+function convert() {
+    $desktopPath = "E:\Code\Python-Currency-Converter\convert_currency.py"
+    $laptopPath = "${env:USERPROFILE}\Documents\Code Folder\Python-Currency-Converter\convert_currency.py"
+
+    if (Test-Path -Path $desktopPath) {
+        python $desktopPath @args
+    } elseif (Test-Path -Path $laptopPath) {
+        python $laptopPath @args
+    }
+}
