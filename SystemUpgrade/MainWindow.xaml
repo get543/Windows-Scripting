@@ -190,15 +190,22 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <CheckBox x:Name="UpdatePSModule" Content="Update All PowerShell Modules"/>
-                            <CheckBox x:Name="WindowsUpdate" Content="Update All Windows Update"/>
-                            <CheckBox x:Name="MicrosoftStoreUpdate" Content="Update All Microsoft Store Applications"/>
-                            <CheckBox x:Name="WingetUpgrade" Content="Update All Winget Package Manager Applications"/>
+                            <CheckBox x:Name="UpdatePSModule" Content="Update All PowerShell Modules"
+                                      ToolTip="Runs Update-Module to update installed PowerShell modules."/>
+                            <CheckBox x:Name="WindowsUpdate" Content="Update All Windows Update"
+                                      ToolTip="Installs available Windows updates without restarting."/>
+                            <CheckBox x:Name="MicrosoftStoreUpdate" Content="Update All Microsoft Store Applications"
+                                      ToolTip="It will open a Microsoft Store window, click the 'Downloads' tab and click 'Check for Updates' button."/>
+                            <CheckBox x:Name="WingetUpgrade" Content="Update All Winget Package Manager Applications"
+                                      ToolTip="Runs 'winget upgrade --all' for available app updates."/>
                         </StackPanel>
                         <StackPanel Grid.Column="1">
-                            <CheckBox x:Name="ChocoUpgrade" Content="Update All Chocolatey Package Manager"/>
-                            <CheckBox x:Name="NPMUpgrade" Content="Update All NPM Global Packages"/>
-                            <CheckBox x:Name="PipUpgrade" Content="Update All Python Pip Packages"/>
+                            <CheckBox x:Name="ChocoUpgrade" Content="Update All Chocolatey Package Manager"
+                                      ToolTip="Runs 'choco upgrade --yes all' to update Chocolatey packages."/>
+                            <CheckBox x:Name="NPMUpgrade" Content="Update All NPM Global Packages"
+                                      ToolTip="Runs 'npm update -g --all' for global packages."/>
+                            <CheckBox x:Name="PipUpgrade" Content="Update All Python Pip Packages"
+                                      ToolTip="Updates pip, then upgrades outdated Python packages."/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
@@ -223,10 +230,12 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <CheckBox x:Name="CheckCorruptionFiles" Content="Scan &amp; Repair Corruption (sfc / DISM / chkdsk)"/>
+                            <CheckBox x:Name="CheckCorruptionFiles" Content="Scan &amp; Repair Corruption (sfc / DISM / chkdsk)"
+                                      ToolTip="Runs chkdsk, SFC, and DISM to scan and repair Windows."/>
                         </StackPanel>
                         <StackPanel Grid.Column="1">
-                            <CheckBox x:Name="DeleteTempFiles" Content="Delete Temporary Files (Disk Cleanup &amp; Temp Files)"/>
+                            <CheckBox x:Name="DeleteTempFiles" Content="Delete Temporary Files (Disk Cleanup &amp; Temp Files)"
+                                      ToolTip="Runs Disk Cleanup and deletes files in temporary folders."/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
