@@ -1202,7 +1202,10 @@ Select pip packages you want to upgrade:"
 
             EmptyLine
             Write-Host "Checking for and upgrading all pip packages automatically..." -ForegroundColor Yellow
-            pip list --outdated --format=json | ConvertFrom-Json | ForEach-Object { pip install --upgrade $_.name }
+            pip list --outdated --format=json | ConvertFrom-Json | ForEach-Object { 
+                Write-Host "`nUpgrading $($_.name)..." -ForegroundColor Yellow
+                pip install --upgrade $_.name
+            }
 
             EmptyLine
             Write-Host "Automatic pip upgrade complete." -ForegroundColor Green
