@@ -125,11 +125,132 @@ function checkBOX() {
     $syncHash = [hashtable]::Synchronized(@{})
     $syncHash.Window          = $PSForm
     $syncHash.OutputTextBox   = $var_OutputTextBox
+    if ($null -eq $syncHash.OutputTextBox) {
+        throw "The OutputTextBox control could not be found in MainWindow.xaml."
+    }
     $syncHash.RunningTask     = $var_RunningTask
     $syncHash.ProgressBar     = $var_ProgressBar
     $syncHash.RunButton       = $var_RunButton
     $syncHash.SelectedTasks   = $selectedTasks
     $syncHash.SelectedCount   = $selectedCount
+    $syncHash.UpdateScriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\Update-MicrosoftStoreApps.ps1'))
+    $syncHash.OutputQueue = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
+    $syncHash.ProgressLineStart = $null
+    $syncHash.ProgressLineLength = $null
+    $syncHash.OutputMaxCharacters = 300000
+
+    $outputTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $outputTimer.Interval = [TimeSpan]::FromMilliseconds(100)
+    $timerSync = $syncHash
+    $outputTimer.Add_Tick({
+        $outputTextBox = $timerSync.OutputTextBox
+        if ($null -eq $outputTextBox) { return }
+
+        $pendingItems = [System.Collections.Generic.List[object]]::new()
+        $item = $null
+        while ($pendingItems.Count -lt 200 -and $timerSync.OutputQueue.TryDequeue([ref]$item)) {
+            $pendingItems.Add($item)
+        }
+
+        if ($pendingItems.Count -eq 0) { return }
+
+        $pendingText = [System.Text.StringBuilder]::new()
+
+        for ($index = 0; $index -lt $pendingItems.Count; $index++) {
+            $item = $pendingItems[$index]
+
+            switch ($item.Type) {
+                'Output' {
+                    if ($item.ReplaceLastLine) {
+                        while (($index + 1) -lt $pendingItems.Count -and
+                            $pendingItems[$index + 1].Type -eq 'Output' -and
+                            $pendingItems[$index + 1].ReplaceLastLine) {
+                            $index++
+                            $item = $pendingItems[$index]
+                        }
+
+                        if ($pendingText.Length -gt 0) {
+                            $outputTextBox.AppendText($pendingText.ToString())
+                            $null = $pendingText.Clear()
+                        }
+
+                        if ($null -eq $timerSync.ProgressLineStart) {
+                            $timerSync.ProgressLineStart = $outputTextBox.Text.Length
+                            $timerSync.ProgressLineLength = 0
+                        }
+
+                        $lineStart = [int]$timerSync.ProgressLineStart
+                        $lineLength = [int]$timerSync.ProgressLineLength
+                        $outputTextBox.Select($lineStart, $lineLength)
+                        $outputTextBox.SelectedText = $item.Text
+                        $timerSync.ProgressLineLength = $item.Text.Length
+                    }
+                    else {
+                        if ($null -ne $timerSync.ProgressLineStart) {
+                            $null = $pendingText.Append("`r`n")
+                            $timerSync.ProgressLineStart = $null
+                            $timerSync.ProgressLineLength = $null
+                        }
+
+                        $null = $pendingText.Append($item.Text).Append("`r`n")
+                    }
+                }
+                'Progress' {
+                    if ($pendingText.Length -gt 0) {
+                        $outputTextBox.AppendText($pendingText.ToString())
+                        $null = $pendingText.Clear()
+                    }
+
+                    if ($timerSync.RunningTask) { $timerSync.RunningTask.Content = $item.TaskName }
+                    if ($timerSync.ProgressBar) {
+                        $timerSync.ProgressBar.IsIndeterminate = $item.IsIndeterminate
+                        $timerSync.ProgressBar.Value = $item.Value
+                    }
+                }
+                'Completed' {
+                    if ($pendingText.Length -gt 0) {
+                        $outputTextBox.AppendText($pendingText.ToString())
+                        $null = $pendingText.Clear()
+                    }
+
+                    if ($timerSync.RunningTask) { $timerSync.RunningTask.Content = 'Done!' }
+                    if ($timerSync.ProgressBar) {
+                        $timerSync.ProgressBar.IsIndeterminate = $false
+                        $timerSync.ProgressBar.Value = 100
+                    }
+                    $timerSync.RunButton.IsEnabled = $true
+                    $outputTimer.Stop()
+                    [System.Windows.MessageBox]::Show('Done', 'Tweaks are Finished', [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+                }
+            }
+        }
+
+        if ($pendingText.Length -gt 0) {
+            $outputTextBox.AppendText($pendingText.ToString())
+            $null = $pendingText.Clear()
+        }
+
+        if ($outputTextBox.Text.Length -gt $timerSync.OutputMaxCharacters) {
+            $removeLength = $outputTextBox.Text.Length - $timerSync.OutputMaxCharacters
+            $nextLine = $outputTextBox.Text.IndexOf("`n", $removeLength)
+            if ($nextLine -ge 0) { $removeLength = $nextLine + 1 }
+            $outputTextBox.Select(0, $removeLength)
+            $outputTextBox.SelectedText = ''
+
+            if ($null -ne $timerSync.ProgressLineStart) {
+                if ($timerSync.ProgressLineStart -le $removeLength) {
+                    $timerSync.ProgressLineStart = $null
+                    $timerSync.ProgressLineLength = $null
+                }
+                else {
+                    $timerSync.ProgressLineStart -= $removeLength
+                }
+            }
+        }
+
+        $outputTextBox.ScrollToEnd()
+    }.GetNewClosure())
+    $outputTimer.Start()
 
     # Create background runspace to keep WPF UI responsive
     $runspace = [runspacefactory]::CreateRunspace()
@@ -147,22 +268,23 @@ function checkBOX() {
                 [double]$Value,
                 [bool]$IsIndeterminate = $false
             )
-            $sync.Window.Dispatcher.Invoke([action]{
-                if ($sync.RunningTask) { $sync.RunningTask.Content = $TaskName }
-                if ($sync.ProgressBar) {
-                    $sync.ProgressBar.IsIndeterminate = $IsIndeterminate
-                    $sync.ProgressBar.Value = $Value
-                }
+            $null = $sync.OutputQueue.Enqueue([pscustomobject]@{
+                Type = 'Progress'
+                TaskName = $TaskName
+                Value = $Value
+                IsIndeterminate = $IsIndeterminate
             })
         }
 
         function Append-Output {
-            param([string]$text)
-            $sync.Window.Dispatcher.Invoke([action]{
-                if ($sync.OutputTextBox) {
-                    $sync.OutputTextBox.AppendText($text + "`r`n")
-                    $sync.OutputTextBox.ScrollToEnd()
-                }
+            param(
+                [string]$text,
+                [switch]$ReplaceLastLine
+            )
+            $null = $sync.OutputQueue.Enqueue([pscustomobject]@{
+                Type = 'Output'
+                Text = $text
+                ReplaceLastLine = [bool]$ReplaceLastLine
             })
         }
 
@@ -234,19 +356,17 @@ function checkBOX() {
             Set-TaskProgress -TaskName "Upgrading Store Applications ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
             Append-Output "`nUpgrading all installed microsoft store applications..."
-            $UpdateScriptPath = Join-Path $PSScriptRoot '..\Update-MicrosoftStoreApps.ps1'
-            Append-Output "> . $UpdateScriptPath"
+            $updateScriptPath = $sync.UpdateScriptPath
+            Append-Output "> . $updateScriptPath"
 
             try {
-                if (Test-Path $UpdateScriptPath) {
-                    . $UpdateScriptPath 2>&1 | ForEach-Object {
+                if (Test-Path -LiteralPath $updateScriptPath -PathType Leaf) {
+                    . $updateScriptPath *>&1 | ForEach-Object {
                         Append-Output $_.ToString()
                     }
+                } else {
+                    Append-Output "Microsoft Store update script not found: $updateScriptPath"
                 }
-
-                # powershell.exe -Command "Get-AppxPackage | Update-InboxApp" 2>&1 | ForEach-Object {
-                #     Append-Output $_.ToString()
-                # }
             } catch {
                 Append-Output $_.Exception.Message
             }
@@ -275,9 +395,13 @@ function checkBOX() {
             $pct = ($completedCount / $selectedCount) * 100
             Set-TaskProgress -TaskName "Upgrading Pip Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-            Append-Output "`nUpgrading all installed pip applications..."
-            Append-Output "> pip list --outdated"
             try {
+                Append-Output "`nUpgrading pip itself..."
+                Append-Output "> python.exe -m pip install --upgrade pip"
+                python.exe -m pip install --upgrade pip
+    
+                Append-Output "`nUpgrading all installed pip applications..."
+                Append-Output "> pip list --outdated"
                 $outdatedPip = pip list --outdated 2>&1 | ForEach-Object {
                     Append-Output $_.ToString()
                     $_.ToString()
@@ -304,17 +428,16 @@ function checkBOX() {
             $pct = ($completedCount / $selectedCount) * 100
             Set-TaskProgress -TaskName "Upgrading Chocolatey Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-            Append-Output "`nChecking for outdated chocolatey packages"
-            Append-Output "> choco outdated"
-            try {
-                choco outdated 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
-                }
-                
+            try {            
                 Append-Output "`nUpdating all chocolatey application(s)..."
                 Append-Output "> choco upgrade --yes all"
                 choco upgrade --yes all 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
+                    $outputLine = $_.ToString()
+                    if ($outputLine -match '\b\d{1,3}(?:\.\d+)?\s*%') {
+                        Append-Output -text $outputLine -ReplaceLastLine
+                    } else {
+                        Append-Output $outputLine
+                    }
                 }
             } catch {
                 Append-Output $_.Exception.Message
@@ -384,11 +507,7 @@ function checkBOX() {
 
         Set-TaskProgress -TaskName "Done!" -Value 100 -IsIndeterminate $false
         Append-Output "`nAll tasks completed successfully!"
-
-        $sync.Window.Dispatcher.Invoke([action]{
-            $sync.RunButton.IsEnabled = $true
-            [System.Windows.MessageBox]::Show("Done", "Tweaks are Finished", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
-        })
+        $null = $sync.OutputQueue.Enqueue([pscustomobject]@{ Type = 'Completed' })
     }) | Out-Null
 
     $ps.AddArgument($syncHash) | Out-Null
