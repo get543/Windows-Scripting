@@ -298,19 +298,25 @@ function checkBOX() {
             Set-TaskProgress -TaskName "Updating Module ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
             Append-Output "`nChecking update for all PowerShell modules..."
-            Append-Output "> Update-Module -AcceptLicense"
-            $hasOutput = $false
-            try {
-                Update-Module -AcceptLicense -ErrorAction SilentlyContinue 2>&1 | ForEach-Object {
-                    $hasOutput = $true
-                    Append-Output $_.ToString()
-                }
-            } catch {
-                Append-Output $_.Exception.Message
+            if (-not (Get-Command -Name Update-Module -ErrorAction SilentlyContinue)) {
+                Append-Output "The 'Update-Module' command is not available. Skipping PowerShell module updates."
             }
+            else {
+                Append-Output "> Update-Module -AcceptLicense"
+                $hasOutput = $false
+                try {
+                    Update-Module -AcceptLicense -ErrorAction SilentlyContinue 2>&1 | ForEach-Object {
+                        $hasOutput = $true
+                        Append-Output $_.ToString()
+                    }
+                }
+                catch {
+                    Append-Output $_.Exception.Message
+                }
 
-            if (-not $hasOutput) {
-                Append-Output "No need to, there's no module that needs to be updated. 😁👍"
+                if (-not $hasOutput) {
+                    Append-Output "No need to, there's no module that needs to be updated. 😁👍"
+                }
             }
             $completedCount++
         }
@@ -322,13 +328,36 @@ function checkBOX() {
 
             Append-Output "`nInstalling all available Windows Updates..."
             Append-Output "> Install-WindowsUpdate -AcceptAll -IgnoreReboot"
-            try {
-                Install-WindowsUpdate -AcceptAll -IgnoreReboot 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
+
+            $canRunWindowsUpdate = $true
+            if (-not (Get-Module -Name "PSWindowsUpdate" -ListAvailable -ErrorAction SilentlyContinue)) {
+                Append-Output "The 'PSWindowsUpdate' module is not installed. Installing it now..."
+                try {
+                    Install-Module -Name PSWindowsUpdate -Force -AcceptLicense -Confirm:$false
+                    Append-Output "Successfully installed the 'PSWindowsUpdate' module."
                 }
-            } catch {
-                Append-Output $_.Exception.Message
+                catch {
+                    Append-Output "Failed to install the 'PSWindowsUpdate' module: $($_.Exception.Message)"
+                    $canRunWindowsUpdate = $false
+                }
             }
+
+            if ($canRunWindowsUpdate) {
+                try {
+                    Import-Module -Name PSWindowsUpdate -ErrorAction Stop
+                    if (-not (Get-Command -Name Install-WindowsUpdate -ErrorAction SilentlyContinue)) {
+                        throw "The Install-WindowsUpdate command is unavailable after importing PSWindowsUpdate."
+                    }
+
+                    Install-WindowsUpdate -AcceptAll -IgnoreReboot 2>&1 | ForEach-Object {
+                        Append-Output $_.ToString()
+                    }
+                }
+                catch {
+                    Append-Output $_.Exception.Message
+                }
+            }
+
             $completedCount++
         }
 
@@ -337,14 +366,40 @@ function checkBOX() {
             $pct = ($completedCount / $selectedCount) * 100
             Set-TaskProgress -TaskName "Upgrading Winget ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-            Append-Output "`nUpgrading all installed applications..."
-            Append-Output "> winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements"
-            try {
-                winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
+            if (-not (Get-Command -Name winget -ErrorAction SilentlyContinue)) {
+                Append-Output "The 'winget' command is not available. Installing Winget..."
+                try {
+                    $release = Invoke-RestMethod -Uri "https://api.github.com/repos/microsoft/winget-cli/releases/latest" -ErrorAction Stop
+                    $asset = $release.assets | Where-Object { $_.name -like '*.msixbundle' } | Select-Object -First 1
+                    if (-not $asset) {
+                        throw "No MSIX bundle was found in the latest Winget release."
+                    }
+
+                    $downloadPath = Join-Path $env:TEMP $asset.name
+                    Append-Output "Downloading Winget installer: $($asset.name)"
+                    Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $downloadPath -ErrorAction Stop
+                    Append-Output "Installing Winget..."
+                    Add-AppxPackage -Path $downloadPath -ErrorAction Stop
                 }
-            } catch {
-                Append-Output $_.Exception.Message
+                catch {
+                    Append-Output "Failed to install Winget: $($_.Exception.Message)"
+                }
+            }
+
+            if (-not (Get-Command -Name winget -ErrorAction SilentlyContinue)) {
+                Append-Output "Winget is still unavailable. Skipping Winget updates."
+            }
+            else {
+                Append-Output "`nUpgrading all installed applications..."
+                Append-Output "> winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements"
+                try {
+                    winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements 2>&1 | ForEach-Object {
+                        Append-Output $_.ToString()
+                    }
+                }
+                catch {
+                    Append-Output $_.Exception.Message
+                }
             }
 
             $completedCount++
@@ -378,14 +433,20 @@ function checkBOX() {
             $pct = ($completedCount / $selectedCount) * 100
             Set-TaskProgress -TaskName "Upgrading NPM Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-            Append-Output "`nUpgrading all installed npm applications..."
-            Append-Output "> npm update -g --all"
-            try {
-                npm update -g --all 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
+            if (-not (Get-Command -Name npm -ErrorAction SilentlyContinue)) {
+                Append-Output "The 'npm' command is not available. Skipping npm updates."
+            }
+            else {
+                Append-Output "`nUpgrading all installed npm applications..."
+                Append-Output "> npm update -g --all"
+                try {
+                    npm update -g --all 2>&1 | ForEach-Object {
+                        Append-Output $_.ToString()
+                    }
                 }
-            } catch {
-                Append-Output $_.Exception.Message
+                catch {
+                    Append-Output $_.Exception.Message
+                }
             }
             $completedCount++
         }
@@ -395,30 +456,41 @@ function checkBOX() {
             $pct = ($completedCount / $selectedCount) * 100
             Set-TaskProgress -TaskName "Upgrading Pip Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-            try {
-                Append-Output "`nUpgrading pip itself..."
-                Append-Output "> python.exe -m pip install --upgrade pip"
-                python.exe -m pip install --upgrade pip
+            $pipCommand = Get-Command -Name pip -ErrorAction SilentlyContinue
+            $pythonCommand = Get-Command -Name python.exe -ErrorAction SilentlyContinue
+            if (-not $pipCommand) {
+                Append-Output "The 'pip' command is not available. Skipping pip updates."
+            }
+            elseif (-not $pythonCommand) {
+                Append-Output "The 'python.exe' command is not available. Skipping pip updates."
+            }
+            else {
+                try {
+                    Append-Output "`nUpgrading pip itself..."
+                    Append-Output "> python.exe -m pip install --upgrade pip"
+                    python.exe -m pip install --upgrade pip
     
-                Append-Output "`nUpgrading all installed pip applications..."
-                Append-Output "> pip list --outdated"
-                $outdatedPip = pip list --outdated 2>&1 | ForEach-Object {
-                    Append-Output $_.ToString()
-                    $_.ToString()
-                }
+                    Append-Output "`nUpgrading all installed pip applications..."
+                    Append-Output "> pip list --outdated"
+                    $outdatedPip = pip list --outdated 2>&1 | ForEach-Object {
+                        Append-Output $_.ToString()
+                        $_.ToString()
+                    }
                 
-                $lines = $outdatedPip | Select-Object -Skip 2
-                foreach ($line in $lines) {
-                    $pkg = ($line -split "\s+")[0].Trim()
-                    if ($pkg) {
-                        Append-Output "> pip install --upgrade $pkg"
-                        pip install --upgrade $pkg 2>&1 | ForEach-Object {
-                            Append-Output $_.ToString()
+                    $lines = $outdatedPip | Select-Object -Skip 2
+                    foreach ($line in $lines) {
+                        $pkg = ($line -split "\s+")[0].Trim()
+                        if ($pkg) {
+                            Append-Output "> pip install --upgrade $pkg"
+                            pip install --upgrade $pkg 2>&1 | ForEach-Object {
+                                Append-Output $_.ToString()
+                            }
                         }
                     }
                 }
-            } catch {
-                Append-Output $_.Exception.Message
+                catch {
+                    Append-Output $_.Exception.Message
+                }
             }
             $completedCount++
         }
@@ -428,19 +500,46 @@ function checkBOX() {
             $pct = ($completedCount / $selectedCount) * 100
             Set-TaskProgress -TaskName "Upgrading Chocolatey Packages ($($completedCount + 1)/$selectedCount)..." -Value $pct -IsIndeterminate $true
 
-            try {            
-                Append-Output "`nUpdating all chocolatey application(s)..."
-                Append-Output "> choco upgrade --yes all"
-                choco upgrade --yes all 2>&1 | ForEach-Object {
-                    $outputLine = $_.ToString()
-                    if ($outputLine -match '\b\d{1,3}(?:\.\d+)?\s*%') {
-                        Append-Output -text $outputLine -ReplaceLastLine
-                    } else {
-                        Append-Output $outputLine
+            if (-not (Get-Command -Name choco -ErrorAction SilentlyContinue)) {
+                Append-Output "The 'choco' command is not available. Installing Chocolatey..."
+                try {
+                    Set-ExecutionPolicy Bypass -Scope Process -Force -ErrorAction Stop
+                    $installScript = Join-Path $env:TEMP "install-choco.ps1"
+                    Invoke-WebRequest -Uri 'https://chocolatey.org/install.ps1' -OutFile $installScript -ErrorAction Stop
+                    & $installScript *>&1 | ForEach-Object {
+                        Append-Output $_.ToString()
                     }
                 }
-            } catch {
-                Append-Output $_.Exception.Message
+                catch {
+                    Append-Output "Failed to install Chocolatey: $($_.Exception.Message)"
+                }
+
+                $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+                $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+                $pathEntries = @($env:Path, $machinePath, $userPath) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+                $env:Path = $pathEntries -join ';'
+            }
+
+            if (-not (Get-Command -Name choco -ErrorAction SilentlyContinue)) {
+                Append-Output "Chocolatey is still unavailable. Skipping Chocolatey updates."
+            }
+            else {
+                try {
+                    Append-Output "`nUpdating all Chocolatey applications..."
+                    Append-Output "> choco upgrade --yes all"
+                    choco upgrade --yes all 2>&1 | ForEach-Object {
+                        $outputLine = $_.ToString()
+                        if ($outputLine -match '\b\d{1,3}(?:\.\d+)?\s*%') {
+                            Append-Output -text $outputLine -ReplaceLastLine
+                        }
+                        else {
+                            Append-Output $outputLine
+                        }
+                    }
+                }
+                catch {
+                    Append-Output $_.Exception.Message
+                }
             }
             $completedCount++
         }
