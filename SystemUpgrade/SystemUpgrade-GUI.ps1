@@ -481,7 +481,7 @@ function checkBOX() {
                     foreach ($line in $lines) {
                         $pkg = ($line -split "\s+")[0].Trim()
                         if ($pkg) {
-                            Append-Output "> pip install --upgrade $pkg"
+                            Append-Output "`n> pip install --upgrade $pkg"
                             pip install --upgrade $pkg 2>&1 | ForEach-Object {
                                 Append-Output $_.ToString()
                             }
