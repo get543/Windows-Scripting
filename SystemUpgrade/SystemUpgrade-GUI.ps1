@@ -349,8 +349,12 @@ function checkBOX() {
                         throw "The Install-WindowsUpdate command is unavailable after importing PSWindowsUpdate."
                     }
 
-                    Install-WindowsUpdate -AcceptAll -IgnoreReboot 2>&1 | ForEach-Object {
-                        Append-Output $_.ToString()
+                    Install-WindowsUpdate -AcceptAll -IgnoreReboot 2>&1 |
+                        Out-String -Stream -Width 200 |
+                        ForEach-Object {
+                            if (-not [string]::IsNullOrWhiteSpace($_)) {
+                                Append-Output $_.TrimEnd()
+                            }
                     }
                 }
                 catch {
